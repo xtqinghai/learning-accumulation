@@ -1,0 +1,122 @@
+package com.quinn.hboot.system.controller;
+
+import com.quinn.hboot.common.R;
+import com.quinn.hboot.system.model.dto.RegisterUserDTO;
+import com.quinn.hboot.system.model.entity.SysMenu;
+import com.quinn.hboot.system.model.entity.SysUser;
+import com.quinn.hboot.system.service.SysMenuService;
+import com.quinn.hboot.system.service.SysUserService;
+import com.quinn.hboot.utils.JwtUtils;
+import com.quinn.hboot.utils.MenuTreeUtil;
+import lombok.Data;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+import java.util.Map;
+
+/**
+ * 认证控制器
+ *
+ * @author yu-qh
+ */
+@RestController
+@RequestMapping("/api")
+public class AuthController {
+
+//    @Autowired
+//    private AuthService userService;
+
+    @Autowired
+    private SysUserService sysUserService;
+
+    @Autowired
+    private SysMenuService menuService;
+
+    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+
+    /**
+     * 登录
+     *
+     * @param req
+     * @return
+     */
+    @PostMapping("/auth/login")
+    public R<LoginResp> login(@RequestBody LoginReq req) {
+        SysUser user =  sysUserService.getByUsername(req.getUsername());
+        if (user == null) {
+            return R.fail("用户不存在");
+        }
+        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+            return R.fail("用户名或密码错误");
+        }
+
+        String token = JwtUtils.createToken(user.getUsername());
+        List<SysMenu> menus = menuService.findMenusByUserId(user.getId());
+        List<SysMenu> menuTree = MenuTreeUtil.buildTree(menus);
+
+        LoginResp resp = new LoginResp();
+        resp.setToken(token);
+        resp.setUser(user);
+        resp.setMenus(menuTree);
+        return R.ok(resp);
+    }
+
+    /**
+     * 获取当前用户信息
+     *
+     * @param authentication
+     * @return
+     */
+    @GetMapping("/auth/me")
+    public R<?> me(Authentication authentication) {
+        if (authentication == null) {
+            return R.fail("未登录");
+        }
+        SysUser user = (SysUser) authentication.getPrincipal();
+        List<String> perms = sysUserService.getUserPermissions(user.getId());
+        return R.ok(Map.of("user", user, "permissions", perms));
+    }
+
+    /**
+     * 获取当前用户菜单
+     *
+     * @param authentication
+     * @return
+     */
+    @GetMapping("/auth/menus")
+    public R<List<SysMenu>> menus(Authentication authentication) {
+        SysUser user = (SysUser) authentication.getPrincipal();
+        List<SysMenu> menus = menuService.findMenusByUserId(user.getId());
+        return R.ok(MenuTreeUtil.buildTree(menus));
+    }
+
+    /**
+     * 注册
+     *
+     * @param dto
+     * @return
+     */
+    @PostMapping("/register")
+    public ResponseEntity<String> register(@Validated @RequestBody RegisterUserDTO dto) {
+        sysUserService.register(dto);
+        return ResponseEntity.ok("注册成功");
+    }
+}
+
+@Data
+class LoginReq {
+    private String username;
+    private String password;
+}
+
+@Data
+class LoginResp {
+    private String token;
+    private SysUser user;
+    private List<SysMenu> menus;
+}

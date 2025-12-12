@@ -1,0 +1,36 @@
+server:
+  port: 8080
+
+logging:
+  level:
+    com.quinn.hboot.system.mapper: debug
+    org.mybatis: debug
+    com.quinn.hboot.system.controller: debug
+
+spring:
+  application:
+    name: hboot-system
+  # 数据库配置
+  datasource:
+    url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    username: root # 你的数据库用户名
+    password: 123456 # 你的数据库密码
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8+ 驱动类
+
+# MyBatis-Plus 配置
+mybatis-plus:
+  # Mapper.xml 文件位置（可选，若使用注解版可省略）
+  mapper-locations: classpath:mapper/**/*.xml
+  # 实体类别名包（可选）
+  type-aliases-package: com.quinn.hboot.**.entity
+  # 配置全局主键生成策略
+  global-config:
+    db-config:
+      id-type: auto # 主键自增（可选值：AUTO/ASSIGN_ID/ASSIGN_UUID等）
+      logic-delete-field: deleted # 全局逻辑删除字段名（可选）
+      logic-delete-value: 1 # 逻辑删除值（默认1）
+      logic-not-delete-value: 0 # 逻辑未删除值（默认0）
+  # 日志配置（开发环境开启，方便调试）
+  configuration:
+    log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 控制台打印SQL
+    map-underscore-to-camel-case: true # 自动下划线转驼峰（默认开启）
