@@ -10,4 +10,6 @@ import java.util.List;
  */
 public interface SysRoleService extends IService<SysRole> {
     List<Long> getRoleMenuIds(Long roleId);
+
+    Boolean saveRoleMenus(Long id, List<Long> ids);
 }

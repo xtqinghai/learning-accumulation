@@ -80,4 +80,20 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 .collect(Collectors.toList());
     }
 
+    @Override
+    public Boolean resetPwd(Long id) {
+        // 1. 参数校验
+        if (id == null || id <= 0) {
+            throw new IllegalArgumentException("用户ID不能为空且必须为正数");
+        }
+
+        // 2. 构建更新实体（仅设置需要更新的字段）
+        SysUser user = new SysUser();
+        user.setId(id);
+        user.setPassword(passwordEncoder.encode("123456"));
+
+        // 3. 执行更新（MyBatis-Plus的updateById会根据ID更新非空字段）
+        return this.updateById(user);
+    }
+
 }

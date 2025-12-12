@@ -6,6 +6,11 @@ import com.quinn.hboot.system.service.SysMenuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.stream.Collectors;
+
 /**
  * @author yu-qh
  */
@@ -38,5 +43,34 @@ public class SysMenuController {
     @DeleteMapping("/{id}")
     public R delete(@PathVariable Long id) {
         return R.ok(menuService.removeById(id));
+    }
+
+    @GetMapping("/tree")
+    public R tree() {
+        return R.ok(buildTree(menuService.list()));
+    }
+
+    // 后端工具方法：扁平菜单列表转树形
+    public List<SysMenu> buildTree(List<SysMenu> menuList) {
+        // 1. 构建ID->菜单的映射，方便快速查找
+        Map<Long, SysMenu> menuMap = menuList.stream()
+                .collect(Collectors.toMap(SysMenu::getId, menu -> menu));
+        // 2. 组装树形
+        List<SysMenu> tree = new ArrayList<>();
+        for (SysMenu menu : menuList) {
+            if (menu.getParentId() == 0) {
+                tree.add(menu); // 根节点直接加入
+            } else {
+                // 找到父节点，把当前菜单加入父节点的children
+                SysMenu parent = menuMap.get(menu.getParentId());
+                if (parent != null) {
+                    if (parent.getChildren() == null) {
+                        parent.setChildren(new ArrayList<>());
+                    }
+                    parent.getChildren().add(menu);
+                }
+            }
+        }
+        return tree;
     }
 }

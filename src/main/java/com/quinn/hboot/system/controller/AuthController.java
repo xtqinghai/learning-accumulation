@@ -6,6 +6,7 @@ import com.quinn.hboot.system.model.entity.SysMenu;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.service.SysMenuService;
 import com.quinn.hboot.system.service.SysUserService;
+import com.quinn.hboot.utils.AESUtils;
 import com.quinn.hboot.utils.JwtUtils;
 import com.quinn.hboot.utils.MenuTreeUtil;
 import lombok.Data;
@@ -51,7 +52,11 @@ public class AuthController {
         if (user == null) {
             return R.fail("用户不存在");
         }
-        if (!passwordEncoder.matches(req.getPassword(), user.getPassword())) {
+
+        // 1. 解密前端传递的加密密码
+        String plainPassword = AESUtils.decrypt(req.getPassword());
+
+        if (!passwordEncoder.matches(plainPassword, user.getPassword())) {
             return R.fail("用户名或密码错误");
         }
 
