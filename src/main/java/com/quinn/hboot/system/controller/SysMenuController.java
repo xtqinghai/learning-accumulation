@@ -3,6 +3,7 @@ package com.quinn.hboot.system.controller;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.system.model.entity.SysMenu;
 import com.quinn.hboot.system.service.SysMenuService;
+import com.quinn.hboot.utils.TreeBuildUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -47,11 +48,19 @@ public class SysMenuController {
 
     @GetMapping("/tree")
     public R tree() {
-        return R.ok(buildTree(menuService.list()));
+//        return R.ok(buildTree(menuService.list()));
+        return R.ok(TreeBuildUtils.buildTree(
+                menuService.list(),
+                SysMenu::getId,                // 获取ID
+                SysMenu::getParentId,          // 获取父ID
+                SysMenu::setChildren,          // 设置子节点
+                SysMenu::getChildren,         // 获取子节点
+                0L                             // 根节点父ID
+        ));
     }
 
     // 后端工具方法：扁平菜单列表转树形
-    public List<SysMenu> buildTree(List<SysMenu> menuList) {
+    /*public List<SysMenu> buildTree(List<SysMenu> menuList) {
         // 1. 构建ID->菜单的映射，方便快速查找
         Map<Long, SysMenu> menuMap = menuList.stream()
                 .collect(Collectors.toMap(SysMenu::getId, menu -> menu));
@@ -72,5 +81,5 @@ public class SysMenuController {
             }
         }
         return tree;
-    }
+    }*/
 }

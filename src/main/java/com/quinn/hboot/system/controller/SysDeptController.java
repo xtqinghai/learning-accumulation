@@ -3,7 +3,9 @@ package com.quinn.hboot.system.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.system.model.entity.SysDept;
+import com.quinn.hboot.system.model.entity.SysMenu;
 import com.quinn.hboot.system.service.SysDeptService;
+import com.quinn.hboot.utils.TreeBuildUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
@@ -39,5 +41,18 @@ public class SysDeptController {
     @DeleteMapping("/{id}")
     public R delete(@PathVariable Long id) {
         return R.ok(deptService.removeById(id));
+    }
+
+    @GetMapping("/tree")
+    public R tree() {
+//        return R.ok(buildTree(menuService.list()));
+        return R.ok(TreeBuildUtils.buildTree(
+                deptService.list(),
+                SysDept::getId,                // 获取ID
+                SysDept::getParentId,          // 获取父ID
+                SysDept::setChildren,          // 设置子节点
+                SysDept::getChildren,         // 获取子节点
+                0L                             // 根节点父ID
+        ));
     }
 }
