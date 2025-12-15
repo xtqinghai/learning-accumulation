@@ -3,9 +3,13 @@ package com.quinn.hboot.system.controller;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.system.model.entity.SysDict;
+import com.quinn.hboot.system.model.entity.SysDictItem;
+import com.quinn.hboot.system.service.SysDictItemService;
 import com.quinn.hboot.system.service.SysDictService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 
 /**
  * @author yu-qh
@@ -15,11 +19,10 @@ import org.springframework.web.bind.annotation.*;
 @RequiredArgsConstructor
 public class SysDictController {
     private final SysDictService dictService;
-
-    @GetMapping("/page")
-    public R page(@RequestParam int pageNum,
-                  @RequestParam int pageSize) {
-        return R.ok(dictService.page(new Page<>(pageNum, pageSize)));
+    private final SysDictItemService itemService;
+    @GetMapping("/list")
+    public R list() {
+        return R.ok(dictService.list());
     }
 
     @GetMapping("/{id}")
@@ -28,17 +31,16 @@ public class SysDictController {
     }
 
     @PostMapping
-    public R add(@RequestBody SysDict entity) {
-        return R.ok(dictService.save(entity));
-    }
-
-    @PutMapping
-    public R update(@RequestBody SysDict entity) {
-        return R.ok(dictService.updateById(entity));
+    public R save(@RequestBody SysDict entity) {
+        entity.setCreateTime(LocalDateTime.now());
+        return R.ok(dictService.saveOrUpdate(entity));
     }
 
     @DeleteMapping("/{id}")
     public R delete(@PathVariable Long id) {
+        itemService.removeByIds(itemService.lambdaQuery()
+                .eq(SysDictItem::getDictId, id)
+                .list());
         return R.ok(dictService.removeById(id));
     }
 }

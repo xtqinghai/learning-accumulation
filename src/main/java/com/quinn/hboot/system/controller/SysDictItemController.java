@@ -6,6 +6,8 @@ import com.quinn.hboot.system.service.SysDictItemService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.LocalDateTime;
+
 /**
  * @author yu-qh
  */
@@ -28,13 +30,9 @@ public class SysDictItemController {
     }
 
     @PostMapping
-    public R add(@RequestBody SysDictItem entity) {
-        return R.ok(itemService.save(entity));
-    }
-
-    @PutMapping
-    public R update(@RequestBody SysDictItem entity) {
-        return R.ok(itemService.updateById(entity));
+    public R save(@RequestBody SysDictItem entity) {
+        entity.setCreateTime(LocalDateTime.now());
+        return R.ok(itemService.saveOrUpdate(entity));
     }
 
     @DeleteMapping("/{id}")
