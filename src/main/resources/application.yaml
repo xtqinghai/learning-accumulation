@@ -36,3 +36,28 @@ mybatis-plus:
   configuration:
     log-impl: org.apache.ibatis.logging.stdout.StdOutImpl # 控制台打印SQL
     map-underscore-to-camel-case: true # 自动下划线转驼峰（默认开启）
+
+# springdoc配置： https://springdoc.org/properties.html
+springdoc:
+  swagger-ui:
+    path: /swagger-ui.html
+    operations-sorter: alpha
+    tags-sorter: alpha
+  api-docs:
+    path: /v3/api-docs
+  group-configs:
+    - group: "系统管理"
+      paths-to-match: "/**"
+      packages-to-scan:
+        - com.quinn.hboot.system.controller
+        - com.quinn.hboot.codegen.controller
+  default-flat-param-object: true
+
+# knife4j 接口文档配置
+knife4j:
+  # 是否开启 Knife4j 增强功能
+  enable: true  # 设置为 true 表示开启增强功能
+  # 生产环境配置
+  production: false  # 设置为 true 表示在生产环境中不显示文档，为 false 表示显示文档（通常在开发环境中使用）
+  setting:
+    language: zh_cn

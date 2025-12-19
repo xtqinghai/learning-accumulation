@@ -29,7 +29,7 @@ public class SecurityConfig {
         http.csrf(cs -> cs.disable());
         http.cors(cors -> {});
         http.authorizeHttpRequests(auth -> auth
-                .requestMatchers("/api/auth/**", "/public/**").permitAll()
+                .requestMatchers("/api/auth/**", "/public/**","/v3/api-docs/**", "/doc.html","/swagger-resources/**","/webjars/**","/swagger-ui/**","/swagger-ui.html").permitAll()
                 .anyRequest().authenticated()
         );
 

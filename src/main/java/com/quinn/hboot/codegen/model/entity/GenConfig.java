@@ -14,6 +14,9 @@ import lombok.Setter;
 @Getter
 @Setter
 public class GenConfig {//extends BaseEntity
+    /**
+     * 主键
+     */
     private Long id;
     /**
      * 表名

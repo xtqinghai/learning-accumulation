@@ -19,7 +19,7 @@ import lombok.Setter;
 @Setter
 public class GenFieldConfig {//extends BaseEntity
 
-
+    private Long id;
     /**
      * 关联的配置ID
      */
