@@ -11,7 +11,7 @@
  Target Server Version : 80042 (8.0.42)
  File Encoding         : 65001
 
- Date: 15/12/2025 17:39:28
+ Date: 19/12/2025 17:38:51
 */
 
 SET NAMES utf8mb4;
@@ -70,11 +70,25 @@ CREATE TABLE `gen_field_config`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `config_id`(`config_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 140 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '代码生成字段配置表' ROW_FORMAT = Dynamic;
+) ENGINE = InnoDB AUTO_INCREMENT = 154 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '代码生成字段配置表' ROW_FORMAT = Dynamic;
 
 -- ----------------------------
 -- Records of gen_field_config
 -- ----------------------------
+INSERT INTO `gen_field_config` VALUES (140, 11, 'id', 'bigint', NULL, 'id', 'Long', 1, '部门ID', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (141, 11, 'name', 'varchar', NULL, 'name', 'String', 2, '部门名称', 255, 1, 0, 1, 1, 1, 2, 'sex', NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (142, 11, 'parent_id', 'bigint', NULL, 'parentId', 'Long', 3, '父部门ID', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (143, 11, 'sort', 'int', NULL, 'sort', 'Integer', 4, '排序', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (144, 11, 'status', 'int', NULL, 'status', 'Integer', 5, '状态', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (145, 11, 'create_time', 'datetime', NULL, 'createTime', 'LocalDateTime', 6, '创建时间', NULL, 1, 0, 0, 0, 1, 9, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (146, 11, 'update_time', 'datetime', NULL, 'updateTime', 'LocalDateTime', 7, '更新时间', NULL, 1, 0, 0, 0, 1, 9, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (147, 11, 'id', 'bigint', NULL, 'id', 'Long', 1, '部门ID', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (148, 11, 'name', 'varchar', NULL, 'name', 'String', 2, '部门名称', 255, 1, 0, 1, 1, 1, 2, 'sex', NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (149, 11, 'parent_id', 'bigint', NULL, 'parentId', 'Long', 3, '父部门ID', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (150, 11, 'sort', 'int', NULL, 'sort', 'Integer', 4, '排序', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (151, 11, 'status', 'int', NULL, 'status', 'Integer', 5, '状态', NULL, 1, 0, 0, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (152, 11, 'create_time', 'datetime', NULL, 'createTime', 'LocalDateTime', 6, '创建时间', NULL, 1, 0, 0, 0, 1, 9, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (153, 11, 'update_time', 'datetime', NULL, 'updateTime', 'LocalDateTime', 7, '更新时间', NULL, 1, 0, 0, 0, 1, 9, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for sys_dept
