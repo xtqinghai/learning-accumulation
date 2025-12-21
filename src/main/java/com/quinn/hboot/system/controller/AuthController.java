@@ -50,14 +50,14 @@ public class AuthController {
     public R<LoginResp> login(@RequestBody LoginReq req) {
         SysUser user =  sysUserService.getByUsername(req.getUsername());
         if (user == null) {
-            return R.fail("用户不存在");
+            return R.fail(401,"用户不存在");
         }
 
         // 1. 解密前端传递的加密密码
         String plainPassword = AESUtils.decrypt(req.getPassword());
 
         if (!passwordEncoder.matches(plainPassword, user.getPassword())) {
-            return R.fail("用户名或密码错误");
+            return R.fail(401,"用户名或密码错误");
         }
 
         String token = JwtUtils.createToken(user.getUsername());
@@ -80,7 +80,7 @@ public class AuthController {
     @GetMapping("/auth/me")
     public R<?> me(Authentication authentication) {
         if (authentication == null) {
-            return R.fail("未登录");
+            return R.fail(401,"未登录");
         }
         SysUser user = (SysUser) authentication.getPrincipal();
         List<String> perms = sysUserService.getUserPermissions(user.getId());

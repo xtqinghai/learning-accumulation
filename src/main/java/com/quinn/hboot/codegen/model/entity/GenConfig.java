@@ -1,8 +1,7 @@
 package com.quinn.hboot.codegen.model.entity;
 
 import com.baomidou.mybatisplus.annotation.TableName;
-import lombok.Getter;
-import lombok.Setter;
+import lombok.Data;
 
 /**
  * 代码生成基础配置
@@ -11,8 +10,7 @@ import lombok.Setter;
  * @since 2.10.0
  */
 @TableName(value = "gen_config")
-@Getter
-@Setter
+@Data
 public class GenConfig {//extends BaseEntity
     /**
      * 主键

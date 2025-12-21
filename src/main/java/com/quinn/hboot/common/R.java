@@ -25,9 +25,9 @@ public class R<T>  implements Serializable {
         return r;
     }
 
-    public static <T> R<T> fail(String message) {
+    public static <T> R<T> fail(int code,String message) {
         R<T> r = new R<>();
-        r.setCode(500);
+        r.setCode(code);
         r.setMessage(message);
         System.err.println(message);
         return r;

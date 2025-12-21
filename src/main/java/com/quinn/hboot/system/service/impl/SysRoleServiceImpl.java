@@ -4,14 +4,11 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.quinn.hboot.system.mapper.SysRoleMapper;
 import com.quinn.hboot.system.mapper.SysRoleMenuMapper;
-import com.quinn.hboot.system.mapper.SysUserMapper;
 import com.quinn.hboot.system.model.entity.SysRole;
 import com.quinn.hboot.system.model.entity.SysRoleMenu;
-import com.quinn.hboot.system.service.SysRoleMenuService;
 import com.quinn.hboot.system.service.SysRoleService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.RollbackOn;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 

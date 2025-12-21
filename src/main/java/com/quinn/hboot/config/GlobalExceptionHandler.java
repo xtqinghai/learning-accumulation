@@ -12,11 +12,11 @@ public class GlobalExceptionHandler {
 
     @ExceptionHandler(Exception.class)
     public R<String> handleException(Exception e) {
-        return R.fail(e.getMessage());
+        return R.fail(500,e.getMessage());
     }
 
     @ExceptionHandler(RuntimeException.class)
     public R<String> handleRuntimeException(RuntimeException e) {
-        return R.fail(e.getMessage());
+        return R.fail(500,e.getMessage());
     }
 }

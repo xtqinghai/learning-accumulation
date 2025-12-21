@@ -31,4 +31,20 @@ public class JwtUtils {
                 .getBody()
                 .getSubject();
     }
+
+      /* 解析 Token
+     */
+    public static Claims getClaims(String token) {
+        return Jwts.parser()
+                .setSigningKey(SECRET.getBytes())
+                .parseClaimsJws(token)
+                .getBody();
+    }
+
+    /**
+     * 判断是否过期
+     */
+    public static boolean isExpired(String token) {
+        return getClaims(token).getExpiration().before(new Date());
+    }
 }

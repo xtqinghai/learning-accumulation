@@ -3,6 +3,8 @@ package com.quinn.hboot.codegen.model.form;
 import com.quinn.hboot.codegen.enums.FormTypeEnum;
 import com.quinn.hboot.codegen.enums.QueryTypeEnum;
 import lombok.Data;
+import lombok.Getter;
+import lombok.Setter;
 
 import java.util.List;
 
@@ -13,7 +15,8 @@ import java.util.List;
  * @since 2.10.0
  */
 //@Schema(description = "代码生成配置表单")
-@Data
+@Getter
+@Setter
 public class GenConfigForm {
 
     //@Schema(description = "主键",example = "1")
@@ -28,13 +31,13 @@ public class GenConfigForm {
     //@Schema(description = "模块名",example = "system")
     private String moduleName;
 
-    //@Schema(description = "包名",example = "com.youlai")
+    //@Schema(description = "包名",example = "com.quinn")
     private String packageName;
 
     //@Schema(description = "实体名",example = "User")
     private String entityName;
 
-    //@Schema(description = "作者",example = "youlaitech")
+    //@Schema(description = "作者",example = "yu-qh")
     private String author;
 
     //@Schema(description = "上级菜单ID",example = "1")

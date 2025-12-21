@@ -4,6 +4,7 @@ import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.quinn.hboot.common.R;
+import com.quinn.hboot.common.SysLog;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;
@@ -38,6 +39,7 @@ public class SysUserController {
         return R.ok(userService.getById(id));
     }
 
+    @SysLog(module = "用户管理", type = "新增用户")
     @PostMapping
     public R add(@RequestBody SysUser entity) {
         return R.ok(userService.save(entity));

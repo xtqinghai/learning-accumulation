@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.quinn.hboot.system.mapper.OperLogMapper">
+
+    <!-- 获取系统操作日志分页列表 -->
+    <select id="getOperLogPage" resultType="com.quinn.hboot.system.model.vo.OperLogVO">
+        SELECT
+                module,
+                type,
+                method,
+                request_method,
+                oper_name,
+                oper_ip,
+                oper_url,
+                oper_param,
+                json_result,
+                status,
+                error_msg,
+                oper_time
+        FROM
+            sys_oper_log
+        <where>
+            <if test="queryParams.module != null and queryParams.module != ''">
+                AND module LIKE CONCAT('%', #{queryParams.module}, '%')
+            </if>
+            <if test="queryParams.method != null and queryParams.method != ''">
+                AND method LIKE CONCAT('%', #{queryParams.method}, '%')
+            </if>
+            <if test="queryParams.requestMethod != null and queryParams.requestMethod != ''">
+                AND request_method = #{queryParams.requestMethod}
+            </if>
+        </where>
+    </select>
+
+</mapper>

@@ -8,8 +8,7 @@ import ${packageName}.${moduleName}.model.form.${entityName}Form;
 import ${packageName}.${moduleName}.model.query.${entityName}Query;
 import ${packageName}.${moduleName}.model.vo.${entityName}VO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
-import com.youlai.boot.core.web.PageResult;
-import com.youlai.boot.core.web.Result;
+import com.quinn.hboot.common.R;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
@@ -35,47 +34,47 @@ public class ${entityName}Controller  {
     @Operation(summary = "$!{businessName}分页列表")
     @GetMapping("/page")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:query')")
-    public PageResult<${entityName}VO> get${entityName}Page(${entityName}Query queryParams ) {
+    public R<?> get${entityName}Page(${entityName}Query queryParams ) {
         IPage<${entityName}VO> result = ${lowerFirstEntityName}Service.get${entityName}Page(queryParams);
-        return PageResult.success(result);
+        return R.ok(result);
     }
 
     @Operation(summary = "新增${businessName}")
     @PostMapping
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:add')")
-    public Result<Void> save${entityName}(@RequestBody @Valid ${entityName}Form formData ) {
+    public R<Void> save${entityName}(@RequestBody @Valid ${entityName}Form formData ) {
         boolean result = ${lowerFirstEntityName}Service.save${entityName}(formData);
-        return Result.judge(result);
+        return R.ok();
     }
 
     @Operation(summary = "获取${businessName}表单数据")
     @GetMapping("/{id}/form")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:edit')")
-    public Result<${entityName}Form> get${entityName}Form(
+    public R<${entityName}Form> get${entityName}Form(
         @Parameter(description = "$!{businessName}ID") @PathVariable Long id
     ) {
         ${entityName}Form formData = ${lowerFirstEntityName}Service.get${entityName}FormData(id);
-        return Result.success(formData);
+        return R.ok(formData);
     }
 
     @Operation(summary = "修改${businessName}")
     @PutMapping(value = "/{id}")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:edit')")
-    public Result<Void> update${entityName}(
+    public R<Void> update${entityName}(
             @Parameter(description = "$!{businessName}ID") @PathVariable Long id,
             @RequestBody @Validated ${entityName}Form formData
     ) {
         boolean result = ${lowerFirstEntityName}Service.update${entityName}(id, formData);
-        return Result.judge(result);
+        return R.ok();
     }
 
     @Operation(summary = "删除${businessName}")
     @DeleteMapping("/{ids}")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:delete')")
-    public Result<Void> delete${entityName}s(
+    public R<Void> delete${entityName}s(
         @Parameter(description = "$!{businessName}ID，多个以英文逗号(,)分割") @PathVariable String ids
     ) {
         boolean result = ${lowerFirstEntityName}Service.delete${entityName}s(ids);
-        return Result.judge(result);
+        return R.ok();
     }
 }

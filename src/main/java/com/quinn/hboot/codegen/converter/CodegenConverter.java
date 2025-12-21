@@ -17,16 +17,10 @@ import java.util.List;
 @Mapper(componentModel = "spring")
 public interface CodegenConverter {
 
-//    @Mapping(source = "genConfig.tableName", target = "tableName")
-//    @Mapping(source = "genConfig.businessName", target = "businessName")
-//    @Mapping(source = "genConfig.moduleName", target = "moduleName")
-//    @Mapping(source = "genConfig.packageName", target = "packageName")
-//    @Mapping(source = "genConfig.entityName", target = "entityName")
-//    @Mapping(source = "genConfig.author", target = "author")
-//    @Mapping(source = "genConfig.pageType", target = "pageType")
-//    @Mapping(source = "genConfig.removeTablePrefix", target = "removeTablePrefix")
-//    @Mapping(source = "fieldConfigs", target = "fieldConfigs")
-    @Mapping(source = "fieldConfigs", target = "fieldConfigs")
+    // 👇 把 genConfig 整体映射到 GenConfigForm
+    @Mapping(target = ".", source = "genConfig")
+    // 👇 单独映射字段配置列表
+    @Mapping(target = "fieldConfigs", source = "fieldConfigs")
     GenConfigForm toGenConfigForm(GenConfig genConfig, List<GenFieldConfig> fieldConfigs);
 
     List<GenConfigForm.FieldConfig> toGenFieldConfigForm(List<GenFieldConfig> fieldConfigs);

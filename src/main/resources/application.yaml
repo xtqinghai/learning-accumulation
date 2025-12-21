@@ -14,10 +14,16 @@ spring:
     import: classpath:codegen.yml
   # 数据库配置
   datasource:
-    url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8+ 驱动类
+    url: jdbc:mysql://localhost:3306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root # 你的数据库用户名
     password: 123456 # 你的数据库密码
-    driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8+ 驱动类
+    hikari:
+      maximum-pool-size: 20
+      minimum-idle: 5
+      connection-timeout: 30000
+      idle-timeout: 600000
+      max-lifetime: 1800000
 
 # MyBatis-Plus 配置
 mybatis-plus:
@@ -38,26 +44,21 @@ mybatis-plus:
     map-underscore-to-camel-case: true # 自动下划线转驼峰（默认开启）
 
 # springdoc配置： https://springdoc.org/properties.html
+# OpenAPI 配置（简化版）
 springdoc:
-  swagger-ui:
-    path: /swagger-ui.html
-    operations-sorter: alpha
-    tags-sorter: alpha
   api-docs:
     path: /v3/api-docs
-  group-configs:
-    - group: "系统管理"
-      paths-to-match: "/**"
-      packages-to-scan:
-        - com.quinn.hboot.system.controller
-        - com.quinn.hboot.codegen.controller
-  default-flat-param-object: true
-
-# knife4j 接口文档配置
-knife4j:
-  # 是否开启 Knife4j 增强功能
-  enable: true  # 设置为 true 表示开启增强功能
-  # 生产环境配置
-  production: false  # 设置为 true 表示在生产环境中不显示文档，为 false 表示显示文档（通常在开发环境中使用）
-  setting:
-    language: zh_cn
+    enabled: true
+  swagger-ui:
+    path: /swagger-ui.html
+    enabled: true
+    config-url: /v3/api-docs/swagger-config
+    url: /v3/api-docs
+    display-request-duration: true
+    operations-sorter: method
+    tags-sorter: alpha
+    default-model-expand-depth: 2
+    default-model-rendering: example
+  show-actuator: true
+  default-consumes-media-type: application/json
+  default-produces-media-type: application/json
