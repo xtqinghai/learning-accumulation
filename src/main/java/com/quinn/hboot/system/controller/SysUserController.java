@@ -1,10 +1,9 @@
 package com.quinn.hboot.system.controller;
 
-import com.baomidou.mybatisplus.core.conditions.Wrapper;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.quinn.hboot.common.R;
-import com.quinn.hboot.common.SysLog;
+import com.quinn.hboot.common.log.SysLog;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.service.SysUserService;
 import lombok.RequiredArgsConstructor;

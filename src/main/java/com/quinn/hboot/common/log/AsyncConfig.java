@@ -1,4 +1,4 @@
-package com.quinn.hboot.common;
+package com.quinn.hboot.common.log;
 
 import org.springframework.context.annotation.Configuration;
 import org.springframework.scheduling.annotation.EnableAsync;

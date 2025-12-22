@@ -1,5 +1,6 @@
 package com.quinn.hboot.system.service.impl;
 
+import cn.hutool.extra.servlet.ServletUtil;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -13,6 +14,7 @@ import com.quinn.hboot.system.model.query.LoginLogQuery;
 import com.quinn.hboot.system.model.vo.LoginLogVO;
 import com.quinn.hboot.system.converter.LoginLogConverter;
 
+import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.stream.Collectors;
@@ -98,6 +100,17 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
                 .map(Long::parseLong)
                 .toList();
         return this.removeByIds(idList);
+    }
+
+    @Override
+    public boolean record(String ip,String username, boolean success, String msg) {
+        LoginLog log = new LoginLog();
+        log.setUsername(username);
+        log.setStatus(success ? 1 : 0);
+        log.setMsg(msg);
+        log.setIp(ip);
+        log.setLoginTime(LocalDateTime.now());
+        return this.save(log);
     }
 
 }

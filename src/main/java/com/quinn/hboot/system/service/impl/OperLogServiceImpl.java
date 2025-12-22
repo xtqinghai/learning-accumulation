@@ -1,6 +1,7 @@
 package com.quinn.hboot.system.service.impl;
 
 import lombok.RequiredArgsConstructor;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
@@ -100,4 +101,10 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
         return this.removeByIds(idList);
     }
 
+    @Override
+    @Async
+    public boolean saveAsync(OperLogForm formData) {
+        OperLog entity = operLogConverter.toEntity(formData);
+        return this.save(entity);
+    }
 }

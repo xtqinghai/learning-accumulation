@@ -1,4 +1,4 @@
-package com.quinn.hboot.common;
+package com.quinn.hboot.common.log;
 
 import java.lang.annotation.ElementType;
 import java.lang.annotation.Retention;

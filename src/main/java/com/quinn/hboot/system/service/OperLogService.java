@@ -6,6 +6,7 @@ import com.quinn.hboot.system.model.query.OperLogQuery;
 import com.quinn.hboot.system.model.vo.OperLogVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import org.springframework.scheduling.annotation.Async;
 
 /**
  * 系统操作日志服务类
@@ -54,5 +55,12 @@ public interface OperLogService extends IService<OperLog> {
      * @return 是否删除成功
      */
     boolean deleteOperLogs(String ids);
+
+    /**
+     * 异步保存系统操作日志
+     *
+     * @param formData 系统操作日志
+     */
+    boolean saveAsync(OperLogForm formData);
 
 }

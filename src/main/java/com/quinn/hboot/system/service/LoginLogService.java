@@ -55,4 +55,11 @@ public interface LoginLogService extends IService<LoginLog> {
      */
     boolean deleteLoginLogs(String ids);
 
+    /**
+     * 记录系统登录日志
+     *
+     * @param  username success msg
+     * @return 是否记录成功
+     */
+    boolean record(String ip,String username, boolean success, String msg);
 }
