@@ -1,6 +1,9 @@
 package com.quinn.hboot.system.service.impl;
 
 import cn.hutool.extra.servlet.ServletUtil;
+import com.quinn.hboot.utils.HttpUtils;
+import com.quinn.hboot.utils.IPUtils;
+import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -103,12 +106,26 @@ public class LoginLogServiceImpl extends ServiceImpl<LoginLogMapper, LoginLog> i
     }
 
     @Override
-    public boolean record(String ip,String username, boolean success, String msg) {
+    public boolean record(HttpServletRequest request, String username, boolean success, String msg) {
+        String ip = IPUtils.getIpAddr(request);
+        String localtion = null;
+        if (StrUtil.isNotBlank(ip)) {
+            String region = IPUtils.getRegion(ip);
+            // 中国|0|四川省|成都市|电信 解析省和市
+            if (StrUtil.isNotBlank(region)) {
+                String[] regionArray = region.split("\\|");
+                localtion = regionArray[2]+"|"+regionArray[3];
+            }
+        }
+
         LoginLog log = new LoginLog();
         log.setUsername(username);
         log.setStatus(success ? 1 : 0);
         log.setMsg(msg);
         log.setIp(ip);
+        log.setLocation(localtion);
+        log.setBrowser(HttpUtils.getBrowserName(request) + "|" + HttpUtils.getBrowserVersion(request));
+        log.setOs(HttpUtils.getOsName(request));
         log.setLoginTime(LocalDateTime.now());
         return this.save(log);
     }

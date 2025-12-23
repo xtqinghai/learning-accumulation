@@ -6,6 +6,7 @@ import com.quinn.hboot.system.model.query.LoginLogQuery;
 import com.quinn.hboot.system.model.vo.LoginLogVO;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.service.IService;
+import jakarta.servlet.http.HttpServletRequest;
 
 /**
  * 系统登录日志服务类
@@ -61,5 +62,5 @@ public interface LoginLogService extends IService<LoginLog> {
      * @param  username success msg
      * @return 是否记录成功
      */
-    boolean record(String ip,String username, boolean success, String msg);
+    boolean record(HttpServletRequest request, String username, boolean success, String msg);
 }

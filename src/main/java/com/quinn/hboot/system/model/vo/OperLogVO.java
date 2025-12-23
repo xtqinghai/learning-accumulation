@@ -46,4 +46,6 @@ public class OperLogVO implements Serializable {
     private String errorMsg;
     @Schema(description = "操作时间")
     private LocalDateTime operTime;
+    @Schema(description = "执行时间")
+    private Long executionTime;
 }

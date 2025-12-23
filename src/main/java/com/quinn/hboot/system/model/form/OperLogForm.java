@@ -70,5 +70,8 @@ public class OperLogForm implements Serializable {
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime operTime;
 
+    @Schema(description = "执行时间")
+    private Long executionTime;
+
 
 }

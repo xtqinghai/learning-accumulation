@@ -20,6 +20,7 @@
                 AND username LIKE CONCAT('%', #{queryParams.username}, '%')
             </if>
         </where>
+        order by login_time desc
     </select>
 
 </mapper>

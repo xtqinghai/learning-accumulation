@@ -1,16 +1,18 @@
 package com.quinn.hboot.common.log;
 
+import cn.hutool.core.date.DateUtil;
+import cn.hutool.core.date.TimeInterval;
+import cn.hutool.core.util.StrUtil;
 import cn.hutool.json.JSONUtil;
-import com.quinn.hboot.common.log.SysLog;
 import com.quinn.hboot.system.model.entity.OperLog;
 import com.quinn.hboot.system.service.OperLogService;
+import com.quinn.hboot.utils.IPUtils;
 import com.quinn.hboot.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Component;
 import org.springframework.web.context.request.RequestContextHolder;
 import org.springframework.web.context.request.ServletRequestAttributes;
@@ -44,13 +46,15 @@ public class SysLogAspect {
         log.setMethod(point.getSignature().toShortString());
         log.setRequestMethod(request.getMethod());
         log.setOperUrl(request.getRequestURI());
-        log.setOperIp(request.getRemoteAddr());
+        log.setOperIp(IPUtils.getIpAddr(request));
         log.setOperTime(LocalDateTime.now());
         log.setOperParam(JSONUtil.toJsonStr(point.getArgs()));
 
         // 当前用户
         String username = SecurityUtils.getCurrentUsername();
         log.setOperName(username);
+
+        TimeInterval timer = DateUtil.timer();
 
         try {
             Object result = point.proceed();
@@ -62,6 +66,9 @@ public class SysLogAspect {
             log.setErrorMsg(e.getMessage());
             throw e;
         } finally {
+            // 执行时长
+            long executionTime = timer.interval();
+            log.setExecutionTime(executionTime);
             // 异步保存
             operLogService.save(log);
         }

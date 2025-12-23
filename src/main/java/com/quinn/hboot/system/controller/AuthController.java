@@ -1,5 +1,9 @@
 package com.quinn.hboot.system.controller;
 
+import cn.hutool.core.util.StrUtil;
+import cn.hutool.crypto.digest.DigestUtil;
+import cn.hutool.http.useragent.UserAgent;
+import cn.hutool.http.useragent.UserAgentUtil;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.system.model.dto.RegisterUserDTO;
 import com.quinn.hboot.system.model.entity.SysMenu;
@@ -8,6 +12,7 @@ import com.quinn.hboot.system.service.LoginLogService;
 import com.quinn.hboot.system.service.SysMenuService;
 import com.quinn.hboot.system.service.SysUserService;
 import com.quinn.hboot.utils.AESUtils;
+import com.quinn.hboot.utils.IPUtils;
 import com.quinn.hboot.utils.JwtUtils;
 import com.quinn.hboot.utils.MenuTreeUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -21,6 +26,7 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.Objects;
 
 /**
  * 认证控制器
@@ -53,10 +59,9 @@ public class AuthController {
      */
     @PostMapping("/auth/login")
     public R<LoginResp> login(@RequestBody LoginReq req, HttpServletRequest request) {
-        String ip = request.getRemoteAddr();
         SysUser user =  sysUserService.getByUsername(req.getUsername());
         if (user == null) {
-            loginLogService.record(ip,req.getUsername(), false, "用户不存在");
+            loginLogService.record(request,req.getUsername(), false, "用户不存在");
             return R.fail(401,"用户不存在");
         }
 
@@ -64,7 +69,7 @@ public class AuthController {
         String plainPassword = AESUtils.decrypt(req.getPassword());
 
         if (!passwordEncoder.matches(plainPassword, user.getPassword())) {
-            loginLogService.record(ip,req.getUsername(), false, "用户名或密码错误");
+            loginLogService.record(request,req.getUsername(), false, "用户名或密码错误");
             return R.fail(401,"用户名或密码错误");
         }
 
@@ -77,7 +82,7 @@ public class AuthController {
         resp.setUser(user);
         resp.setMenus(menuTree);
 
-        loginLogService.record(ip,req.getUsername(), true, "登陆成功");
+        loginLogService.record(request,req.getUsername(), true, "登陆成功");
         return R.ok(resp);
     }
 

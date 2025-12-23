@@ -34,6 +34,7 @@ public class ${entityName}Controller  {
     @Operation(summary = "$!{businessName}分页列表")
     @GetMapping("/page")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:query')")
+    @SysLog(module = "${businessName}", type = "分页列表查询")
     public R<?> get${entityName}Page(${entityName}Query queryParams ) {
         IPage<${entityName}VO> result = ${lowerFirstEntityName}Service.get${entityName}Page(queryParams);
         return R.ok(result);
@@ -42,6 +43,7 @@ public class ${entityName}Controller  {
     @Operation(summary = "新增${businessName}")
     @PostMapping
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:add')")
+    @SysLog(module = "${businessName}", type = "新增")
     public R<Void> save${entityName}(@RequestBody @Valid ${entityName}Form formData ) {
         boolean result = ${lowerFirstEntityName}Service.save${entityName}(formData);
         return R.ok();
@@ -50,6 +52,7 @@ public class ${entityName}Controller  {
     @Operation(summary = "获取${businessName}表单数据")
     @GetMapping("/{id}/form")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:edit')")
+    @SysLog(module = "${businessName}", type = "获取表单数据")
     public R<${entityName}Form> get${entityName}Form(
         @Parameter(description = "$!{businessName}ID") @PathVariable Long id
     ) {
@@ -60,6 +63,7 @@ public class ${entityName}Controller  {
     @Operation(summary = "修改${businessName}")
     @PutMapping(value = "/{id}")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:edit')")
+    @SysLog(module = "${businessName}", type = "修改")
     public R<Void> update${entityName}(
             @Parameter(description = "$!{businessName}ID") @PathVariable Long id,
             @RequestBody @Validated ${entityName}Form formData
@@ -71,6 +75,7 @@ public class ${entityName}Controller  {
     @Operation(summary = "删除${businessName}")
     @DeleteMapping("/{ids}")
     @PreAuthorize("@ss.hasPerm('${moduleName}:${kebabCaseEntityName}:delete')")
+    @SysLog(module = "${businessName}", type = "删除")
     public R<Void> delete${entityName}s(
         @Parameter(description = "$!{businessName}ID，多个以英文逗号(,)分割") @PathVariable String ids
     ) {

@@ -67,4 +67,9 @@ public class OperLog extends BaseEntity {
      * 操作时间
      */
     private LocalDateTime operTime;
+
+    /**
+     * 执行时间
+     */
+    private Long executionTime;
 }

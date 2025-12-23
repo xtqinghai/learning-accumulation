@@ -45,6 +45,8 @@
         <easyexcel.version>4.0.3</easyexcel.version>
         <xxl-job.version>2.4.1</xxl-job.version>
         <flowable.version>7.0.0</flowable.version>
+        <!-- IP 地区转换 -->
+        <ip2region.version>2.7.0</ip2region.version>
     </properties>
     <dependencies>
 
@@ -172,9 +174,17 @@
             <version>${flowable.version}</version>
         </dependency>-->
 
+        <!--切面-日志用到-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-aop</artifactId>
+        </dependency>
+
+        <!-- IP 转省市区 -->
+        <dependency>
+            <groupId>org.lionsoul</groupId>
+            <artifactId>ip2region</artifactId>
+            <version>${ip2region.version}</version>
         </dependency>
 </dependencies>
     <build>

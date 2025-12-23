@@ -16,7 +16,8 @@
                 json_result,
                 status,
                 error_msg,
-                oper_time
+                oper_time,
+                execution_time
         FROM
             sys_oper_log
         <where>
@@ -30,6 +31,7 @@
                 AND request_method = #{queryParams.requestMethod}
             </if>
         </where>
+        order by oper_time desc
     </select>
 
 </mapper>

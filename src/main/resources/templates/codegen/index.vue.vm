@@ -1,6 +1,6 @@
 <template>
   <div class="app-container">
-    <div class="search-container">
+    <el-card class="mb-2" style="margin-bottom: 6px;height: 70px;">
       <el-form ref="queryFormRef" :model="queryParams" :inline="true">
         #foreach($fieldConfig in $fieldConfigs)
           #if($fieldConfig.isShowInQuery == 1)
@@ -91,9 +91,11 @@
         <el-form-item class="search-buttons">
           <el-button type="primary" icon="search" @click="handleQuery">搜索</el-button>
           <el-button icon="refresh" @click="handleResetQuery">重置</el-button>
+          <el-button v-hasPerm="['${moduleName}:${kebabCaseEntityName}:add']" type="success" icon="plus" @click="handleOpenDialog()" >新增</el-button>
+          <el-button v-hasPerm="['${moduleName}:${kebabCaseEntityName}:delete']" type="danger" :disabled="removeIds.length === 0" icon="delete" @click="handleDelete()" >删除</el-button>
         </el-form-item>
       </el-form>
-    </div>
+    </el-card>
 
     <el-card shadow="never">
       <div class="mb-10px">
@@ -118,6 +120,7 @@
         :data="pageData"
         highlight-current-row
         border
+        height="calc(100vh - 235px)"
         @selection-change="handleSelectionChange"
       >
         <el-table-column type="selection" width="55" align="center" />
@@ -166,12 +169,16 @@
         </el-table-column>
       </el-table>
 
-      <pagination
-          v-if="total > 0"
+      <el-pagination
           v-model:total="total"
           v-model:page="queryParams.pageNum"
           v-model:limit="queryParams.pageSize"
-          @pagination="handleQuery()"
+          :size="queryParams.pageSize"
+          :disabled="disabled"
+          :background="background"
+          layout="total, sizes, prev, pager, next, jumper"
+          @size-change="(val)=>{queryParams.pageSize=val;handleQuery();}"
+          @current-change="(val)=>{queryParams.pageNum=val;handleQuery();}"
       />
     </el-card>
 
@@ -317,7 +324,7 @@ import { ref, reactive,onMounted } from 'vue'
     loading.value = true;
           ${entityName}API.getPage(queryParams)
         .then((data) => {
-          pageData.value = data.list;
+          pageData.value = data.records;
           total.value = data.total;
         })
         .finally(() => {
