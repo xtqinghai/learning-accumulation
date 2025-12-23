@@ -1,9 +1,5 @@
 package com.quinn.hboot.system.controller;
 
-import cn.hutool.core.util.StrUtil;
-import cn.hutool.crypto.digest.DigestUtil;
-import cn.hutool.http.useragent.UserAgent;
-import cn.hutool.http.useragent.UserAgentUtil;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.system.model.dto.RegisterUserDTO;
 import com.quinn.hboot.system.model.entity.SysMenu;
@@ -12,7 +8,6 @@ import com.quinn.hboot.system.service.LoginLogService;
 import com.quinn.hboot.system.service.SysMenuService;
 import com.quinn.hboot.system.service.SysUserService;
 import com.quinn.hboot.utils.AESUtils;
-import com.quinn.hboot.utils.IPUtils;
 import com.quinn.hboot.utils.JwtUtils;
 import com.quinn.hboot.utils.MenuTreeUtil;
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,7 +21,6 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 /**
  * 认证控制器

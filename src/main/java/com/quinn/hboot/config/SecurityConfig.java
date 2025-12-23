@@ -33,11 +33,13 @@ public class SecurityConfig {
                         "/api/auth/**",
                         "/api/test/**",
                         "/public/**",
+                        "/v3/api-docs",
                         "/v3/api-docs/**",
                         "/swagger-ui/**",
                         "/swagger-ui.html",
                         "/webjars/**",
-                        "/favicon.ico")
+                        "/favicon.ico",
+                        "/druid/**")
                 .permitAll()
                 .anyRequest().authenticated()
         );

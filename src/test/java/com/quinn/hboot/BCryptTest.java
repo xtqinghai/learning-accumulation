@@ -2,6 +2,12 @@ package com.quinn.hboot;
 
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 
+/**
+ * BCrypt密码加密测试
+ * 前端密码加密传输
+ * @author quinn
+ * @date 2021/06/01
+ */
 public class BCryptTest {
     public static void main(String[] args) {
         // 重新生成密码并测试
