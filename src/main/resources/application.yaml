@@ -15,7 +15,7 @@ spring:
   # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8+ 驱动类
-    url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+    url: jdbc:mysql://localhost:3306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
     username: root # 你的数据库用户名
     password: AfgaqHawW1eQAEeXhS6FFvhNXOO2MQFXLrGPWxCSznfPd8MCa+Nzs3xQGwqRsWlJ/u+6ck4vxZNmqiYSV2CGJg== # 你的数据库密码
     type: com.alibaba.druid.pool.DruidDataSource
@@ -89,3 +89,10 @@ springdoc:
   show-actuator: true
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
+
+#file storage
+file:
+  storage: local
+  local:
+    base-path: c:/upload
+    public-url: http://localhost:8080/api/file/preview

@@ -1,17 +1,17 @@
 /*
  Navicat Premium Data Transfer
 
- Source Server         : local80
+ Source Server         : 本地
  Source Server Type    : MySQL
- Source Server Version : 80042 (8.0.42)
- Source Host           : localhost:13306
+ Source Server Version : 80025 (8.0.25)
+ Source Host           : localhost:3306
  Source Schema         : h_boot
 
  Target Server Type    : MySQL
- Target Server Version : 80042 (8.0.42)
+ Target Server Version : 80025 (8.0.25)
  File Encoding         : 65001
 
- Date: 23/12/2025 18:05:32
+ Date: 26/12/2025 00:14:50
 */
 
 SET NAMES utf8mb4;
@@ -37,7 +37,7 @@ CREATE TABLE `gen_config`  (
   `is_deleted` tinyint NULL DEFAULT 0 COMMENT '是否删除',
   PRIMARY KEY (`id`) USING BTREE,
   UNIQUE INDEX `uk_tablename`(`table_name` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 17 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '代码生成基础配置表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '代码生成基础配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of gen_config
@@ -45,6 +45,7 @@ CREATE TABLE `gen_config`  (
 INSERT INTO `gen_config` VALUES (11, 'sys_dept', 'system', 'com.quinn.hboot', '系统部门', 'Dept', 'yu-qh', NULL, 'sys_', 'classic', NULL, NULL, 0);
 INSERT INTO `gen_config` VALUES (13, 'sys_login_log', 'system', 'com.quinn.hboot', '系统登录日志', 'LoginLog', 'yu-qh', 2, 'sys_', 'classic', NULL, NULL, 0);
 INSERT INTO `gen_config` VALUES (16, 'sys_oper_log', 'system', 'com.quinn.hboot', '系统操作日志', 'OperLog', 'yu-qh', 2, 'sys_', 'classic', NULL, NULL, 0);
+INSERT INTO `gen_config` VALUES (17, 'sys_file', 'system', 'com.quinn.hboot', '文件管理', 'File', 'yu-qh', 15, 'sys_', 'classic', NULL, NULL, 0);
 
 -- ----------------------------
 -- Table structure for gen_field_config
@@ -72,7 +73,7 @@ CREATE TABLE `gen_field_config`  (
   `update_time` datetime NULL DEFAULT NULL COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE,
   INDEX `config_id`(`config_id` ASC) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 176 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '代码生成字段配置表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 188 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_0900_ai_ci COMMENT = '代码生成字段配置表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of gen_field_config
@@ -113,6 +114,18 @@ INSERT INTO `gen_field_config` VALUES (172, 16, 'json_result', 'text', NULL, 'js
 INSERT INTO `gen_field_config` VALUES (173, 16, 'status', 'tinyint', NULL, 'status', 'Integer', 11, '0失败 1成功', NULL, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
 INSERT INTO `gen_field_config` VALUES (174, 16, 'error_msg', 'text', NULL, 'errorMsg', 'String', 12, '错误信息', 65535, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
 INSERT INTO `gen_field_config` VALUES (175, 16, 'oper_time', 'datetime', NULL, 'operTime', 'LocalDateTime', 13, '操作时间', NULL, 0, 1, 1, 0, 1, 9, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (176, 17, 'id', 'bigint', NULL, 'id', 'Long', 1, '', NULL, 1, 0, 1, 0, 1, 10, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (177, 17, 'file_name', 'varchar', NULL, 'fileName', 'String', 2, '原始文件名', 255, 1, 1, 1, 1, 2, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (178, 17, 'file_ext', 'varchar', NULL, 'fileExt', 'String', 3, '扩展名', 50, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (179, 17, 'content_type', 'varchar', NULL, 'contentType', 'String', 4, 'MIME类型', 100, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (180, 17, 'file_size', 'bigint', NULL, 'fileSize', 'Long', 5, '文件大小(byte)', NULL, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (181, 17, 'file_hash', 'varchar', NULL, 'fileHash', 'String', 6, '文件hash(SHA256/MD5)', 64, 1, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (182, 17, 'storage_type', 'varchar', NULL, 'storageType', 'String', 7, '存储类型', 20, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (183, 17, 'storage_path', 'varchar', NULL, 'storagePath', 'String', 8, '存储路径或对象key', 500, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (184, 17, 'url', 'varchar', NULL, 'url', 'String', 9, '访问URL', 500, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (185, 17, 'status', 'tinyint', NULL, 'status', 'Integer', 10, '状态', NULL, 0, 1, 1, 0, 1, 1, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (186, 17, 'create_time', 'datetime', NULL, 'createTime', 'LocalDateTime', 11, '创建时间', NULL, 0, 1, 1, 0, 1, 9, NULL, NULL, NULL);
+INSERT INTO `gen_field_config` VALUES (187, 17, 'update_time', 'datetime', NULL, 'updateTime', 'LocalDateTime', 12, '更新时间', NULL, 0, 1, 1, 0, 1, 9, NULL, NULL, NULL);
 
 -- ----------------------------
 -- Table structure for sys_dept
@@ -176,6 +189,31 @@ INSERT INTO `sys_dict_item` VALUES (12, 6, '男', '1', 1, 1, '2025-12-15 14:37:1
 INSERT INTO `sys_dict_item` VALUES (13, 6, '女', '0', 2, 1, '2025-12-15 14:37:15', '2025-12-15 14:37:05');
 
 -- ----------------------------
+-- Table structure for sys_file
+-- ----------------------------
+DROP TABLE IF EXISTS `sys_file`;
+CREATE TABLE `sys_file`  (
+  `id` bigint NOT NULL AUTO_INCREMENT,
+  `file_name` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '原始文件名',
+  `file_ext` varchar(50) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '扩展名',
+  `content_type` varchar(100) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'MIME类型',
+  `file_size` bigint NULL DEFAULT NULL COMMENT '文件大小(byte)',
+  `file_hash` varchar(64) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NOT NULL COMMENT '文件hash(SHA256/MD5)',
+  `storage_type` varchar(20) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT 'LOCAL / MINIO',
+  `storage_path` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '存储路径或对象key',
+  `url` varchar(500) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '访问URL',
+  `status` tinyint NULL DEFAULT 1 COMMENT '1正常 0删除',
+  `create_time` datetime NULL DEFAULT NULL COMMENT '创建时间',
+  `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '更新时间',
+  PRIMARY KEY (`id`) USING BTREE,
+  UNIQUE INDEX `uk_hash`(`file_hash` ASC) USING BTREE
+) ENGINE = InnoDB CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '文件管理' ROW_FORMAT = Dynamic;
+
+-- ----------------------------
+-- Records of sys_file
+-- ----------------------------
+
+-- ----------------------------
 -- Table structure for sys_login_log
 -- ----------------------------
 DROP TABLE IF EXISTS `sys_login_log`;
@@ -190,7 +228,7 @@ CREATE TABLE `sys_login_log`  (
   `msg` varchar(255) CHARACTER SET utf8mb4 COLLATE utf8mb4_general_ci NULL DEFAULT NULL COMMENT '提示信息',
   `login_time` datetime NULL DEFAULT NULL COMMENT '登录时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 10 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统登录日志' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 12 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统登录日志' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_login_log
@@ -204,6 +242,8 @@ INSERT INTO `sys_login_log` VALUES (6, 'admin', '192.168.137.1', '0|内网IP', '
 INSERT INTO `sys_login_log` VALUES (7, 'admin', '192.168.137.1', '0|内网IP', 'Chrome|142.0.0.0', 'Windows 10 or Windows Server 2016', 1, '登陆成功', '2025-12-23 15:15:49');
 INSERT INTO `sys_login_log` VALUES (8, 'admin', '192.168.137.1', '0|内网IP', 'Chrome|142.0.0.0', 'Windows 10 or Windows Server 2016', 1, '登陆成功', '2025-12-23 16:07:29');
 INSERT INTO `sys_login_log` VALUES (9, 'admin', '192.168.137.1', '0|内网IP', 'Chrome|142.0.0.0', 'Windows 10 or Windows Server 2016', 1, '登陆成功', '2025-12-23 17:03:43');
+INSERT INTO `sys_login_log` VALUES (10, 'admin', '192.168.0.105', '0|内网IP', 'Chrome|136.0.0.0', 'Windows 10 or Windows Server 2016', 1, '登陆成功', '2025-12-25 22:40:26');
+INSERT INTO `sys_login_log` VALUES (11, 'admin', '192.168.0.105', '0|内网IP', 'Chrome|136.0.0.0', 'Windows 10 or Windows Server 2016', 1, '登陆成功', '2025-12-25 23:47:40');
 
 -- ----------------------------
 -- Table structure for sys_menu
@@ -223,7 +263,7 @@ CREATE TABLE `sys_menu`  (
   `create_time` datetime NULL DEFAULT CURRENT_TIMESTAMP COMMENT '创建时间',
   `update_time` datetime NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP COMMENT '更新时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 15 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统菜单表' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 18 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统菜单表' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_menu
@@ -242,6 +282,8 @@ INSERT INTO `sys_menu` VALUES (11, 0, '监控管理', '/monitor', '', 0, NULL, '
 INSERT INTO `sys_menu` VALUES (12, 11, 'druid数据连接池', '/druidUrl', 'http://localhost:8080/druid', 3, NULL, '', 1, 1, '2025-12-23 15:01:17', '2025-12-23 16:41:27');
 INSERT INTO `sys_menu` VALUES (13, 11, 'swagger页面', 'swaggerUrl', 'http://localhost:8080/swagger-ui/index.html', 3, NULL, '', 2, 1, '2025-12-23 17:02:00', '2025-12-23 17:02:00');
 INSERT INTO `sys_menu` VALUES (14, 11, 'openAPI-JSON', '/openapi-json', 'http://localhost:8080/v3/api-docs', 3, NULL, '', 3, 1, '2025-12-23 17:02:42', '2025-12-23 17:02:42');
+INSERT INTO `sys_menu` VALUES (16, 15, '文件管理', '/system/file', 'system/file/index', 1, NULL, '', 0, 1, '2025-12-25 22:45:34', '2025-12-25 22:45:34');
+INSERT INTO `sys_menu` VALUES (17, 2, '文件管理', '/system/file', 'system/file/index', 1, NULL, '', 16, 1, '2025-12-25 23:56:21', '2025-12-25 23:56:21');
 
 -- ----------------------------
 -- Table structure for sys_oper_log
@@ -263,7 +305,7 @@ CREATE TABLE `sys_oper_log`  (
   `oper_time` datetime NULL DEFAULT NULL COMMENT '操作时间',
   `execution_time` bigint NULL DEFAULT NULL COMMENT '执行时间',
   PRIMARY KEY (`id`) USING BTREE
-) ENGINE = InnoDB AUTO_INCREMENT = 98 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统操作日志' ROW_FORMAT = DYNAMIC;
+) ENGINE = InnoDB AUTO_INCREMENT = 103 CHARACTER SET = utf8mb4 COLLATE = utf8mb4_general_ci COMMENT = '系统操作日志' ROW_FORMAT = DYNAMIC;
 
 -- ----------------------------
 -- Records of sys_oper_log
@@ -365,6 +407,11 @@ INSERT INTO `sys_oper_log` VALUES (94, '用户管理', '分页列表查询', 'Sy
 INSERT INTO `sys_oper_log` VALUES (95, '用户管理', '分页列表查询', 'SysUserController.page(..)', 'GET', 'admin', '192.168.137.1', '/api/sys/user/page', '[1,10,{\"username\":\"\"}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[{\"id\":1,\"username\":\"admin\",\"password\":\"$2a$10$7ARi0T918cXK4JAU0Y/IJuWuqilxcwnoJuFr.IKVLblCe5yV9JgK6\",\"nickname\":\"管理员\",\"deptId\":1,\"status\":1,\"createTime\":1765423703000,\"updateTime\":1765437386000},{\"id\":5,\"username\":\"2\",\"password\":\"2\",\"nickname\":\"2\",\"deptId\":2,\"status\":1,\"createTime\":1766396388000,\"updateTime\":1766396388000},{\"id\":6,\"username\":\"3\",\"password\":\"3\",\"nickname\":\"3\",\"deptId\":3,\"status\":1,\"createTime\":1766396554000,\"updateTime\":1766396554000}],\"total\":3,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-23 17:59:54', 24);
 INSERT INTO `sys_oper_log` VALUES (96, '用户管理', '分页列表查询', 'SysUserController.page(..)', 'GET', 'admin', '192.168.137.1', '/api/sys/user/page', '[1,10,{\"username\":\"\"}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[{\"id\":1,\"username\":\"admin\",\"password\":\"$2a$10$7ARi0T918cXK4JAU0Y/IJuWuqilxcwnoJuFr.IKVLblCe5yV9JgK6\",\"nickname\":\"管理员\",\"deptId\":1,\"status\":1,\"createTime\":1765423703000,\"updateTime\":1765437386000},{\"id\":5,\"username\":\"2\",\"password\":\"2\",\"nickname\":\"2\",\"deptId\":2,\"status\":1,\"createTime\":1766396388000,\"updateTime\":1766396388000},{\"id\":6,\"username\":\"3\",\"password\":\"3\",\"nickname\":\"3\",\"deptId\":3,\"status\":1,\"createTime\":1766396554000,\"updateTime\":1766396554000}],\"total\":3,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-23 18:00:00', 16);
 INSERT INTO `sys_oper_log` VALUES (97, '用户管理', '分页列表查询', 'SysUserController.page(..)', 'GET', 'admin', '192.168.137.1', '/api/sys/user/page', '[1,10,{\"username\":\"\"}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[{\"id\":1,\"username\":\"admin\",\"password\":\"$2a$10$7ARi0T918cXK4JAU0Y/IJuWuqilxcwnoJuFr.IKVLblCe5yV9JgK6\",\"nickname\":\"管理员\",\"deptId\":1,\"status\":1,\"createTime\":1765423703000,\"updateTime\":1765437386000},{\"id\":5,\"username\":\"2\",\"password\":\"2\",\"nickname\":\"2\",\"deptId\":2,\"status\":1,\"createTime\":1766396388000,\"updateTime\":1766396388000},{\"id\":6,\"username\":\"3\",\"password\":\"3\",\"nickname\":\"3\",\"deptId\":3,\"status\":1,\"createTime\":1766396554000,\"updateTime\":1766396554000}],\"total\":3,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-23 18:00:10', 20);
+INSERT INTO `sys_oper_log` VALUES (98, '用户管理', '分页列表查询', 'SysUserController.page(..)', 'GET', 'admin', '192.168.0.105', '/api/sys/user/page', '[1,10,{\"username\":\"\"}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[{\"id\":1,\"username\":\"admin\",\"password\":\"$2a$10$7ARi0T918cXK4JAU0Y/IJuWuqilxcwnoJuFr.IKVLblCe5yV9JgK6\",\"nickname\":\"管理员\",\"deptId\":1,\"status\":1,\"createTime\":1765423703000,\"updateTime\":1765437386000},{\"id\":5,\"username\":\"2\",\"password\":\"2\",\"nickname\":\"2\",\"deptId\":2,\"status\":1,\"createTime\":1766396388000,\"updateTime\":1766396388000},{\"id\":6,\"username\":\"3\",\"password\":\"3\",\"nickname\":\"3\",\"deptId\":3,\"status\":1,\"createTime\":1766396554000,\"updateTime\":1766396554000}],\"total\":3,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-25 23:55:13', 30);
+INSERT INTO `sys_oper_log` VALUES (99, '文件管理', '分页列表查询', 'FileController.getFilePage(..)', 'GET', 'admin', '192.168.0.105', '/api/v1/file/page', '[{\"pageNum\":1,\"pageSize\":10}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[],\"total\":0,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-25 23:57:50', 71);
+INSERT INTO `sys_oper_log` VALUES (100, '文件管理', '分页列表查询', 'FileController.getFilePage(..)', 'GET', 'admin', '192.168.0.105', '/api/v1/file/page', '[{\"pageNum\":1,\"pageSize\":10}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[],\"total\":0,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-26 00:04:18', 115);
+INSERT INTO `sys_oper_log` VALUES (101, '文件管理', '分页列表查询', 'FileController.getFilePage(..)', 'GET', 'admin', '192.168.0.105', '/api/v1/file/page', '[{\"pageNum\":1,\"pageSize\":10}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[],\"total\":0,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-26 00:06:17', 16);
+INSERT INTO `sys_oper_log` VALUES (102, '文件管理', '分页列表查询', 'FileController.getFilePage(..)', 'GET', 'admin', '192.168.0.105', '/api/v1/file/page', '[{\"pageNum\":1,\"pageSize\":10}]', '{\"code\":200,\"message\":\"success\",\"data\":{\"records\":[],\"total\":0,\"size\":10,\"current\":1}}', 1, NULL, '2025-12-26 00:12:58', 97);
 
 -- ----------------------------
 -- Table structure for sys_role
@@ -414,6 +461,7 @@ INSERT INTO `sys_role_menu` VALUES (1, 11);
 INSERT INTO `sys_role_menu` VALUES (1, 12);
 INSERT INTO `sys_role_menu` VALUES (1, 13);
 INSERT INTO `sys_role_menu` VALUES (1, 14);
+INSERT INTO `sys_role_menu` VALUES (1, 17);
 
 -- ----------------------------
 -- Table structure for sys_user
