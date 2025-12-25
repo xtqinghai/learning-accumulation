@@ -1,22 +1,29 @@
 # h_boot
 
 #### Description
-{**When you're done, you can delete the content in this README and update the file with details for others getting started with your repository**}
+
+**1、h-boot**
+Description: h-boot is a rapid development platform for backend programs of SpringBoot+Vue separated frontend and backend. It is based on SpringBoot 3.5+, MyBatisPlus 3.5+, MySQL 8+, and JDK 17+
+
+**2、h-boot**
+Learning Purpose: h-boot is mainly used for learning purposes
+
+**3、h-boot**
+Open Source Reference: h-boot references and utilizes many excellent open-source projects and components (when referring to this project, you need to pay attention to the original author's license, please be sure to comply with and obtain the original author's license when using)
 
 #### Software Architecture
 Software architecture description
 
 #### Installation
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1.  JDK Requirement: Use JDK 17 or higher
+2.  Build Tool: Import with IDEA Maven
 
 #### Instructions
 
-1.  xxxx
-2.  xxxx
-3.  xxxx
+1.  Database Setup: The sql directory contains database scripts, requiring database creation and import
+2.  Configuration: Modify database configuration in the application.yml file
+3.  Run Project: Run the main entry program HBootApplication.java in IDEA
 
 #### Contribution
 
@@ -24,13 +31,3 @@ Software architecture description
 2.  Create Feat_xxx branch
 3.  Commit your code
 4.  Create Pull Request
-
-
-#### Gitee Feature
-
-1.  You can use Readme\_XXX.md to support different languages, such as Readme\_en.md, Readme\_zh.md
-2.  Gitee blog [blog.gitee.com](https://blog.gitee.com)
-3.  Explore open source project [https://gitee.com/explore](https://gitee.com/explore)
-4.  The most valuable open source project [GVP](https://gitee.com/gvp)
-5.  The manual of Gitee [https://gitee.com/help](https://gitee.com/help)
-6.  The most popular members  [https://gitee.com/gitee-stars/](https://gitee.com/gitee-stars/)
