@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.quinn.hboot.system.mapper.CmsContentMapper">
+
+    <!-- 获取系统内容管理分页列表 -->
+    <select id="getCmsContentPage" resultType="com.quinn.hboot.system.model.vo.CmsContentVO">
+        SELECT
+                id,
+                type,
+                title,
+                summary,
+                content,
+                status,
+                sort,
+                publish_time,
+                creator,
+                create_time,
+                update_time
+        FROM
+            sys_cms_content
+        <where>
+            <if test="queryParams.type != null and queryParams.type != ''">
+                AND type = #{queryParams.type}
+            </if>
+            <if test="queryParams.title != null and queryParams.title != ''">
+                AND title LIKE CONCAT('%', #{queryParams.title}, '%')
+            </if>
+            <if test="queryParams.summary != null and queryParams.summary != ''">
+                AND summary LIKE CONCAT('%', #{queryParams.summary}, '%')
+            </if>
+        </where>
+    </select>
+
+</mapper>

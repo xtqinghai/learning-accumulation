@@ -17,10 +17,10 @@ import java.time.LocalDateTime;
 public class SysDictItemController {
     private final SysDictItemService itemService;
 
-    @GetMapping("/list/{dictId}")
-    public R listByDictId(@PathVariable Long dictId) {
+    @GetMapping("/list/{dictType}")
+    public R listByDictType(@PathVariable String dictType) {
         return R.ok(itemService.lambdaQuery()
-                .eq(SysDictItem::getDictId, dictId)
+                .eq(SysDictItem::getDictType, dictType)
                 .list());
     }
 

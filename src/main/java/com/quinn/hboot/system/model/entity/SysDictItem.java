@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 public class SysDictItem {
     @TableId(type = IdType.AUTO)
     private Long id;
-    private Long dictId;
+    private String dictType;
     private String label;
     private String value;
     private Integer sort;

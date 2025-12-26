@@ -14,7 +14,7 @@
                       />
                     #elseif($fieldConfig.formType == "SELECT")
                         #if($fieldConfig.dictType && $fieldConfig.dictType.trim() != "")
-                          <Dict v-model="queryParams.$fieldConfig.fieldName" code="$fieldConfig.dictType" />
+                          <Dict v-model="queryParams.$fieldConfig.fieldName" code="$fieldConfig.dictType" style="width: 180px;"/>
                         #else
                           <el-select v-model="queryParams.$fieldConfig.fieldName" placeholder="请选择$fieldConfig.fieldComment">
                             <el-option :key="1" :value="1" label="选项一"/>
@@ -98,22 +98,6 @@
     </el-card>
 
     <el-card shadow="never">
-      <div class="mb-10px">
-        <el-button
-            v-hasPerm="['${moduleName}:${kebabCaseEntityName}:add']"
-            type="success"
-            icon="plus"
-            @click="handleOpenDialog()"
-        >新增</el-button>
-        <el-button
-            v-hasPerm="['${moduleName}:${kebabCaseEntityName}:delete']"
-            type="danger"
-            :disabled="removeIds.length === 0"
-            icon="delete"
-            @click="handleDelete()"
-        >删除</el-button>
-      </div>
-
       <el-table
         ref="dataTableRef"
         v-loading="loading"
@@ -275,7 +259,9 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive,onMounted } from 'vue'
+import { ref, reactive,onMounted } from 'vue';
+import Dict from '@/components/dict/DictSelect.vue';
+import DictLabel from '@/components/dict/DictLabel.vue';
 
   defineOptions({
     name: "${entityName}",
@@ -372,7 +358,7 @@ import { ref, reactive,onMounted } from 'vue'
               })
               .finally(() => (loading.value = false));
         } else {
-                ${entityName}API.add(formData)
+                ${entityName}API.create(formData)
               .then(() => {
                 ElMessage.success("新增成功");
                 handleCloseDialog();

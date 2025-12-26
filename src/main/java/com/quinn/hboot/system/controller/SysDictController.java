@@ -10,6 +10,8 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 /**
  * @author yu-qh
@@ -39,7 +41,7 @@ public class SysDictController {
     @DeleteMapping("/{id}")
     public R delete(@PathVariable Long id) {
         itemService.removeByIds(itemService.lambdaQuery()
-                .eq(SysDictItem::getDictId, id)
+                .eq(SysDictItem::getDictType, dictService.getById(id).getDictType())
                 .list());
         return R.ok(dictService.removeById(id));
     }

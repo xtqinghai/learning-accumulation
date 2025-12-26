@@ -18,6 +18,8 @@ public enum JavaTypeEnum {
     CHAR("char", "String", "string"),
     BLOB("blob", "byte[]", "Uint8Array"),
     TEXT("text", "String", "string"),
+    // 核心补充：添加 longtext 类型映射（和 text 保持一致）
+    LONGTEXT("longtext", "String", "string"),
     JSON("json", "String", "any"),
     INTEGER("int", "Integer", "number"),
     TINYINT("tinyint", "Integer", "number"),

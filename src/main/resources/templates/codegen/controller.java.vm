@@ -1,5 +1,6 @@
 package ${packageName}.${moduleName}.${subpackageName};
 
+import com.quinn.hboot.common.log.SysLog;
 import ${packageName}.${moduleName}.service.${entityName}Service;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
