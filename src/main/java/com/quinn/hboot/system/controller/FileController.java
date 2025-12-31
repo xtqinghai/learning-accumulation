@@ -91,32 +91,34 @@ public class FileController  {
         return R.ok();
     }
 
+    /**
+     * 文件上传
+     */
 
     @PostMapping("/upload")
-    public SysFile upload(@RequestParam MultipartFile file) throws Exception {
-        return fileService.upload(file);
+    public R upload(@RequestPart MultipartFile file) throws Exception {
+        return R.ok(fileService.upload(file));
     }
 
+    /**
+     * 文件下载
+     */
     @GetMapping("/download/{id}")
     public void download(@PathVariable Long id, HttpServletResponse response) throws Exception {
         fileService.download(id, response);
     }
 
+    /**
+     * 文件预览
+     */
     @GetMapping("/preview/{id}")
     public void preview(@PathVariable Long id, HttpServletResponse response) throws Exception {
         fileService.preview(id, response);
     }
 
-    @DeleteMapping("/{id}")
-    public void delete(@PathVariable Long id) {
-        fileService.delete(id);
-    }
-
-    @DeleteMapping("/batch")
-    public void deleteBatch(@RequestBody List<Long> ids) {
-        fileService.deleteBatch(ids);
-    }
-
+    /**
+     * 文件校验
+     */
     @GetMapping("/check")
     public R check(@RequestParam String hash) {
         SysFile sysFile = fileService.getOne(
@@ -128,15 +130,20 @@ public class FileController  {
         return R.ok(sysFile != null);
     }
 
+    /**
+     * 文件分片上传
+     */
     @PostMapping("/upload/chunk")
     public void uploadChunk(@RequestPart MultipartFile file,
                             FileChunkUploadDTO dto) throws Exception {
         fileService.uploadChunk(file, dto);
     }
 
+    /**
+     * 文件分片合并
+     */
     @PostMapping("/upload/merge")
     public R<SysFile> merge(@RequestBody FileChunkUploadDTO dto) throws Exception {
         return R.ok(fileService.mergeChunks(dto));
     }
-
 }

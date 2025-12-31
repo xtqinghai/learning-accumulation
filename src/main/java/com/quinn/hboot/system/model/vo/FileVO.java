@@ -21,7 +21,8 @@ public class FileVO implements Serializable {
 
     @Serial
     private static final long serialVersionUID = 1L;
-
+    @Schema(description = "id")
+    private String id;
     @Schema(description = "原始文件名")
     private String fileName;
     @Schema(description = "扩展名")

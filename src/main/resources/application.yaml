@@ -1,5 +1,9 @@
 server:
   port: 8080
+  multipart:
+    enabled: true
+    max-file-size: 100MB
+    max-request-size: 100MB
 
 logging:
   level:
@@ -12,6 +16,11 @@ spring:
     name: hboot-system
   config:
     import: classpath:codegen.yml
+  servlet:
+    multipart:
+      enabled: true
+      max-file-size: 100MB
+      max-request-size: 100MB
   # 数据库配置
   datasource:
     driver-class-name: com.mysql.cj.jdbc.Driver # MySQL 8+ 驱动类
@@ -95,4 +104,4 @@ file:
   storage: local
   local:
     base-path: c:/upload
-    public-url: http://localhost:8080/api/file/preview
+    public-url: http://localhost:8080/api/v1/file/preview
