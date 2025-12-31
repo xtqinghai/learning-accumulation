@@ -11,7 +11,7 @@ import lombok.Data;
  */
 @TableName(value = "gen_config")
 @Data
-public class GenConfig {//extends BaseEntity
+public class GenConfig {
     /**
      * 主键
      */

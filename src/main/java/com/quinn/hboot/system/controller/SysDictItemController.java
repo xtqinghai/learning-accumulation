@@ -4,6 +4,7 @@ import com.quinn.hboot.common.R;
 import com.quinn.hboot.system.model.entity.SysDictItem;
 import com.quinn.hboot.system.service.SysDictItemService;
 import lombok.RequiredArgsConstructor;
+import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 
 import java.time.LocalDateTime;

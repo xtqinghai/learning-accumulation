@@ -48,7 +48,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
         );
         return pageVO;
     }
-    
+
     /**
      * 获取系统内容管理表单数据
      *
@@ -60,7 +60,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
         CmsContent entity = this.getById(id);
         return cmsContentConverter.toForm(entity);
     }
-    
+
     /**
      * 新增系统内容管理
      *
@@ -72,9 +72,12 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
         CmsContent entity = cmsContentConverter.toEntity(formData);
         entity.setCreator(SecurityUtils.getCurrentUsername());
         entity.setCreateTime(LocalDateTime.now());
+        if(entity.getPublishTime()==null && entity.getStatus()==1){
+            entity.setPublishTime(LocalDateTime.now());
+        }
         return this.save(entity);
     }
-    
+
     /**
      * 更新系统内容管理
      *
@@ -85,9 +88,10 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     @Override
     public boolean updateCmsContent(Long id,CmsContentForm formData) {
         CmsContent entity = cmsContentConverter.toEntity(formData);
+        entity.setId(id);
         return this.updateById(entity);
     }
-    
+
     /**
      * 删除系统内容管理
      *

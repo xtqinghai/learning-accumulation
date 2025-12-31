@@ -15,7 +15,7 @@ import com.quinn.hboot.common.base.BaseEntity;
 @Getter
 @Setter
 @TableName("sys_login_log")
-public class LoginLog extends BaseEntity {
+public class LoginLog {
 
     private static final long serialVersionUID = 1L;
 

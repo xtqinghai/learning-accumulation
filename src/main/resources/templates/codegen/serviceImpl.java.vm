@@ -46,7 +46,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         );
         return pageVO;
     }
-    
+
     /**
      * 获取${businessName}表单数据
      *
@@ -58,7 +58,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         ${entityName} entity = this.getById(id);
         return ${lowerFirstEntityName}Converter.toForm(entity);
     }
-    
+
     /**
      * 新增${businessName}
      *
@@ -70,7 +70,7 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
         ${entityName} entity = ${lowerFirstEntityName}Converter.toEntity(formData);
         return this.save(entity);
     }
-    
+
     /**
      * 更新${businessName}
      *
@@ -81,9 +81,10 @@ public class ${entityName}ServiceImpl extends ServiceImpl<${entityName}Mapper, $
     @Override
     public boolean update${entityName}(Long id,${entityName}Form formData) {
         ${entityName} entity = ${lowerFirstEntityName}Converter.toEntity(formData);
+        entity.setId(id);
         return this.updateById(entity);
     }
-    
+
     /**
      * 删除${businessName}
      *

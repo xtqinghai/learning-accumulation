@@ -17,7 +17,7 @@ import lombok.Setter;
 @TableName(value = "gen_field_config")
 @Getter
 @Setter
-public class GenFieldConfig {//extends BaseEntity
+public class GenFieldConfig {
 
     private Long id;
     /**

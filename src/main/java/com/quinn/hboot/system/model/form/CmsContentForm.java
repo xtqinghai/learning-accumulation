@@ -23,6 +23,8 @@ public class CmsContentForm implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    private Long id;
+
     @Schema(description = "内容类型")
     @NotBlank(message = "内容类型不能为空")
     @Size(max=50, message="内容类型长度不能超过50个字符")
@@ -39,7 +41,7 @@ public class CmsContentForm implements Serializable {
     private String summary;
 
     @Schema(description = "正文（HTML）")
-    @Size(max=-1, message="正文（HTML）长度不能超过-1个字符")
+    //@Size(max=-1, message="正文（HTML）长度不能超过-1个字符")
     private String content;
 
     @Schema(description = "0-草稿 1-发布")
@@ -55,16 +57,16 @@ public class CmsContentForm implements Serializable {
     private LocalDateTime publishTime;
 
     @Schema(description = "创建人")
-    @NotNull(message = "创建人不能为空")
+//    @NotNull(message = "创建人不能为空")
     private String creator;
 
     @Schema(description = "创建时间")
-    @NotNull(message = "创建时间不能为空")
+//    @NotNull(message = "创建时间不能为空")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;
 
     @Schema(description = "更新时间")
-    @NotNull(message = "更新时间不能为空")
+//    @NotNull(message = "更新时间不能为空")
     @JsonFormat(timezone = "GMT+8", pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime updateTime;
 
