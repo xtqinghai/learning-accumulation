@@ -1,5 +1,6 @@
 package com.quinn.hboot.system.model.entity;
 
+import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.Getter;
 import lombok.Setter;
 import java.time.LocalDateTime;
@@ -55,4 +56,7 @@ public class CmsContent extends BaseEntity {
      * 发布时间
      */
     private LocalDateTime createTime;
+
+    @Schema(description = "置顶")
+    private  Integer top;
 }

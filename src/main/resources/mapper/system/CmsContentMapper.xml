@@ -10,6 +10,7 @@
                 title,
                 summary,
                 content,
+                top,
                 status,
                 sort,
                 publish_time,
@@ -28,7 +29,11 @@
             <if test="queryParams.summary != null and queryParams.summary != ''">
                 AND summary LIKE CONCAT('%', #{queryParams.summary}, '%')
             </if>
+            <if test="queryParams.top != null">
+                AND top = #{queryParams.top}
+            </if>
         </where>
+        order by top desc, type, sort, title
     </select>
 
 </mapper>

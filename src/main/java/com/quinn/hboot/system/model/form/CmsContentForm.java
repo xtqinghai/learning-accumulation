@@ -71,4 +71,6 @@ public class CmsContentForm implements Serializable {
     private LocalDateTime updateTime;
 
 
+    @Schema(description = "置顶")
+    private  Integer top;
 }

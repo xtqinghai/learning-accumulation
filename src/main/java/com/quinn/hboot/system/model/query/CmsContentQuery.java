@@ -24,4 +24,6 @@ public class CmsContentQuery extends BasePageQuery {
     private String title;
     @Schema(description = "摘要")
     private String summary;
+    @Schema(description = "置顶")
+    private  Integer top;
 }

@@ -44,4 +44,6 @@ public class CmsContentVO implements Serializable {
     private LocalDateTime createTime;
     @Schema(description = "更新时间")
     private LocalDateTime updateTime;
+    @Schema(description = "置顶")
+    private  Integer top;
 }
