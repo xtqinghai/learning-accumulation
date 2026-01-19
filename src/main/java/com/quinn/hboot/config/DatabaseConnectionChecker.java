@@ -1,3 +1,4 @@
+/*
 package com.quinn.hboot.config;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -10,10 +11,10 @@ import java.sql.Connection;
 
 @Component
 public class DatabaseConnectionChecker {
-    
+
     @Autowired
     private DataSource dataSource;
-    
+
     @EventListener(ApplicationReadyEvent.class)
     public void checkConnection() {
         try {
@@ -26,3 +27,4 @@ public class DatabaseConnectionChecker {
         }
     }
 }
+*/

@@ -1,19 +1,25 @@
 package com.quinn.hboot.system.controller;
 
+import cn.hutool.json.JSONUtil;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.system.model.dto.RegisterUserDTO;
 import com.quinn.hboot.system.model.entity.SysMenu;
 import com.quinn.hboot.system.model.entity.SysUser;
+import com.quinn.hboot.system.model.vo.LoginUser;
 import com.quinn.hboot.system.service.LoginLogService;
 import com.quinn.hboot.system.service.SysMenuService;
 import com.quinn.hboot.system.service.SysUserService;
 import com.quinn.hboot.utils.AESUtils;
 import com.quinn.hboot.utils.JwtUtils;
 import com.quinn.hboot.utils.MenuTreeUtil;
+import com.quinn.hboot.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.Data;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.redis.core.StringRedisTemplate;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.authentication.AuthenticationManager;
+import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
 import org.springframework.validation.annotation.Validated;
@@ -21,6 +27,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Map;
+import java.util.UUID;
+import java.util.concurrent.TimeUnit;
 
 /**
  * 认证控制器
@@ -31,19 +39,17 @@ import java.util.Map;
 @RequestMapping("/api")
 public class AuthController {
 
-//    @Autowired
-//    private AuthService userService;
-
     @Autowired
     private SysUserService sysUserService;
 
     @Autowired
     private SysMenuService menuService;
 
-    private BCryptPasswordEncoder passwordEncoder = new BCryptPasswordEncoder();
+    @Autowired
+    private AuthenticationManager authenticationManager;
 
     @Autowired
-    private LoginLogService loginLogService;
+    private StringRedisTemplate redisTemplate;
 
     /**
      * 登录
@@ -52,60 +58,70 @@ public class AuthController {
      * @return
      */
     @PostMapping("/auth/login")
-    public R<LoginResp> login(@RequestBody LoginReq req, HttpServletRequest request) {
-        SysUser user =  sysUserService.getByUsername(req.getUsername());
-        if (user == null) {
-            loginLogService.record(request,req.getUsername(), false, "用户不存在");
-            return R.fail(401,"用户不存在");
-        }
+    public R<LoginResp> login(@RequestBody LoginReq req,
+                              HttpServletRequest request) {
 
-        // 1. 解密前端传递的加密密码
         String plainPassword = AESUtils.decrypt(req.getPassword());
 
-        if (!passwordEncoder.matches(plainPassword, user.getPassword())) {
-            loginLogService.record(request,req.getUsername(), false, "用户名或密码错误");
-            return R.fail(401,"用户名或密码错误");
-        }
+        Authentication authentication =
+                authenticationManager.authenticate(
+                        new UsernamePasswordAuthenticationToken(
+                                req.getUsername(),
+                                plainPassword
+                        )
+                );
 
-        String token = JwtUtils.createToken(user.getUsername());
-        List<SysMenu> menus = menuService.findMenusByUserId(user.getId());
-        List<SysMenu> menuTree = MenuTreeUtil.buildTree(menus);
+        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
+
+        // 1️⃣ 生成 tokenId
+        String tokenId = UUID.randomUUID().toString();
+        String token = JwtUtils.createToken(tokenId);
+
+        // 2️⃣ LoginUser 存 Redis
+        redisTemplate.opsForValue().set(
+                "login:" + tokenId,
+                JSONUtil.toJsonStr(loginUser),
+                30,
+                TimeUnit.MINUTES
+        );
+
+        // 3️⃣ 菜单
+        List<SysMenu> menus = menuService.findMenusByUserId(loginUser.getUserId());
 
         LoginResp resp = new LoginResp();
         resp.setToken(token);
-        resp.setUser(user);
-        resp.setMenus(menuTree);
+        resp.setUser(loginUser);   // ✔️ 直接返回 LoginUser
+        resp.setMenus(MenuTreeUtil.buildTree(menus));
 
-        loginLogService.record(request,req.getUsername(), true, "登陆成功");
         return R.ok(resp);
     }
 
     /**
      * 获取当前用户信息
      *
-     * @param authentication
      * @return
      */
     @GetMapping("/auth/me")
-    public R<?> me(Authentication authentication) {
-        if (authentication == null) {
-            return R.fail(401,"未登录");
+    public R<?> me() {
+        LoginUser user = SecurityUtils.getLoginUser();
+        if (user == null) {
+            return R.fail(401, "未登录");
         }
-        SysUser user = (SysUser) authentication.getPrincipal();
-        List<String> perms = sysUserService.getUserPermissions(user.getId());
-        return R.ok(Map.of("user", user, "permissions", perms));
+        return R.ok(user);
     }
 
     /**
      * 获取当前用户菜单
-     *
-     * @param authentication
      * @return
      */
     @GetMapping("/auth/menus")
-    public R<List<SysMenu>> menus(Authentication authentication) {
-        SysUser user = (SysUser) authentication.getPrincipal();
-        List<SysMenu> menus = menuService.findMenusByUserId(user.getId());
+    public R<List<SysMenu>> menus() {
+        LoginUser user = SecurityUtils.getLoginUser();
+        if (user == null) {
+            return R.fail(401, "未登录");
+        }
+
+        List<SysMenu> menus = menuService.findMenusByUserId(user.getUserId());
         return R.ok(MenuTreeUtil.buildTree(menus));
     }
 
@@ -131,6 +147,6 @@ class LoginReq {
 @Data
 class LoginResp {
     private String token;
-    private SysUser user;
+    private LoginUser user;
     private List<SysMenu> menus;
 }

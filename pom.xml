@@ -44,9 +44,12 @@
         <!-- 未来扩展 -->
         <easyexcel.version>4.0.3</easyexcel.version>
         <xxl-job.version>2.4.1</xxl-job.version>
-        <flowable.version>7.0.0</flowable.version>
         <!-- IP 地区转换 -->
         <ip2region.version>2.7.0</ip2region.version>
+        <!--工作流flowable-->
+        <flowable.version>7.2.0</flowable.version>
+        <!-- 工作流 -->
+        <warm-flow>1.8.4</warm-flow>
     </properties>
     <dependencies>
 
@@ -87,6 +90,17 @@
             <groupId>com.mysql</groupId>
             <artifactId>mysql-connector-j</artifactId>
             <scope>runtime</scope>
+        </dependency>
+
+        <!-- 核心依赖：SpringBoot整合Redis，引入这个就够了，无需其他Redis相关依赖 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-data-redis</artifactId>
+        </dependency>
+        <!-- 可选但强烈推荐：redis连接池，SpringBoot3.x默认用lettuce客户端，必须加这个包才生效连接池 -->
+        <dependency>
+            <groupId>org.apache.commons</groupId>
+            <artifactId>commons-pool2</artifactId>
         </dependency>
 
         <!-- JWT -->
@@ -174,13 +188,6 @@
             <version>${xxl-job.version}</version>
         </dependency>
 
-        <!-- 工作流（Flowable，轻量） -->
-        <!--<dependency>
-            <groupId>org.flowable</groupId>
-            <artifactId>flowable-spring-boot-starter-process</artifactId>
-            <version>${flowable.version}</version>
-        </dependency>-->
-
         <!--切面-日志用到-->
         <dependency>
             <groupId>org.springframework.boot</groupId>
@@ -194,13 +201,81 @@
             <version>${ip2region.version}</version>
         </dependency>
 
-        <!-- pom.xml 引入 Druid 依赖 -->
+        <!-- SpringBoot3.x 专属Druid连接池 完整依赖，包含所有工具类+核心包，无冲突 -->
         <dependency>
             <groupId>com.alibaba</groupId>
             <artifactId>druid-spring-boot-3-starter</artifactId>
             <version>1.2.23</version>
         </dependency>
-</dependencies>
+
+        <!-- 动态多数据源 无需任何排除，完美兼容，无冲突 -->
+        <dependency>
+            <groupId>com.baomidou</groupId>
+            <artifactId>dynamic-datasource-spring-boot-starter</artifactId>
+            <version>4.3.1</version>
+        </dependency>
+        <!--javaCPP 组件 提供java调用c++原始文件的映射-->
+        <!--<dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacpp</artifactId>
+            <version>1.5.12</version>
+        </dependency>-->
+        <!--javaCPP-presets组件 提供java调用c++的基础类库-->
+        <!--javacv 提供调用OpenCV等的直接方式-->
+        <dependency>
+            <groupId>org.bytedeco</groupId>
+            <artifactId>javacv-platform</artifactId>
+            <version>1.5.9</version>
+        </dependency>
+
+        <!-- Flowable 工作流相关 -->
+        <!--<dependency>
+            <groupId>org.flowable</groupId>
+            <artifactId>flowable-spring-boot-starter-process</artifactId>
+            <version>${flowable.version}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.flowable</groupId>
+            <artifactId>flowable-spring-boot-starter-actuator</artifactId>
+            <version>${flowable.version}</version>
+        </dependency>-->
+        <!--turbo工作流-->
+        <dependency>
+            <groupId>com.didiglobal.turbo</groupId>
+            <artifactId>engine</artifactId>
+            <version>1.3.0</version>
+        </dependency>
+        <!--<dependency>
+            <groupId>com.didiglobal.turbo</groupId>
+            <artifactId>parallel-plugin</artifactId>
+            <version>1.1.1</version>
+        </dependency>-->
+        <!--guava-->
+        <dependency>
+            <groupId>com.google.guava</groupId>
+            <artifactId>guava</artifactId>
+            <version>33.2.1-android</version>
+        </dependency>
+
+        <!--warm-flow-->
+        <dependency>
+            <groupId>org.dromara.warm</groupId>
+            <artifactId>warm-flow-mybatis-plus-sb3-starter</artifactId>
+            <version>${warm-flow}</version>
+        </dependency>
+        <dependency>
+            <groupId>org.dromara.warm</groupId>
+            <artifactId>warm-flow-plugin-ui-sb-web</artifactId>
+            <version>${warm-flow}</version>
+        </dependency>
+    </dependencies>
+    <!-- 如果中央仓库下载慢，可以添加阿里云仓库 -->
+    <repositories>
+        <repository>
+            <id>aliyun</id>
+            <url>https://maven.aliyun.com/repository/public</url>
+        </repository>
+    </repositories>
     <build>
         <plugins>
             <plugin>

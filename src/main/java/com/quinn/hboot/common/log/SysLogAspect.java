@@ -51,7 +51,7 @@ public class SysLogAspect {
         log.setOperParam(JSONUtil.toJsonStr(point.getArgs()));
 
         // 当前用户
-        String username = SecurityUtils.getCurrentUsername();
+        String username = SecurityUtils.getUsername();
         log.setOperName(username);
 
         TimeInterval timer = DateUtil.timer();

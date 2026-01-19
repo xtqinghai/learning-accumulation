@@ -7,7 +7,7 @@ import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 
-@SpringBootTest
+//@SpringBootTest
 @Slf4j
 class DruidTests {
 
@@ -35,4 +35,6 @@ class DruidTests {
 //                2025-12-23T14:45:52.560+08:00  INFO 9644 --- [hboot-system] [           main] com.quinn.hboot.DruidTests               : password: AfgaqHawW1eQAEeXhS6FFvhNXOO2MQFXLrGPWxCSznfPd8MCa+Nzs3xQGwqRsWlJ/u+6ck4vxZNmqiYSV2CGJg==
     }
 
+    @Test
+    void testDecodePassword() {}
 }

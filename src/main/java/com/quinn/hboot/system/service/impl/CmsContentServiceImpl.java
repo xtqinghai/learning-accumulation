@@ -70,7 +70,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     @Override
     public boolean saveCmsContent(CmsContentForm formData) {
         CmsContent entity = cmsContentConverter.toEntity(formData);
-        entity.setCreator(SecurityUtils.getCurrentUsername());
+        entity.setCreator(SecurityUtils.getUsername());
         entity.setCreateTime(LocalDateTime.now());
         if(entity.getPublishTime()==null && entity.getStatus()==1){
             entity.setPublishTime(LocalDateTime.now());
