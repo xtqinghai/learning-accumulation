@@ -20,6 +20,7 @@ public class SysDict {
     private Integer status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private String remark;
 }
 
 

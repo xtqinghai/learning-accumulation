@@ -27,14 +27,14 @@ public class JacksonGlobalConfig implements WebMvcConfigurer {
 
                 // ✅ ========== 新增核心代码开始 ==========
                 // 创建序列化规则模块
-                SimpleModule simpleModule = new SimpleModule();
+                ////SimpleModule simpleModule = new SimpleModule();
                 // 1. 处理 基本类型 long + 包装类型 Long 转 String
-                simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
-                simpleModule.addSerializer(Long.TYPE, ToStringSerializer.instance);
+                ////simpleModule.addSerializer(Long.class, ToStringSerializer.instance);
+                ////simpleModule.addSerializer(Long.TYPE, ToStringSerializer.instance);
                 // 2. 【锦上添花】处理 BigInteger 类型（如果项目有用到），同样转String避免精度丢失
-                simpleModule.addSerializer(BigInteger.class, ToStringSerializer.instance);
+                ////simpleModule.addSerializer(BigInteger.class, ToStringSerializer.instance);
                 // 将序列化规则注册到ObjectMapper
-                objectMapper.registerModule(simpleModule);
+                ////objectMapper.registerModule(simpleModule);
                 // ✅ ========== 新增核心代码结束 ==========
             }
         }

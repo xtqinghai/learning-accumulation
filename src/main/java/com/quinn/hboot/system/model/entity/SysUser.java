@@ -1,9 +1,11 @@
 package com.quinn.hboot.system.model.entity;
 
 import com.baomidou.mybatisplus.annotation.IdType;
+import com.baomidou.mybatisplus.annotation.TableField;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
+import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDateTime;
 
@@ -21,8 +23,22 @@ public class SysUser {
     private String password;
     private String nickname;
     private Long deptId;
+    private Long roleId;
+    private Long postId;
     private Integer status;
+    private String email;
+    private String mobile;
 
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+
+    @Transient
+    @TableField(exist = false)
+    private String deptName;
+    @Transient
+    @TableField(exist = false)
+    private String roleName;
+    @Transient
+    @TableField(exist = false)
+    private String postName;
 }

@@ -1,0 +1,102 @@
+package com.quinn.hboot.workflow.controller;
+
+//import cn.dev33.satoken.annotation.SaCheckPermission;
+import com.quinn.hboot.common.R;
+import com.quinn.hboot.workflow.common.ConditionalOnEnable;
+import com.quinn.hboot.workflow.domain.PageQuery;
+import com.quinn.hboot.workflow.domain.bo.FlowSpelBo;
+import com.quinn.hboot.workflow.domain.vo.FlowSpelVo;
+import com.quinn.hboot.workflow.service.IFlwSpelService;
+import jakarta.validation.constraints.NotEmpty;
+import jakarta.validation.constraints.NotNull;
+import lombok.RequiredArgsConstructor;
+//import org.dromara.common.core.domain.R;
+//import org.dromara.common.core.validate.AddGroup;
+//import org.dromara.common.core.validate.EditGroup;
+//import org.dromara.common.idempotent.annotation.RepeatSubmit;
+//import org.dromara.common.log.annotation.Log;
+//import org.dromara.common.log.enums.BusinessType;
+//import org.dromara.common.mybatis.core.page.PageQuery;
+//import org.dromara.common.mybatis.core.page.TableDataInfo;
+//import org.dromara.common.web.core.BaseController;
+//import org.dromara.workflow.common.ConditionalOnEnable;
+//import org.dromara.workflow.domain.bo.FlowSpelBo;
+//import org.dromara.workflow.domain.vo.FlowSpelVo;
+//import org.dromara.workflow.service.IFlwSpelService;
+import org.springframework.validation.annotation.Validated;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+/**
+ * 流程spel表达式定义
+ *
+ * @author Michelle.Chung
+ * @date 2025-07-04
+ */
+@ConditionalOnEnable
+@Validated
+@RequiredArgsConstructor
+@RestController
+@RequestMapping("/workflow/spel")
+public class FlwSpelController {////extends BaseController {
+
+    private final IFlwSpelService flwSpelService;
+
+    /**
+     * 查询流程spel表达式定义列表
+     */
+    //@SaCheckPermission("workflow:spel:list")
+    @GetMapping("/list")
+    public R list(FlowSpelBo bo, PageQuery pageQuery) {
+        return R.ok(flwSpelService.queryPageList(bo, pageQuery));
+    }
+
+    /**
+     * 获取流程spel表达式定义详细信息
+     *
+     * @param id 主键
+     */
+    //@SaCheckPermission("workflow:spel:query")
+    @GetMapping("/{id}")
+    public R<FlowSpelVo> getInfo(@NotNull(message = "主键不能为空") @PathVariable Long id) {
+        return R.ok(flwSpelService.queryById(id));
+    }
+
+    /**
+     * 新增流程spel表达式定义
+     */
+    //@SaCheckPermission("workflow:spel:add")
+    //@Log(title = "流程spel表达式定义", businessType = BusinessType.INSERT)
+    //@RepeatSubmit()
+    @PostMapping()
+    public R<Void> add(@RequestBody FlowSpelBo bo) {
+        flwSpelService.insertByBo(bo);
+        return R.ok();
+    }
+
+    /**
+     * 修改流程spel表达式定义
+     */
+    //@SaCheckPermission("workflow:spel:edit")
+    //@Log(title = "流程spel表达式定义", businessType = BusinessType.UPDATE)
+    //@RepeatSubmit()
+    @PutMapping()
+    public R<Void> edit(@RequestBody FlowSpelBo bo) {
+        flwSpelService.updateByBo(bo);
+        return R.ok();
+    }
+
+    /**
+     * 删除流程spel表达式定义
+     *
+     * @param ids 主键串
+     */
+    //@SaCheckPermission("workflow:spel:remove")
+    //@Log(title = "流程spel表达式定义", businessType = BusinessType.DELETE)
+    @DeleteMapping("/{ids}")
+    public R<Void> remove(@NotEmpty(message = "主键不能为空") @PathVariable Long[] ids) {
+        flwSpelService.deleteWithValidByIds(List.of(ids), true);
+        return R.ok();
+    }
+}

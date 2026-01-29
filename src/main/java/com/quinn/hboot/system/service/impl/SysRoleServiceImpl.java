@@ -1,5 +1,6 @@
 package com.quinn.hboot.system.service.impl;
 
+import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
 import com.quinn.hboot.system.mapper.SysRoleMapper;
@@ -13,6 +14,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 /**
@@ -67,6 +69,17 @@ public class SysRoleServiceImpl extends ServiceImpl<SysRoleMapper, SysRole>
 
         // 5. 返回最终结果
         return allSuccess;
+    }
+
+    @Override
+    public List<SysRole> selectRoleList(LambdaQueryWrapper<SysRole> queryWrapper) {
+        return baseMapper.selectList(queryWrapper);
+    }
+
+    @Override
+    public Map<Long, String> selectRoleNamesByIds(List<Long> longIds) {
+        List<SysRole> list = this.baseMapper.selectByIds(longIds);
+        return list.stream().collect(Collectors.toMap(SysRole::getId, SysRole::getName));
     }
 }
 

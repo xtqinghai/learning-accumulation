@@ -32,6 +32,11 @@
 3.  提交代码
 4.  新建 Pull Request
 
+#### warm-flow参考
+https://gitee.com/dromara/RuoYi-Vue-Plus
+
+
+
 阶段一（现在 – 6 个月）
 
 目标：AI + 现有系统融合
@@ -79,3 +84,7 @@ AI Agent 编排
 多团队协作架构
 
 技术选型能力
+
+
+# RBAC权限 ER图
+![mermaid-diagram.png](mermaid-diagram.png)

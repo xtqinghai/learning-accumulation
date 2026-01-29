@@ -22,4 +22,5 @@ public class SysDictItem {
     private Integer status;
     private LocalDateTime createTime;
     private LocalDateTime updateTime;
+    private String isDefault;
 }

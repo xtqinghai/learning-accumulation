@@ -31,7 +31,7 @@ public class SysUserController {
         if (sysUser.getStatus() != null) {
             queryWrapper.eq(SysUser::getStatus, sysUser.getStatus()); // 状态精确查询
         }
-        return R.ok(userService.page(new Page<>(pageNum, pageSize),queryWrapper));
+        return R.ok(userService.pageAll(new Page<>(pageNum, pageSize),sysUser));
     }
 
     @GetMapping("/{id}")
@@ -42,13 +42,13 @@ public class SysUserController {
     @PostMapping
     @SysLog(module = "用户管理", type = "新增")
     public R add(@RequestBody SysUser entity) {
-        return R.ok(userService.save(entity));
+        return R.ok(userService.saveUserRolePost(entity));
     }
 
     @PutMapping
     @SysLog(module = "用户管理", type = "修改")
     public R update(@RequestBody SysUser entity) {
-        return R.ok(userService.updateById(entity));
+        return R.ok(userService.updateAllById(entity));
     }
 
     @DeleteMapping("/{id}")

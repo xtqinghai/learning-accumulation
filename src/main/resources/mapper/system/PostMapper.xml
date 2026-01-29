@@ -1,0 +1,35 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.quinn.hboot.system.mapper.SysPostMapper">
+
+    <!-- 获取岗位信息分页列表 -->
+    <select id="getPostPage" resultType="com.quinn.hboot.system.model.vo.PostVO">
+        SELECT
+        t.id,
+        t.dept_id,
+        d.name deptName,
+        t.post_code,
+        t.post_category,
+        t.post_name,
+        t.post_sort,
+        t.status,
+        t.create_dept,
+        t.create_by,
+        t.create_time,
+        t.update_by,
+        t.update_time,
+        t.remark
+        FROM
+        sys_post t
+        left join sys_dept d on t.dept_id = d.id
+        <where>
+            <if test="queryParams.postName != null and queryParams.postName != ''">
+                AND post_name LIKE CONCAT('%', #{queryParams.postName}, '%')
+            </if>
+            <if test="queryParams.deptId != null and queryParams.deptId != ''">
+                AND dept_id = #{queryParams.deptId}
+            </if>
+        </where>
+    </select>
+
+</mapper>
