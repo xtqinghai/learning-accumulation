@@ -38,7 +38,7 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/workflow/category")
+@RequestMapping("/api/workflow/category")
 public class FlwCategoryController {////extends BaseController {
 
     private final IFlwCategoryService flwCategoryService;

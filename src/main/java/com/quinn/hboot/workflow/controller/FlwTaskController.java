@@ -41,7 +41,7 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/workflow/task")
+@RequestMapping("/api/workflow/task")
 public class FlwTaskController {////extends BaseController {
 
     private final IFlwTaskService flwTaskService;

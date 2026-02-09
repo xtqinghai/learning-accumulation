@@ -43,7 +43,7 @@ import java.util.Map;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/workflow/instance")
+@RequestMapping("/api/workflow/instance")
 public class FlwInstanceController{//// extends BaseController {
 
     private final InsService insService;

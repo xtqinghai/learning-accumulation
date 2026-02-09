@@ -38,7 +38,7 @@ import java.util.List;
 @Validated
 @RequiredArgsConstructor
 @RestController
-@RequestMapping("/workflow/spel")
+@RequestMapping("/api/workflow/spel")
 public class FlwSpelController {////extends BaseController {
 
     private final IFlwSpelService flwSpelService;
