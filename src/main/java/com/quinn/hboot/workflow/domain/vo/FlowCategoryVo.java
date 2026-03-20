@@ -25,7 +25,7 @@ import java.util.Date;
  */
 @Data
 @ExcelIgnoreUnannotated
-//@AutoMapper(target = FlowCategory.class, reverse = true)
+@AutoMapper(target = FlowCategory.class)
 public class FlowCategoryVo implements Serializable {
 
     @Serial
