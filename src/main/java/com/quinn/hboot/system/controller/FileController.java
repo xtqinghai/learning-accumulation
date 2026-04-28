@@ -23,6 +23,7 @@ import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
 import org.springframework.web.multipart.MultipartFile;
 
+import java.util.Arrays;
 import java.util.List;
 
 /**
@@ -46,6 +47,19 @@ public class FileController  {
     public R<?> getFilePage(FileQuery queryParams ) {
         IPage<FileVO> result = fileService.getFilePage(queryParams);
         return R.ok(result);
+    }
+
+    
+    @Operation(summary = "根据ID批量获取文件")
+    @GetMapping("/listByIds/{ids}")
+    public R<List<SysFile>> listByIds(
+        @Parameter(description = "文件ID，多个用英文逗号分隔") @PathVariable String ids
+    ) {
+        List<Long> idList = Arrays.stream(ids.split(","))
+            .filter(id -> id != null && !id.isBlank())
+            .map(Long::parseLong)
+            .toList();
+        return R.ok(fileService.listByIds(idList));
     }
 
     @Operation(summary = "新增文件管理")

@@ -56,7 +56,7 @@ public class FlwTaskController {////extends BaseController {
     @PostMapping("/startWorkFlow")
     public R<StartProcessReturnDTO> startWorkFlow(@RequestBody StartProcessBo startProcessBo) {
         StartProcessReturnDTO startProcessReturn = flwTaskService.startWorkFlow(startProcessBo);
-        return R.ok();
+        return R.ok(startProcessReturn);
     }
 
     /**

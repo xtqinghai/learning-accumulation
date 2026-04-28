@@ -292,6 +292,20 @@
             <artifactId>warm-flow-plugin-ui-sb-web</artifactId>
             <version>${warm-flow}</version>
         </dependency>
+
+        <!-- EXIF 解析 -->
+        <dependency>
+            <groupId>com.drewnoakes</groupId>
+            <artifactId>metadata-extractor</artifactId>
+            <version>2.18.0</version>
+        </dependency>
+
+        <!-- 缩略图 -->
+        <dependency>
+            <groupId>net.coobird</groupId>
+            <artifactId>thumbnailator</artifactId>
+            <version>0.4.20</version>
+        </dependency>
     </dependencies>
     <!-- 如果中央仓库下载慢，可以添加阿里云仓库 -->
     <repositories>
