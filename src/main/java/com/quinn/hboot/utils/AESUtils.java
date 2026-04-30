@@ -1,27 +1,36 @@
 package com.quinn.hboot.utils;
 
-/**
-* @program: h-boot
-* @ClassName AESUtils
-* @description: 说明：AES加密解密工具类（ECB模式，和前端crypto-js对齐）
-* @author: yuqh
-* @create: 2025-12-12 22:04
-* @Version 1.0
-**/
 import javax.crypto.Cipher;
 import javax.crypto.spec.SecretKeySpec;
 import java.nio.charset.StandardCharsets;
 import java.util.Base64;
 
-public class AESUtils {
-    // 前后端一致的密钥（16位），生产环境建议配置在nacos/yml中
-    private static final String AES_KEY = "438704315@qq.com";
-    private static final String ALGORITHM = "AES";
-    // 算法/模式/填充（必须和前端一致）
-    private static final String CIPHER_MODE = "AES/ECB/PKCS5Padding";
+/**
+ * AES 解密工具。
+ * <p>
+ * 当前主要用于兼容前端登录密码的 AES/ECB/PKCS5Padding 加密方式。
+ * 后续若接入更完善的认证网关或密钥管理，应优先迁移配置方式，
+ * 避免把密钥长期固定在代码中。
+ */
+public final class AESUtils {
 
     /**
-     * AES解密（前端加密后的字符串 → 明文密码）
+     * 当前前后端约定的 AES 密钥。
+     * 生产环境建议改为配置中心或环境变量注入。
+     */
+    private static final String AES_KEY = "438704315@qq.com";
+
+    private static final String ALGORITHM = "AES";
+    private static final String CIPHER_MODE = "AES/ECB/PKCS5Padding";
+
+    private AESUtils() {
+    }
+
+    /**
+     * 解密前端提交的登录密码。
+     *
+     * @param encryptedPwd AES 加密后的 Base64 字符串
+     * @return 明文密码
      */
     public static String decrypt(String encryptedPwd) {
         try {
@@ -33,8 +42,8 @@ public class AESUtils {
             // 3. Base64解码 → AES解密 → 明文
             byte[] decryptBytes = cipher.doFinal(Base64.getDecoder().decode(encryptedPwd));
             return new String(decryptBytes, StandardCharsets.UTF_8);
-        } catch (Exception e) {
-            throw new RuntimeException("密码解密失败", e);
+        } catch (Exception ex) {
+            throw new RuntimeException("密码解密失败", ex);
         }
     }
 }

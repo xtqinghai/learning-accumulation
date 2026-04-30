@@ -1176,7 +1176,6 @@ INSERT INTO `sys_menu` VALUES (27, 20, '我发起的', '/myDocument', 'workflow/
 INSERT INTO `sys_menu` VALUES (28, 19, '流程分类', '/flow-category', 'workflow/category/index', 1, NULL, 'setting', 0, 1, '2026-01-23 15:09:50', '2026-01-23 15:02:08');
 INSERT INTO `sys_menu` VALUES (29, 19, '流程表达式', '/spel', 'workflow/spel/index', 1, NULL, 'setting', 1, 1, '2026-01-23 15:10:33', '2026-01-23 15:02:08');
 INSERT INTO `sys_menu` VALUES (30, 19, '流程定义', '/processDefinition', 'workflow/processDefinition/index', 1, NULL, 'setting', 2, 1, '2026-01-23 15:11:43', '2026-01-23 15:11:48');
-INSERT INTO `sys_menu` VALUES (31, 19, '流程设计', '/design/index', 'workflow/processDefinition/design', 1, NULL, 'setting', 4, 1, '2026-01-23 15:12:58', '2026-01-23 15:02:08');
 INSERT INTO `sys_menu` VALUES (32, 19, '请假申请', '/leaveEdit/index', 'workflow/leave/leaveEdit', 1, NULL, 'setting', 5, 1, '2026-01-23 15:13:32', '2026-01-23 15:02:08');
 INSERT INTO `sys_menu` VALUES (33, 2, '岗位管理', '/sysPost', 'system/post/index', 1, NULL, 'setting', 2, 1, '2026-01-28 17:09:34', '2025-12-20 10:12:13');
 

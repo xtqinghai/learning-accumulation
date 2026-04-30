@@ -3,9 +3,11 @@ package com.quinn.hboot.workflow.controller;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.workflow.common.ConditionalOnEnable;
 import com.quinn.hboot.workflow.domain.PageQuery;
+import com.quinn.hboot.workflow.domain.vo.FlowDefinitionVo;
 import com.quinn.hboot.workflow.service.IFlwDefinitionService;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.dromara.warm.flow.core.entity.Definition;
 import org.dromara.warm.flow.core.service.DefService;
 import org.dromara.warm.flow.orm.entity.FlowDefinition;
@@ -42,7 +44,7 @@ public class FlwDefinitionController {////extends BaseController {
      * @param pageQuery      分页
      */
     @GetMapping("/list")
-    public R list(FlowDefinition flowDefinition, PageQuery pageQuery) {
+    public R<Page<FlowDefinitionVo>> list(FlowDefinition flowDefinition, PageQuery pageQuery) {
         return R.ok(flwDefinitionService.queryList(flowDefinition, pageQuery));
     }
 
@@ -53,7 +55,7 @@ public class FlwDefinitionController {////extends BaseController {
      * @param pageQuery      分页
      */
     @GetMapping("/unPublishList")
-    public R unPublishList(FlowDefinition flowDefinition, PageQuery pageQuery) {
+    public R<Page<FlowDefinitionVo>> unPublishList(FlowDefinition flowDefinition, PageQuery pageQuery) {
         return R.ok(flwDefinitionService.unPublishList(flowDefinition, pageQuery));
     }
 

@@ -26,7 +26,7 @@ spring:
   datasource:
     dynamic:
       strict: false
-      public-key: '438704315@qq.com'
+      public-key: "438704315@qq.com"
       primary: hboot
       datasource:
         hboot:
@@ -175,15 +175,20 @@ warm-flow:
 #    ## 已办理
 #    - 157,255,0
 
-#  # 填充器，内部有默认实现，如果不满足实际业务，可通过此配置自定义实现
-#  data-fill-handler-path: com.ruoyi.system.handle.CustomDataFillHandler
-#  # 全局租户处理器，有多租户需要，可以配置自定义实现
-#  tenant_handler_path: com.ruoyi.system.handle.CustomTenantHandler
-#  # 是否开启逻辑删除（orm框架本身不支持逻辑删除，可通过这种方式开启，比如jpa）
-#  logic_delete: true
-#  # 逻辑删除字段值（开启后默认为2）
-#  logic_delete_value: 2
-#  # 逻辑未删除字段（开启后默认为0）
-#  logic_not_delete_value: 0
-#  # 当使用JPA时指定JpaPersistenceProvider
-#  jpa_persistence_provider: org.springframework.orm.jpa.vendor.SpringHibernateJpaPersistenceProvider
+app:
+  auth:
+    # JWT 令牌签名密钥，生产环境建议放到安全配置中心。
+    jwt-secret: "yuqinghai-hboot-438704315@qq.com"
+    # JWT 本身的有效期，单位：分钟。这里保持 24 小时。
+    jwt-expire-minutes: 1440
+    # Redis 登录会话有效期，单位：分钟。
+    # 每次携带有效 token 访问时都会自动续期，减少活跃用户被动退出。
+    session-expire-minutes: 30
+    # 登录会话缓存 key 前缀。
+    login-session-prefix: "login:"
+    # 登录失败次数缓存 key 前缀。
+    login-fail-prefix: "login:fail:"
+    # 最大连续失败次数。
+    max-retry-count: 5
+    # 达到失败阈值后的锁定时长，单位：分钟。
+    retry-lock-minutes: 10

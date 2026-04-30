@@ -49,7 +49,7 @@
         <!--工作流flowable-->
         <flowable.version>7.2.0</flowable.version>
         <!-- 工作流 -->
-        <warm-flow>1.8.4</warm-flow>
+        <warm-flow>1.8.5</warm-flow>
     </properties>
     <dependencies>
 

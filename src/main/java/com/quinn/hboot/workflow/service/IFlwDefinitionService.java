@@ -1,7 +1,8 @@
 package com.quinn.hboot.workflow.service;
 
-import com.quinn.hboot.common.R;
+import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.quinn.hboot.workflow.domain.PageQuery;
+import com.quinn.hboot.workflow.domain.vo.FlowDefinitionVo;
 import jakarta.servlet.http.HttpServletResponse;
 import org.dromara.warm.flow.orm.entity.FlowDefinition;
 import org.springframework.web.multipart.MultipartFile;
@@ -23,7 +24,7 @@ public interface IFlwDefinitionService {
      * @param pageQuery      分页
      * @return 返回分页列表
      */
-    R queryList(FlowDefinition flowDefinition, PageQuery pageQuery);
+    Page<FlowDefinitionVo> queryList(FlowDefinition flowDefinition, PageQuery pageQuery);
 
     /**
      * 查询未发布的流程定义列表
@@ -32,7 +33,7 @@ public interface IFlwDefinitionService {
      * @param pageQuery      分页
      * @return 返回分页列表
      */
-    R unPublishList(FlowDefinition flowDefinition, PageQuery pageQuery);
+    Page<FlowDefinitionVo> unPublishList(FlowDefinition flowDefinition, PageQuery pageQuery);
 
     /**
      * 发布流程定义

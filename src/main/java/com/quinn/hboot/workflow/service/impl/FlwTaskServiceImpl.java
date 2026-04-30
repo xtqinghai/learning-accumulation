@@ -12,6 +12,7 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.quinn.hboot.common.R;
+import com.quinn.hboot.common.exception.BusinessException;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.service.SysUserService;
 import com.quinn.hboot.utils.*;
@@ -19,6 +20,7 @@ import com.quinn.hboot.workflow.common.ConditionalOnEnable;
 import com.quinn.hboot.workflow.common.constant.FlowConstant;
 import com.quinn.hboot.workflow.common.enums.BusinessStatusEnum;
 import com.quinn.hboot.workflow.common.enums.TaskAssigneeType;
+import com.quinn.hboot.workflow.common.enums.TaskOperationEnum;
 import com.quinn.hboot.workflow.common.enums.TaskStatusEnum;
 import com.quinn.hboot.workflow.domain.FlowInstanceBizExt;
 import com.quinn.hboot.workflow.domain.PageQuery;
@@ -132,7 +134,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     public StartProcessReturnDTO startWorkFlow(StartProcessBo startProcessBo) {
         String businessId = startProcessBo.getBusinessId();
         if (StringUtils.isBlank(businessId)) {
-            throw new RuntimeException("启动工作流时必须包含业务ID");
+            throw new BusinessException("启动工作流时必须包含业务ID");
         }
 
         // 启动流程实例（提交申请）
@@ -153,6 +155,9 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
             // 已存在流程
             BusinessStatusEnum.checkStartStatus(flowInstance.getFlowStatus());
             List<Task> taskList = taskService.list(new FlowTask().setInstanceId(flowInstance.getId()));
+            if (CollUtil.isEmpty(taskList)) {
+                throw new BusinessException("流程实例缺少待办任务，请检查流程定义配置");
+            }
             taskService.mergeVariable(flowInstance, variables);
             insService.updateById(flowInstance);
             StartProcessReturnDTO dto = new StartProcessReturnDTO();
@@ -166,7 +171,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         // 将流程定义内的扩展参数设置到变量中
         Definition definition = FlowEngine.defService().getPublishByFlowCode(startProcessBo.getFlowCode());
         if (ObjectUtil.isNull(definition)) {
-            throw new RuntimeException("流程【" + startProcessBo.getFlowCode() + "】未发布，请先在流程设计器中发布流程定义");
+            throw new BusinessException("流程【" + startProcessBo.getFlowCode() + "】未发布，请先在流程定义中发布流程");
         }
         Dict dict = JsonUtils.parseMap(definition.getExt());
         boolean autoPass = !ObjectUtil.isNull(dict) && dict.getBool(FlowConstant.AUTO_PASS);
@@ -182,8 +187,11 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         this.buildFlowInstanceBizExt(instance, bizExt);
         // 申请人执行流程
         List<Task> taskList = taskService.list(new FlowTask().setInstanceId(instance.getId()));
+        if (CollUtil.isEmpty(taskList)) {
+            throw new BusinessException("流程启动失败，未生成待办任务");
+        }
         if (taskList.size() > 1) {
-            throw new RuntimeException("请检查流程第一个环节是否为申请人！");
+            throw new BusinessException("请检查流程第一个环节是否为申请人节点");
         }
         StartProcessReturnDTO dto = new StartProcessReturnDTO();
         dto.setProcessInstanceId(instance.getId());
@@ -242,9 +250,12 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
 
         FlowTask flowTask = flowTaskMapper.selectById(taskId);
         if (ObjectUtil.isNull(flowTask)) {
-            throw new RuntimeException("流程任务不存在或任务已审批！");
+            throw new BusinessException("流程任务不存在或任务已审批");
         }
         Instance ins = insService.getById(flowTask.getInstanceId());
+        if (ObjectUtil.isNull(ins)) {
+            throw new BusinessException("流程实例不存在");
+        }
         // 检查流程状态是否为草稿、已撤销或已退回状态，若是则执行流程提交监听
         if (BusinessStatusEnum.isDraftOrCancelOrBack(ins.getFlowStatus())) {
             variables.put(FlowConstant.SUBMIT, true);
@@ -266,7 +277,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
             .flowStatus(BusinessStatusEnum.WAITING.getStatus())
             .hisStatus(TaskStatusEnum.PASS.getStatus())
             .hisTaskExt(completeTaskBo.getFileId());
-        Boolean autoPass = Convert.toBool(variables.getOrDefault(AUTO_PASS, false));
+        Boolean autoPass = Convert.toBool(ins.getVariableMap().getOrDefault(AUTO_PASS, false));
         skipTask(taskId, flowParams, flowTask.getInstanceId(), autoPass);
         return true;
     }
@@ -505,9 +516,12 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         String message = bo.getMessage();
         FlowTask task = flowTaskMapper.selectById(taskId);
         if (ObjectUtil.isNull(task)) {
-            throw new RuntimeException("任务不存在！");
+            throw new BusinessException("任务不存在");
         }
         Instance inst = insService.getById(task.getInstanceId());
+        if (ObjectUtil.isNull(inst)) {
+            throw new BusinessException("流程实例不存在");
+        }
         BusinessStatusEnum.checkBackStatus(inst.getFlowStatus());
         Long definitionId = task.getDefinitionId();
         String applyNodeCode = flwCommonService.applyNodeCode(definitionId);
@@ -539,6 +553,9 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     @Override
     public List<Node> getBackTaskNode(Long taskId, String nowNodeCode) {
         FlowTask task = flowTaskMapper.selectById(taskId);
+        if (ObjectUtil.isNull(task)) {
+            throw new BusinessException("任务不存在");
+        }
         List<Node> nodeCodes = nodeService.getByNodeCodes(Collections.singletonList(nowNodeCode), task.getDefinitionId());
         if (!CollUtil.isNotEmpty(nodeCodes)) {
             return nodeCodes;
@@ -624,6 +641,12 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         FlowTaskVo flowTaskVo = BeanUtil.toBean(task, FlowTaskVo.class);
         Instance instance = insService.getById(task.getInstanceId());
         Definition definition = defService.getById(task.getDefinitionId());
+        if (ObjectUtil.isNull(instance)) {
+            throw new BusinessException("流程实例不存在");
+        }
+        if (ObjectUtil.isNull(definition)) {
+            throw new BusinessException("流程定义不存在");
+        }
         flowTaskVo.setFlowStatus(instance.getFlowStatus());
         flowTaskVo.setVersion(definition.getVersion());
         flowTaskVo.setFlowCode(definition.getFlowCode());
@@ -666,11 +689,23 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         Long taskId = bo.getTaskId();
         Map<String, Object> variables = bo.getVariables();
         Task task = taskService.getById(taskId);
+        if (ObjectUtil.isNull(task)) {
+            throw new BusinessException("任务不存在");
+        }
         Instance instance = insService.getById(task.getInstanceId());
+        if (ObjectUtil.isNull(instance)) {
+            throw new BusinessException("流程实例不存在");
+        }
         Definition definition = defService.getById(task.getDefinitionId());
+        if (ObjectUtil.isNull(definition)) {
+            throw new BusinessException("流程定义不存在");
+        }
         Map<String, Object> mergeVariable = MapUtil.mergeAll(instance.getVariableMap(), variables);
         // 获取下一节点列表
         List<Node> nextNodeList = nodeService.getNextNodeList(task.getDefinitionId(), task.getNodeCode(), null, SkipType.PASS.getKey(), mergeVariable);
+        if (CollUtil.isEmpty(nextNodeList)) {
+            return new ArrayList<>();
+        }
         List<FlowNode> nextFlowNodes = BeanUtil.copyToList(nextNodeList, FlowNode.class);
         // 只获取中间节点
         nextFlowNodes = StreamUtils.filter(nextFlowNodes, node -> NodeType.BETWEEN.getKey().equals(node.getNodeType()));
@@ -745,67 +780,94 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean taskOperation(TaskOperationBo bo, String taskOperation) {
+        TaskOperationEnum operationEnum = TaskOperationEnum.getByCode(taskOperation);
+        if (ObjectUtil.isNull(operationEnum)) {
+            log.error("Invalid operation type:{} ", taskOperation);
+            throw new BusinessException("不支持的任务操作类型: " + taskOperation);
+        }
+
         FlowParams flowParams = FlowParams.build().message(bo.getMessage());
-        //是否超级管理员
-        if (SecurityUtils.getUsername().equals("admin")) {
+        // 管理员执行时忽略部分限制，便于流程运维处理
+        if (StringUtils.equals(SecurityUtils.getUsername(), "admin")) {
             flowParams.ignore(true);
         }
 
-        // 根据操作类型构建 FlowParams
-        switch (taskOperation) {
+        switch (operationEnum) {
             case DELEGATE_TASK, TRANSFER_TASK -> {
-//                ValidatorUtils.validate(bo, AddGroup.class);
+                if (StringUtils.isBlank(bo.getUserId())) {
+                    throw new BusinessException("目标用户不能为空");
+                }
                 flowParams.addHandlers(Collections.singletonList(bo.getUserId()));
             }
             case ADD_SIGNATURE -> {
-//                ValidatorUtils.validate(bo, EditGroup.class);
+                if (CollUtil.isEmpty(bo.getUserIds())) {
+                    throw new BusinessException("加签用户不能为空");
+                }
                 flowParams.addHandlers(bo.getUserIds());
             }
             case REDUCTION_SIGNATURE -> {
-//                ValidatorUtils.validate(bo, EditGroup.class);
+                if (CollUtil.isEmpty(bo.getUserIds())) {
+                    throw new BusinessException("减签用户不能为空");
+                }
                 flowParams.reductionHandlers(bo.getUserIds());
-            }
-            default -> {
-                log.error("Invalid operation type:{} ", taskOperation);
-                throw new RuntimeException("Invalid operation type " + taskOperation);
             }
         }
 
         Long taskId = bo.getTaskId();
         Task task = taskService.getById(taskId);
+        if (ObjectUtil.isNull(task)) {
+            throw new BusinessException("任务不存在");
+        }
         FlowNode flowNode = getByNodeCode(task.getNodeCode(), task.getDefinitionId());
-        if (ADD_SIGNATURE.equals(taskOperation) || REDUCTION_SIGNATURE.equals(taskOperation)) {
+        if (ObjectUtil.isNull(flowNode)) {
+            throw new BusinessException("流程节点不存在");
+        }
+        if (operationEnum == TaskOperationEnum.ADD_SIGNATURE || operationEnum == TaskOperationEnum.REDUCTION_SIGNATURE) {
             if (CooperateType.isOrSign(flowNode.getNodeRatio())) {
-                throw new RuntimeException(task.getNodeName() + "不是会签或票签节点！");
+                throw new BusinessException(task.getNodeName() + "不是会签或票签节点");
             }
         }
-        // 设置任务状态并执行对应的任务操作
-        switch (taskOperation) {
-            //委派任务
+
+        boolean result;
+        switch (operationEnum) {
             case DELEGATE_TASK -> {
                 flowParams.hisStatus(TaskStatusEnum.DEPUTE.getStatus());
-                return taskService.depute(taskId, flowParams);
+                result = taskService.depute(taskId, flowParams);
             }
-            //转办任务
             case TRANSFER_TASK -> {
                 flowParams.hisStatus(TaskStatusEnum.TRANSFER.getStatus());
-                return taskService.transfer(taskId, flowParams);
+                result = taskService.transfer(taskId, flowParams);
             }
-            //加签，增加办理人
             case ADD_SIGNATURE -> {
                 flowParams.hisStatus(TaskStatusEnum.SIGN.getStatus());
-                return taskService.addSignature(taskId, flowParams);
+                result = taskService.addSignature(taskId, flowParams);
             }
-            //减签，减少办理人
             case REDUCTION_SIGNATURE -> {
                 flowParams.hisStatus(TaskStatusEnum.SIGN_OFF.getStatus());
-                return taskService.reductionSignature(taskId, flowParams);
+                result = taskService.reductionSignature(taskId, flowParams);
             }
-            default -> {
-                log.error("Invalid operation type:{} ", taskOperation);
-                throw new RuntimeException("Invalid operation type " + taskOperation);
+            default -> throw new BusinessException("不支持的任务操作类型: " + taskOperation);
+        }
+
+        if (result && CollUtil.isNotEmpty(bo.getMessageType())) {
+            List<Long> userIdList = new ArrayList<>();
+            if (StringUtils.isNotBlank(bo.getUserId())) {
+                userIdList.add(Convert.toLong(bo.getUserId()));
+            }
+            if (CollUtil.isNotEmpty(bo.getUserIds())) {
+                userIdList.addAll(StreamUtils.toList(bo.getUserIds(), Convert::toLong));
+            }
+            userIdList = userIdList.stream().filter(Objects::nonNull).distinct().toList();
+            if (CollUtil.isNotEmpty(userIdList)) {
+                flwCommonService.sendMessage(
+                    bo.getMessageType(),
+                    StringUtils.defaultIfBlank(bo.getMessage(), "单据“" + operationEnum.getDesc() + "”通知"),
+                    "单据“" + operationEnum.getDesc() + "”提醒",
+                    userService.listByIds(userIdList)
+                );
             }
         }
+        return result;
     }
 
     /**
@@ -850,7 +912,10 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         }
         List<SysUser> sysUserList = new ArrayList<>();
         userList.forEach(e -> {
-            sysUserList.add(userService.getById(e.getProcessedBy()));
+            SysUser sysUser = userService.getById(e.getProcessedBy());
+            if (ObjectUtil.isNotNull(sysUser)) {
+                sysUserList.add(sysUser);
+            }
         });
         return sysUserList;
     }

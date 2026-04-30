@@ -1,30 +1,29 @@
 package com.quinn.hboot.utils;
 
-import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.model.vo.LoginUser;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.stereotype.Component;
 
 import java.util.Collections;
 import java.util.Set;
 
 /**
- * @author yu-qh
+ * 安全上下文工具类。
+ * <p>
+ * 统一封装当前登录用户的读取逻辑，避免业务代码直接操作
+ * {@link SecurityContextHolder}。
  */
-@Component
-public class SecurityUtils {
+public final class SecurityUtils {
+
+    private SecurityUtils() {
+    }
 
     private static LoginUser getPrincipal() {
-        Authentication authentication =
-                SecurityContextHolder.getContext().getAuthentication();
-
-        if (authentication == null ||
-                !(authentication.getPrincipal() instanceof LoginUser)) {
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        if (authentication == null || !(authentication.getPrincipal() instanceof LoginUser loginUser)) {
             return null;
         }
-        return (LoginUser) authentication.getPrincipal();
+        return loginUser;
     }
 
     public static Long getUserId() {

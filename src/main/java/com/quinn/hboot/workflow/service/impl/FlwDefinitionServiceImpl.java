@@ -7,7 +7,6 @@ import cn.hutool.core.io.IoUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
-import com.quinn.hboot.common.R;
 import com.quinn.hboot.utils.JsonUtils;
 import com.quinn.hboot.utils.StringUtils;
 import com.quinn.hboot.workflow.common.ConditionalOnEnable;
@@ -55,7 +54,9 @@ import java.io.IOException;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 //import static org.dromara.common.core.constant.TenantConstants.DEFAULT_TENANT_ID;
 
@@ -86,12 +87,11 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
      * @return 返回分页列表
      */
     @Override
-    public R queryList(FlowDefinition flowDefinition, PageQuery pageQuery) {
+    public Page<FlowDefinitionVo> queryList(FlowDefinition flowDefinition, PageQuery pageQuery) {
         LambdaQueryWrapper<FlowDefinition> wrapper = buildQueryWrapper(flowDefinition);
         wrapper.eq(FlowDefinition::getIsPublish, PublishStatus.PUBLISHED.getKey());
         Page<FlowDefinition> page = flowDefinitionMapper.selectPage(pageQuery.build(), wrapper);
-//        List<FlowDefinitionVo> list = BeanUtil.copyToList(page.getRecords(), FlowDefinitionVo.class);
-        return R.ok(page);
+        return buildDefinitionVoPage(page);
     }
 
     /**
@@ -102,12 +102,39 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
      * @return 返回分页列表
      */
     @Override
-    public R unPublishList(FlowDefinition flowDefinition, PageQuery pageQuery) {
+    public Page<FlowDefinitionVo> unPublishList(FlowDefinition flowDefinition, PageQuery pageQuery) {
         LambdaQueryWrapper<FlowDefinition> wrapper = buildQueryWrapper(flowDefinition);
         wrapper.in(FlowDefinition::getIsPublish, Arrays.asList(PublishStatus.UNPUBLISHED.getKey(), PublishStatus.EXPIRED.getKey()));
         Page<FlowDefinition> page = flowDefinitionMapper.selectPage(pageQuery.build(), wrapper);
-//        List<FlowDefinitionVo> list = BeanUtil.copyToList(page.getRecords(), FlowDefinitionVo.class);
-        return R.ok(page);
+        return buildDefinitionVoPage(page);
+    }
+
+    /**
+     * 转换流程定义分页结果，补齐前端列表需要的分类名称等字段。
+     */
+    private Page<FlowDefinitionVo> buildDefinitionVoPage(Page<FlowDefinition> page) {
+        Page<FlowDefinitionVo> result = new Page<>(page.getCurrent(), page.getSize(), page.getTotal());
+        List<FlowDefinitionVo> records = BeanUtil.copyToList(page.getRecords(), FlowDefinitionVo.class);
+        if (CollUtil.isEmpty(records)) {
+            result.setRecords(records);
+            return result;
+        }
+
+        Map<String, String> categoryNameMap = new HashMap<>();
+        List<Long> categoryIds = records.stream()
+            .map(FlowDefinitionVo::getCategory)
+            .filter(StringUtils::isNotBlank)
+            .map(Convert::toLong)
+            .distinct()
+            .toList();
+        if (CollUtil.isNotEmpty(categoryIds)) {
+            flwCategoryMapper.selectByIds(categoryIds).forEach(category ->
+                categoryNameMap.put(Convert.toStr(category.getCategoryId()), category.getCategoryName()));
+        }
+
+        records.forEach(item -> item.setCategoryName(categoryNameMap.get(item.getCategory())));
+        result.setRecords(records);
+        return result;
     }
 
     private LambdaQueryWrapper<FlowDefinition> buildQueryWrapper(FlowDefinition flowDefinition) {

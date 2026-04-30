@@ -1,152 +1,79 @@
 package com.quinn.hboot.system.controller;
 
-import cn.hutool.json.JSONUtil;
 import com.quinn.hboot.common.R;
+import com.quinn.hboot.system.model.dto.LoginReqDTO;
 import com.quinn.hboot.system.model.dto.RegisterUserDTO;
 import com.quinn.hboot.system.model.entity.SysMenu;
-import com.quinn.hboot.system.model.entity.SysUser;
-import com.quinn.hboot.system.model.vo.LoginUser;
-import com.quinn.hboot.system.service.LoginLogService;
-import com.quinn.hboot.system.service.SysMenuService;
+import com.quinn.hboot.system.model.vo.AuthMeVO;
+import com.quinn.hboot.system.model.vo.LoginRespVO;
+import com.quinn.hboot.system.service.AuthService;
 import com.quinn.hboot.system.service.SysUserService;
-import com.quinn.hboot.utils.AESUtils;
-import com.quinn.hboot.utils.JwtUtils;
-import com.quinn.hboot.utils.MenuTreeUtil;
-import com.quinn.hboot.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
-import lombok.Data;
-import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.data.redis.core.StringRedisTemplate;
+import jakarta.validation.Valid;
+import lombok.RequiredArgsConstructor;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.authentication.AuthenticationManager;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.crypto.bcrypt.BCryptPasswordEncoder;
-import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.*;
+import org.springframework.web.bind.annotation.GetMapping;
+import org.springframework.web.bind.annotation.PostMapping;
+import org.springframework.web.bind.annotation.RequestBody;
+import org.springframework.web.bind.annotation.RequestHeader;
+import org.springframework.web.bind.annotation.RequestMapping;
+import org.springframework.web.bind.annotation.RestController;
 
 import java.util.List;
-import java.util.Map;
-import java.util.UUID;
-import java.util.concurrent.TimeUnit;
 
 /**
- * 认证控制器
- *
- * @author yu-qh
+ * 认证相关接口。
  */
 @RestController
 @RequestMapping("/api")
+@RequiredArgsConstructor
 public class AuthController {
 
-    @Autowired
-    private SysUserService sysUserService;
-
-    @Autowired
-    private SysMenuService menuService;
-
-    @Autowired
-    private AuthenticationManager authenticationManager;
-
-    @Autowired
-    private StringRedisTemplate redisTemplate;
+    private final AuthService authService;
+    private final SysUserService sysUserService;
 
     /**
-     * 登录
-     *
-     * @param req
-     * @return
+     * 用户登录。
      */
     @PostMapping("/auth/login")
-    public R<LoginResp> login(@RequestBody LoginReq req,
-                              HttpServletRequest request) {
-
-        String plainPassword = AESUtils.decrypt(req.getPassword());
-
-        Authentication authentication =
-                authenticationManager.authenticate(
-                        new UsernamePasswordAuthenticationToken(
-                                req.getUsername(),
-                                plainPassword
-                        )
-                );
-
-        LoginUser loginUser = (LoginUser) authentication.getPrincipal();
-
-        // 1️⃣ 生成 tokenId
-        String tokenId = UUID.randomUUID().toString();
-        String token = JwtUtils.createToken(tokenId);
-
-        // 2️⃣ LoginUser 存 Redis
-        redisTemplate.opsForValue().set(
-                "login:" + tokenId,
-                JSONUtil.toJsonStr(loginUser),
-                30,
-                TimeUnit.MINUTES
-        );
-
-        // 3️⃣ 菜单
-        List<SysMenu> menus = menuService.findMenusByUserId(loginUser.getUserId());
-
-        LoginResp resp = new LoginResp();
-        resp.setToken(token);
-        resp.setUser(loginUser);   // ✔️ 直接返回 LoginUser
-        resp.setMenus(MenuTreeUtil.buildTree(menus));
-
-        return R.ok(resp);
+    public R<LoginRespVO> login(@Valid @RequestBody LoginReqDTO req, HttpServletRequest request) {
+        return R.ok(authService.login(req, request));
     }
 
     /**
-     * 获取当前用户信息
-     *
-     * @return
+     * 获取当前登录用户信息。
      */
     @GetMapping("/auth/me")
-    public R<?> me() {
-        LoginUser user = SecurityUtils.getLoginUser();
-        if (user == null) {
-            return R.fail(401, "未登录");
-        }
-        return R.ok(user);
+    public R<AuthMeVO> me() {
+        return R.ok(authService.me());
     }
 
     /**
-     * 获取当前用户菜单
-     * @return
+     * 获取当前登录用户菜单。
      */
     @GetMapping("/auth/menus")
     public R<List<SysMenu>> menus() {
-        LoginUser user = SecurityUtils.getLoginUser();
-        if (user == null) {
-            return R.fail(401, "未登录");
-        }
-
-        List<SysMenu> menus = menuService.findMenusByUserId(user.getUserId());
-        return R.ok(MenuTreeUtil.buildTree(menus));
+        return R.ok(authService.menus());
     }
 
     /**
-     * 注册
-     *
-     * @param dto
-     * @return
+     * 退出登录。
+     * <p>
+     * 当前前端未强依赖该接口，但后端保留统一退出能力，
+     * 便于后续接入单点登录、在线会话管理等功能。
+     */
+    @PostMapping("/auth/logout")
+    public R<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
+        authService.logout(authorizationHeader);
+        return R.ok();
+    }
+
+    /**
+     * 注册。
      */
     @PostMapping("/register")
-    public ResponseEntity<String> register(@Validated @RequestBody RegisterUserDTO dto) {
+    public ResponseEntity<String> register(@Valid @RequestBody RegisterUserDTO dto) {
         sysUserService.register(dto);
         return ResponseEntity.ok("注册成功");
     }
-}
-
-@Data
-class LoginReq {
-    private String username;
-    private String password;
-}
-
-@Data
-class LoginResp {
-    private String token;
-    private LoginUser user;
-    private List<SysMenu> menus;
 }
