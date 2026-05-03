@@ -8,6 +8,8 @@ import lombok.Data;
 import org.springframework.data.annotation.Transient;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
+import java.util.List;
 
 /**
  * @author yu-qh
@@ -41,4 +43,12 @@ public class SysUser {
     @Transient
     @TableField(exist = false)
     private String postName;
+
+    @Transient
+    @TableField(exist = false)
+    private List<Long> roleIds = new ArrayList<>();
+
+    @Transient
+    @TableField(exist = false)
+    private List<SysUserOrgPost> orgPosts = new ArrayList<>();
 }

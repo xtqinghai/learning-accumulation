@@ -46,6 +46,16 @@ public final class SecurityUtils {
         return user != null ? user.getRoles() : Collections.emptySet();
     }
 
+    public static Set<Long> getDeptIds() {
+        LoginUser user = getPrincipal();
+        return user != null && user.getDeptIds() != null ? user.getDeptIds() : Collections.emptySet();
+    }
+
+    public static Set<Long> getPostIds() {
+        LoginUser user = getPrincipal();
+        return user != null && user.getPostIds() != null ? user.getPostIds() : Collections.emptySet();
+    }
+
     public static LoginUser getLoginUser() {
         return getPrincipal();
     }

@@ -53,16 +53,16 @@ public class TestLeaveBo extends FlowBaseEntity {
      * 开始时间
      */
     @NotNull(message = "开始时间不能为空")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date startDate;
 
     /**
      * 结束时间
      */
     @NotNull(message = "结束时间不能为空")
-    @DateTimeFormat(pattern = "yyyy-MM-dd")
-    @JsonFormat(pattern = "yyyy-MM-dd")
+    @DateTimeFormat(pattern = "yyyy-MM-dd HH:mm:ss")
+    @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private Date endDate;
 
     /**

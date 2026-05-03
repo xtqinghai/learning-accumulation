@@ -31,7 +31,7 @@ spring:
       datasource:
         hboot:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          url: jdbc:mysql://localhost:3306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
           username: root
           password: 123456
           type: com.alibaba.druid.pool.DruidDataSource
@@ -52,7 +52,7 @@ spring:
 
         engine:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          url: jdbc:mysql://localhost:3306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
           username: root
           password: 123456
           type: com.alibaba.druid.pool.DruidDataSource

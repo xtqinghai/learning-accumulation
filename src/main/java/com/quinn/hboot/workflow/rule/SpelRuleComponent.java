@@ -37,4 +37,11 @@ public class SpelRuleComponent {
         return leaderId;
     }
 
+    public Boolean leaveDaysGreaterThan3(Integer leaveDays) {
+        return leaveDays != null && leaveDays > 3;
+    }
+
+    public Boolean leaveDaysLessOrEqual3(Integer leaveDays) {
+        return leaveDays != null && leaveDays <= 3;
+    }
 }

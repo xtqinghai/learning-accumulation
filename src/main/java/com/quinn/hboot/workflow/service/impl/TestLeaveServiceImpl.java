@@ -43,11 +43,16 @@ import lombok.extern.slf4j.Slf4j;
 //import org.dromara.workflow.domain.vo.TestLeaveVo;
 //import org.dromara.workflow.mapper.TestLeaveMapper;
 //import org.dromara.workflow.service.ITestLeaveService;
+import org.dromara.warm.flow.core.enums.PublishStatus;
 import org.dromara.warm.flow.core.utils.StreamUtils;
+import org.dromara.warm.flow.orm.entity.FlowDefinition;
+import org.dromara.warm.flow.orm.mapper.FlowDefinitionMapper;
 import org.springframework.context.event.EventListener;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.util.Collections;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
@@ -63,8 +68,11 @@ import java.util.Map;
 @Slf4j
 public class TestLeaveServiceImpl implements ITestLeaveService {
 
+    private static final String LEAVE_FORM_PATH = "/workflow/leaveEdit/index";
+
     private final TestLeaveMapper baseMapper;
     private final WorkflowService workflowService;
+    private final FlowDefinitionMapper flowDefinitionMapper;
 
     /**
      * spel条件表达：判断小于2
@@ -73,10 +81,7 @@ public class TestLeaveServiceImpl implements ITestLeaveService {
      * @return boolean
      */
     public boolean eval(Integer leaveDays) {
-        if (leaveDays <= 2) {
-            return true;
-        }
-        return false;
+        return leaveDays != null && leaveDays <= 3;
     }
 
     /**
@@ -148,13 +153,17 @@ public class TestLeaveServiceImpl implements ITestLeaveService {
         boolean flag = baseMapper.insertOrUpdate(leave);
         if (flag) {
             bo.setId(leave.getId());
+            Map<String, Object> variables = buildLeaveVariables(bo);
             // 后端发起需要忽略权限
+            if (bo.getParams() == null) {
+                bo.setParams(new HashMap<>());
+            }
             bo.getParams().put("ignore", true);
 
             StartProcessDTO startProcess = new StartProcessDTO();
             startProcess.setBusinessId(leave.getId().toString());
-            startProcess.setFlowCode(StringUtils.isEmpty(bo.getFlowCode()) ? "leave1" : bo.getFlowCode());
-            startProcess.setVariables(bo.getParams());
+            startProcess.setFlowCode(resolveFlowCode(bo.getFlowCode()));
+            startProcess.setVariables(variables);
             // 后端发起 如果没有登录用户 比如定时任务 可以手动设置一个处理人id
             // startProcess.setHandler("0");
 
@@ -169,6 +178,40 @@ public class TestLeaveServiceImpl implements ITestLeaveService {
     /**
      * 修改请假
      */
+    private Map<String, Object> buildLeaveVariables(TestLeaveBo bo) {
+        Map<String, Object> baseParams = bo.getParams() == null ? Collections.emptyMap() : bo.getParams();
+        Map<String, Object> variables = new HashMap<>(baseParams);
+        Integer leaveDays = bo.getLeaveDays();
+        if (leaveDays != null) {
+            variables.put("leaveDays", leaveDays);
+            variables.put("day", leaveDays);
+            variables.put("flag", leaveDays);
+        }
+        variables.put("ignore", true);
+        bo.setParams(variables);
+        return variables;
+    }
+
+    private String resolveFlowCode(String flowCode) {
+        if (StringUtils.isNotBlank(flowCode)) {
+            return flowCode;
+        }
+        List<FlowDefinition> definitions = flowDefinitionMapper.selectList(
+            Wrappers.<FlowDefinition>lambdaQuery()
+                .eq(FlowDefinition::getFormPath, LEAVE_FORM_PATH)
+                .eq(FlowDefinition::getIsPublish, PublishStatus.PUBLISHED.getKey())
+                .eq(FlowDefinition::getActivityStatus, 1)
+                .eq(FlowDefinition::getDelFlag, "0")
+                .orderByDesc(FlowDefinition::getUpdateTime)
+                .orderByDesc(FlowDefinition::getCreateTime)
+                .orderByDesc(FlowDefinition::getId)
+        );
+        if (definitions.isEmpty()) {
+            throw new RuntimeException("未找到可用的请假流程定义，请先发布请假流程");
+        }
+        return definitions.get(0).getFlowCode();
+    }
+
     @Override
     public TestLeaveVo updateByBo(TestLeaveBo bo) {
         TestLeave update = MapstructUtils.convert(bo, TestLeave.class);
@@ -193,7 +236,7 @@ public class TestLeaveServiceImpl implements ITestLeaveService {
      *
      * @param processEvent 参数
      */
-    @EventListener(condition = "#processEvent.flowCode.startsWith('leave')")
+    @EventListener(condition = "#processEvent.flowCode != null && #processEvent.flowCode.toLowerCase().contains('leave')")
     public void processHandler(ProcessEvent processEvent) {
         log.info("当前任务执行了{}", processEvent.toString());
         TestLeave testLeave = baseMapper.selectById(Convert.toLong(processEvent.getBusinessId()));
@@ -231,7 +274,7 @@ public class TestLeaveServiceImpl implements ITestLeaveService {
      *
      * @param processTaskEvent 参数
      */
-    @EventListener(condition = "#processTaskEvent.flowCode.startsWith('leave')")
+    @EventListener(condition = "#processTaskEvent.flowCode != null && #processTaskEvent.flowCode.toLowerCase().contains('leave')")
     public void processTaskHandler(ProcessTaskEvent processTaskEvent) {
         log.info("当前任务创建了{}", processTaskEvent.toString());
     }
@@ -243,7 +286,7 @@ public class TestLeaveServiceImpl implements ITestLeaveService {
      *
      * @param processDeleteEvent 参数
      */
-    @EventListener(condition = "#processDeleteEvent.flowCode.startsWith('leave')")
+    @EventListener(condition = "#processDeleteEvent.flowCode != null && #processDeleteEvent.flowCode.toLowerCase().contains('leave')")
     public void processDeleteHandler(ProcessDeleteEvent processDeleteEvent) {
         log.info("监听删除流程事件，当前任务执行了{}", processDeleteEvent.toString());
         TestLeave testLeave = baseMapper.selectById(Convert.toLong(processDeleteEvent.getBusinessId()));

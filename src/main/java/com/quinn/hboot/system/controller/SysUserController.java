@@ -36,7 +36,7 @@ public class SysUserController {
 
     @GetMapping("/{id}")
     public R get(@PathVariable Long id) {
-        return R.ok(userService.getById(id));
+        return R.ok(userService.getUserDetail(id));
     }
 
     @PostMapping

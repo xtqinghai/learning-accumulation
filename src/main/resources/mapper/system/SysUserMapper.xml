@@ -1,69 +1,113 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <!DOCTYPE mapper
-        PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
-        "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+    PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+    "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
 <mapper namespace="com.quinn.hboot.system.mapper.SysUserMapper">
+
     <select id="selectUserPage" resultType="com.quinn.hboot.system.model.entity.SysUser">
-        select u.*, d.name as deptName, r.name as roleName, p.post_name as postName
+        select u.*,
+               d.name as deptName,
+               group_concat(distinct r.name order by r.sort separator ', ') as roleName,
+               group_concat(distinct p.post_name order by p.post_sort separator ', ') as postName
         from sys_user u
         left join sys_dept d on u.dept_id = d.id
-        left join sys_role r on u.role_id = r.id
-        left join sys_post p on u.post_id = p.id
+        left join sys_user_role ur on ur.user_id = u.id
+        left join sys_role r on ur.role_id = r.id
+        left join sys_user_org_post uop on uop.user_id = u.id and uop.status = 1
+        left join sys_post p on uop.post_id = p.id
         <where>
             <if test="queryParams.username != null and queryParams.username != ''">
-                and u.username like concat('%',#{queryParams.username},'%')
+                and u.username like concat('%', #{queryParams.username}, '%')
             </if>
             <if test="queryParams.nickname != null and queryParams.nickname != ''">
-                and u.nickname like concat('%',#{queryParams.nickname},'%')
+                and u.nickname like concat('%', #{queryParams.nickname}, '%')
             </if>
-            <if test="queryParams.deptId != null and queryParams.deptId != ''">
-                and u.dept_id = #{queryParams.deptId}
+            <if test="queryParams.deptId != null">
+                and exists (
+                    select 1
+                    from sys_user_org_post x
+                    where x.user_id = u.id
+                      and x.status = 1
+                      and x.dept_id = #{queryParams.deptId}
+                )
             </if>
-            <if test="queryParams.roleId != null and queryParams.roleId != ''">
-                and u.role_id = #{queryParams.roleId}
+            <if test="queryParams.roleId != null">
+                and exists (
+                    select 1
+                    from sys_user_role x
+                    where x.user_id = u.id
+                      and x.role_id = #{queryParams.roleId}
+                )
             </if>
-            <if test="queryParams.postId != null and queryParams.postId != ''">
-                and u.post_id = #{queryParams.postId}
+            <if test="queryParams.postId != null">
+                and exists (
+                    select 1
+                    from sys_user_org_post x
+                    where x.user_id = u.id
+                      and x.status = 1
+                      and x.post_id = #{queryParams.postId}
+                )
             </if>
-            <if test="queryParams.status != null and queryParams.status != ''">
+            <if test="queryParams.status != null">
                 and u.status = #{queryParams.status}
             </if>
         </where>
+        group by u.id
     </select>
+
     <select id="selectUsersByRoleIds" resultType="com.quinn.hboot.system.model.entity.SysUser" parameterType="java.util.List">
         select *
         from sys_user u
         where u.id in (
-        select r.user_id
-        from sys_user_role r
-        where r.role_id in
-        <!-- 使用foreach遍历List集合 -->
-        <foreach collection="list" item="roleId" open="(" separator="," close=")">
-            #{roleId}
-        </foreach>
+            select r.user_id
+            from sys_user_role r
+            where r.role_id in
+            <foreach collection="list" item="roleId" open="(" separator="," close=")">
+                #{roleId}
+            </foreach>
         )
     </select>
+
     <select id="selectUsersByDeptIds" resultType="com.quinn.hboot.system.model.entity.SysUser" parameterType="java.util.List">
         select *
         from sys_user u
-        where u.dept_id in
-        <!-- 使用foreach遍历List集合 -->
-        <foreach collection="list" item="deptId" open="(" separator="," close=")">
-            #{deptId}
-        </foreach>
+        where u.id in (
+            select distinct r.user_id
+            from sys_user_org_post r
+            where r.status = 1
+              and r.dept_id in
+            <foreach collection="list" item="deptId" open="(" separator="," close=")">
+                #{deptId}
+            </foreach>
         )
     </select>
+
     <select id="selectUsersByPostIds" resultType="com.quinn.hboot.system.model.entity.SysUser" parameterType="java.util.List">
         select *
         from sys_user u
         where u.id in (
-        select r.user_id
-        from sys_user_post r
-        where r.id in
-        <!-- 使用foreach遍历List集合 -->
-        <foreach collection="list" item="postId" open="(" separator="," close=")">
-            #{postId}
-        </foreach>
+            select distinct r.user_id
+            from sys_user_org_post r
+            where r.status = 1
+              and r.post_id in
+            <foreach collection="list" item="postId" open="(" separator="," close=")">
+                #{postId}
+            </foreach>
         )
+    </select>
+
+    <select id="selectUserDetail" resultType="com.quinn.hboot.system.model.entity.SysUser">
+        select u.*,
+               d.name as deptName,
+               group_concat(distinct r.name order by r.sort separator ', ') as roleName,
+               group_concat(distinct p.post_name order by p.post_sort separator ', ') as postName
+        from sys_user u
+        left join sys_dept d on u.dept_id = d.id
+        left join sys_user_role ur on ur.user_id = u.id
+        left join sys_role r on ur.role_id = r.id
+        left join sys_user_org_post uop on uop.user_id = u.id and uop.status = 1
+        left join sys_post p on uop.post_id = p.id
+        where u.id = #{id}
+        group by u.id
     </select>
 </mapper>

@@ -14,7 +14,9 @@ import org.springframework.stereotype.Service;
 
 import java.util.Collections;
 import java.util.Comparator;
+import java.util.LinkedHashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
 
@@ -75,10 +77,19 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             return Collections.emptyList();
         }
 
-        return menus.stream()
+        Map<String, SysMenu> uniqueMenus = new LinkedHashMap<>();
+        menus.stream()
                 .filter(menu -> !isWorkflowDesignMenu(menu))
                 .sorted(Comparator.comparing(SysMenu::getSort))
-                .collect(Collectors.toList());
+                .forEach(menu -> uniqueMenus.putIfAbsent(buildMenuKey(menu), menu));
+        return uniqueMenus.values().stream().toList();
+    }
+
+    private String buildMenuKey(SysMenu menu) {
+        String path = menu.getPath() == null ? "" : menu.getPath().trim();
+        String component = menu.getComponent() == null ? "" : menu.getComponent().trim();
+        String name = menu.getName() == null ? "" : menu.getName().trim();
+        return path + "|" + component + "|" + name + "|" + menu.getType();
     }
 
     private boolean isWorkflowDesignMenu(SysMenu menu) {

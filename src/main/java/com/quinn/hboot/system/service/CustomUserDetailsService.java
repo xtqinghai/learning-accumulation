@@ -1,6 +1,7 @@
 package com.quinn.hboot.system.service;
 
 import com.quinn.hboot.system.model.entity.SysUser;
+import com.quinn.hboot.system.model.entity.SysUserOrgPost;
 import com.quinn.hboot.system.model.vo.LoginUser;
 import lombok.RequiredArgsConstructor;
 import org.springframework.security.core.GrantedAuthority;
@@ -36,6 +37,8 @@ public class CustomUserDetailsService implements UserDetailsService {
         }
 
         List<String> perms = userService.getUserPermissions(user.getId());
+        Set<String> roleCodes = userService.getUserRoleCodes(user.getId());
+        List<SysUserOrgPost> orgPosts = userService.getUserOrgPosts(user.getId());
         Set<GrantedAuthority> authorities = perms.stream()
                 .filter(Objects::nonNull)
                 .filter(permission -> !permission.isBlank())
@@ -49,7 +52,10 @@ public class CustomUserDetailsService implements UserDetailsService {
         loginUser.setPassword(user.getPassword());
         loginUser.setOrgId(user.getDeptId());
         loginUser.setOrgName(user.getDeptName());
-        loginUser.setRoles(Collections.emptySet());
+        loginUser.setMainPostId(user.getPostId());
+        loginUser.setDeptIds(orgPosts.stream().map(SysUserOrgPost::getDeptId).filter(Objects::nonNull).collect(Collectors.toSet()));
+        loginUser.setPostIds(orgPosts.stream().map(SysUserOrgPost::getPostId).filter(Objects::nonNull).collect(Collectors.toSet()));
+        loginUser.setRoles(roleCodes.isEmpty() ? Collections.emptySet() : roleCodes);
         loginUser.setPermissions(Set.copyOf(perms));
         loginUser.setAuthorities(authorities);
         loginUser.setEnabled(Objects.equals(user.getStatus(), 1));

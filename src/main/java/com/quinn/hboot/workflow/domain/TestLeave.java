@@ -1,6 +1,7 @@
 package com.quinn.hboot.workflow.domain;
 
 import com.baomidou.mybatisplus.annotation.TableId;
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableName;
 import lombok.Data;
 import lombok.EqualsAndHashCode;
@@ -26,7 +27,7 @@ public class TestLeave extends FlowBaseEntity{
     /**
      * 主键
      */
-    @TableId(value = "id")
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
     private Long id;
 
     /**

@@ -18,6 +18,9 @@ public class CurrentUserVO {
     private String nickname;
     private Long orgId;
     private String orgName;
+    private Long mainPostId;
+    private Set<Long> deptIds;
+    private Set<Long> postIds;
     private Set<String> roles;
     private Set<String> permissions;
 }

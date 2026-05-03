@@ -34,6 +34,9 @@ public class LoginUser implements UserDetails {
      */
     private Long orgId;
     private String orgName;
+    private Long mainPostId;
+    private Set<Long> deptIds;
+    private Set<Long> postIds;
 
     /**
      * 角色编码集合。

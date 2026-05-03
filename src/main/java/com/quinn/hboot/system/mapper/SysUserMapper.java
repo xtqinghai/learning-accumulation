@@ -22,4 +22,6 @@ public interface SysUserMapper extends BaseMapper<SysUser> {
     List<SysUser> selectUsersByPostIds(List<Long> longIds);
 
     Page<SysUser> selectUserPage(Page<SysUser> objectPage, @Param("queryParams") SysUser queryParams);
+
+    SysUser selectUserDetail(@Param("id") Long id);
 }

@@ -1,5 +1,6 @@
 package com.quinn.hboot.workflow.domain;
 
+import com.baomidou.mybatisplus.annotation.IdType;
 import com.baomidou.mybatisplus.annotation.TableId;
 import com.baomidou.mybatisplus.annotation.TableLogic;
 import com.baomidou.mybatisplus.annotation.TableName;
@@ -26,7 +27,7 @@ public class FlowInstanceBizExt extends TenantEntity {
     /**
      * 主键
      */
-    @TableId(value = "id")
+    @TableId(value = "id", type = IdType.ASSIGN_ID)
     private Long id;
 
     /**
