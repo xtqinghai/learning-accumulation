@@ -21,6 +21,7 @@ import com.quinn.hboot.workflow.domain.vo.TestLeaveVo;
 import com.quinn.hboot.workflow.mapper.TestLeaveMapper;
 import com.quinn.hboot.workflow.service.ITestLeaveService;
 import com.quinn.hboot.workflow.service.WorkflowService;
+import com.quinn.hboot.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 //import org.dromara.common.core.domain.dto.StartProcessDTO;
@@ -186,7 +187,14 @@ public class TestLeaveServiceImpl implements ITestLeaveService {
             variables.put("leaveDays", leaveDays);
             variables.put("day", leaveDays);
             variables.put("flag", leaveDays);
+            variables.put("needGeneralManagerApproval", leaveDays > 3);
         }
+        variables.putIfAbsent(FlowConstant.INITIATOR, SecurityUtils.getUserId());
+        variables.putIfAbsent(FlowConstant.INITIATOR_DEPT_ID, SecurityUtils.getOrgId());
+        variables.putIfAbsent(FlowConstant.INITIATOR_POST_ID, SecurityUtils.getLoginUser() != null ? SecurityUtils.getLoginUser().getMainPostId() : null);
+        variables.put("deptLeaderAssignee", "#{@spelRuleComponent.selectDeptLeaderById(#initiatorDeptId)}");
+        variables.put("generalManagerAssignee", "#{@spelRuleComponent.selectUserByRoleCode('ceo')}");
+        variables.put("hrArchiveAssignee", "#{@spelRuleComponent.selectUserByPostCode('hr_manager')}");
         variables.put("ignore", true);
         bo.setParams(variables);
         return variables;

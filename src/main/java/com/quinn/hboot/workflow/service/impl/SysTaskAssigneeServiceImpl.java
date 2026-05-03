@@ -47,20 +47,10 @@ public class SysTaskAssigneeServiceImpl implements TaskAssigneeService {
      */
     @Override
     public TaskAssigneeDTO selectRolesByTaskAssigneeList(TaskAssigneeBody taskQuery) {
-//        PageQuery pageQuery = new PageQuery(taskQuery.getPageSize(), taskQuery.getPageNum());
-//        SysRole bo = new SysRole();
-//        bo.setCode(taskQuery.getHandlerCode());
-//        bo.setName(taskQuery.getHandlerName());
-//        bo.setStatus(0);
-//        Map<String, Object> params = bo.getParams();
-//        params.put("beginTime", taskQuery.getBeginTime());
-//        params.put("endTime", taskQuery.getEndTime());
         LambdaQueryWrapper<SysRole> queryWrapper = new LambdaQueryWrapper<>();
-        // 按需添加查询条件（非空才拼接，避免查询全部）
-        queryWrapper.eq(SysRole::getCode, taskQuery.getHandlerCode());
-        queryWrapper.eq(SysRole::getName, taskQuery.getHandlerName());
+        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerCode()), SysRole::getCode, taskQuery.getHandlerCode());
+        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerName()), SysRole::getName, taskQuery.getHandlerName());
         List<SysRole> page = roleService.selectRoleList(queryWrapper);
-        // 使用封装的字段映射方法进行转换
         List<TaskAssigneeDTO.TaskHandler> handlers = TaskAssigneeDTO.convertToHandlerList(page,
             item -> Convert.toStr(item.getId()), SysRole::getCode, SysRole::getName, item -> "", item -> Date.from(item.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
         return new TaskAssigneeDTO((long) page.size(), handlers);
@@ -74,22 +64,14 @@ public class SysTaskAssigneeServiceImpl implements TaskAssigneeService {
      */
     @Override
     public TaskAssigneeDTO selectPostsByTaskAssigneeList(TaskAssigneeBody taskQuery) {
-        PageQuery pageQuery = new PageQuery(taskQuery.getPageSize(), taskQuery.getPageNum());
-        SysPost bo = new SysPost();
-        bo.setPostCategory(taskQuery.getHandlerCode());
-        bo.setPostName(taskQuery.getHandlerName());
-//        bo.setStatus("0");
-//        Map<String, Object> params = bo.getParams();
-//        params.put("beginTime", taskQuery.getBeginTime());
-//        params.put("endTime", taskQuery.getEndTime());
-//        bo.setBelongDeptId(Convert.toLong(taskQuery.getGroupId()));
-        LambdaQueryWrapper<SysPost> queryWrapper = new LambdaQueryWrapper<>(bo);
-        queryWrapper.eq(SysPost::getPostCategory, taskQuery.getHandlerCode());
-        queryWrapper.eq(SysPost::getPostName, taskQuery.getHandlerName());
+        LambdaQueryWrapper<SysPost> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerCode()), SysPost::getPostCode, taskQuery.getHandlerCode());
+        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerName()), SysPost::getPostName, taskQuery.getHandlerName());
+        queryWrapper.eq(StrUtil.isNotBlank(taskQuery.getGroupId()), SysPost::getDeptId, Convert.toLong(taskQuery.getGroupId()));
+        queryWrapper.eq(SysPost::getStatus, 1);
         List<SysPost> page = postService.list(queryWrapper);
-        // 使用封装的字段映射方法进行转换
         List<TaskAssigneeDTO.TaskHandler> handlers = TaskAssigneeDTO.convertToHandlerList(page,
-            item -> Convert.toStr(item.getId()), SysPost::getPostCategory, SysPost::getPostName, item -> Convert.toStr(item.getDeptId()), item -> Date.from(item.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
+            item -> Convert.toStr(item.getId()), SysPost::getPostCode, SysPost::getPostName, item -> Convert.toStr(item.getDeptId()), item -> Date.from(item.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
         return new TaskAssigneeDTO((long) page.size(), handlers);
     }
 
@@ -102,28 +84,24 @@ public class SysTaskAssigneeServiceImpl implements TaskAssigneeService {
     @Override
     public TaskAssigneeDTO selectDeptsByTaskAssigneeList(TaskAssigneeBody taskQuery) {
         LambdaQueryWrapper<SysDept> queryWrapper = new LambdaQueryWrapper<>();
-        // 非空拼接查询条件
         if (StrUtil.isNotBlank(taskQuery.getHandlerCode())) {
-            queryWrapper.eq(SysDept::getId, Convert.toLong(taskQuery.getHandlerCode())); // 部门编码用ID替代，可根据实际调整
+            queryWrapper.eq(SysDept::getId, Convert.toLong(taskQuery.getHandlerCode()));
         }
         if (StrUtil.isNotBlank(taskQuery.getHandlerName())) {
-            queryWrapper.eq(SysDept::getName, taskQuery.getHandlerName());
+            queryWrapper.like(SysDept::getName, taskQuery.getHandlerName());
         }
-        queryWrapper.eq(SysDept::getStatus, 0); // 状态正常
+        queryWrapper.eq(SysDept::getStatus, 1);
 
-        // 分页查询
         Page<SysDept> page = new Page<>(taskQuery.getPageNum(), taskQuery.getPageSize());
         IPage<SysDept> deptPage = deptService.page(page, queryWrapper);
         List<SysDept> deptList = deptPage.getRecords();
 
-        // 显式指定泛型类型SysDept，解决item.getId()爆红问题
         List<TaskAssigneeDTO.TaskHandler> handlers = TaskAssigneeDTO.<SysDept>convertToHandlerList(
                 deptList,
-                item -> Convert.toStr(item.getId()),          // 唯一标识ID
-                item -> Convert.toStr(item.getId()),          // 部门编码（用ID替代，可替换为实际编码字段）
-                SysDept::getName,                             // 部门名称
-                item -> Convert.toStr(item.getParentId()),    // 父部门ID（分组ID）
-                // JDK原生转换（替代Hutool的localDateTimeToDate）
+                item -> Convert.toStr(item.getId()),
+                item -> Convert.toStr(item.getId()),
+                SysDept::getName,
+                item -> Convert.toStr(item.getParentId()),
                 item -> Date.from(item.getCreateTime().atZone(ZoneId.systemDefault()).toInstant())
         );
         return new TaskAssigneeDTO(deptPage.getTotal(), handlers);
@@ -137,22 +115,15 @@ public class SysTaskAssigneeServiceImpl implements TaskAssigneeService {
      */
     @Override
     public TaskAssigneeDTO selectUsersByTaskAssigneeList(TaskAssigneeBody taskQuery) {
-        PageQuery pageQuery = new PageQuery(taskQuery.getPageSize(), taskQuery.getPageNum());
-        SysUser bo = new SysUser();
-        bo.setUsername(taskQuery.getHandlerCode());
-        bo.setNickname(taskQuery.getHandlerName());
-//        bo.setStatus("0");
-//        Map<String, Object> params = bo.getParams();
-//        params.put("beginTime", taskQuery.getBeginTime());
-//        params.put("endTime", taskQuery.getEndTime());
-        bo.setDeptId(Convert.toLong(taskQuery.getGroupId()));
-
         LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
+        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerCode()), SysUser::getUsername, taskQuery.getHandlerCode());
+        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerName()), SysUser::getNickname, taskQuery.getHandlerName());
+        queryWrapper.eq(StrUtil.isNotBlank(taskQuery.getGroupId()), SysUser::getDeptId, Convert.toLong(taskQuery.getGroupId()));
+        queryWrapper.eq(SysUser::getStatus, 1);
 
-        Page<SysUser> page = userService.page(new Page<>(taskQuery.getPageNum(), taskQuery.getPageSize()),queryWrapper);
-        // 使用封装的字段映射方法进行转换
+        Page<SysUser> page = userService.page(new Page<>(taskQuery.getPageNum(), taskQuery.getPageSize()), queryWrapper);
         List<TaskAssigneeDTO.TaskHandler> handlers = TaskAssigneeDTO.<SysUser>convertToHandlerList(page.getRecords(),
-            item -> Convert.toStr(item.getId()), SysUser::getUsername, SysUser::getNickname, item -> Convert.toStr(item.getId()),item -> Date.from(item.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
+            item -> Convert.toStr(item.getId()), SysUser::getUsername, SysUser::getNickname, item -> Convert.toStr(item.getDeptId()), item -> Date.from(item.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
         return new TaskAssigneeDTO(page.getTotal(), handlers);
     }
 
