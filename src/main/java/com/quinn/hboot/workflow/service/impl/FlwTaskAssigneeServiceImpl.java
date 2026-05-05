@@ -170,7 +170,10 @@ public class FlwTaskAssigneeServiceImpl implements IFlwTaskAssigneeService, Hand
             return DEFAULT_GROUP_NAME;
         }
         if (type.needsDeptService()) {
-            return deptService.getById(groupName).getName();
+            SysDept dept = deptService.getById(groupName);
+            if (dept != null && StringUtils.isNotEmpty(dept.getName())) {
+                return dept.getName();
+            }
         }
         return DEFAULT_GROUP_NAME;
     }
@@ -194,7 +197,9 @@ public class FlwTaskAssigneeServiceImpl implements IFlwTaskAssigneeService, Hand
             .setHandlerCode(assignee -> StringUtils.blankToDefault(assignee.getHandlerCode(), "无"))
             .setHandlerName(assignee -> StringUtils.blankToDefault(assignee.getHandlerName(), "无"))
             .setGroupName(assignee -> this.getGroupName(type, assignee.getGroupName()))
-            .setCreateTime(assignee -> DateUtils.parseDateToStr(FormatsType.valueOf("yyyy-MM-dd HH:mm:ss"), assignee.getCreateTime()));
+            .setCreateTime(assignee -> assignee.getCreateTime() == null
+                ? ""
+                : DateUtils.parseDateToStr(FormatsType.YYYY_MM_DD_HH_MM_SS, assignee.getCreateTime()));
     }
 
     /**

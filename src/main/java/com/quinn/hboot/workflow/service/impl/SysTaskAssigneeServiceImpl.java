@@ -115,13 +115,19 @@ public class SysTaskAssigneeServiceImpl implements TaskAssigneeService {
      */
     @Override
     public TaskAssigneeDTO selectUsersByTaskAssigneeList(TaskAssigneeBody taskQuery) {
-        LambdaQueryWrapper<SysUser> queryWrapper = new LambdaQueryWrapper<>();
-        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerCode()), SysUser::getUsername, taskQuery.getHandlerCode());
-        queryWrapper.like(StrUtil.isNotBlank(taskQuery.getHandlerName()), SysUser::getNickname, taskQuery.getHandlerName());
-        queryWrapper.eq(StrUtil.isNotBlank(taskQuery.getGroupId()), SysUser::getDeptId, Convert.toLong(taskQuery.getGroupId()));
-        queryWrapper.eq(SysUser::getStatus, 1);
+        SysUser queryUser = new SysUser();
+        queryUser.setUsername(taskQuery.getHandlerCode());
+        queryUser.setNickname(taskQuery.getHandlerName());
+        if (StrUtil.isNotBlank(taskQuery.getGroupId())) {
+            queryUser.setDeptId(Convert.toLong(taskQuery.getGroupId()));
+        }
 
-        Page<SysUser> page = userService.page(new Page<>(taskQuery.getPageNum(), taskQuery.getPageSize()), queryWrapper);
+        // Reuse the system user query so workflow assignee search stays aligned with
+        // the current org-post model and doesn't depend on a single hard-coded status value.
+        Page<SysUser> page = (Page<SysUser>) userService.pageAll(
+            new Page<>(taskQuery.getPageNum(), taskQuery.getPageSize()),
+            queryUser
+        );
         List<TaskAssigneeDTO.TaskHandler> handlers = TaskAssigneeDTO.<SysUser>convertToHandlerList(page.getRecords(),
             item -> Convert.toStr(item.getId()), SysUser::getUsername, SysUser::getNickname, item -> Convert.toStr(item.getDeptId()), item -> Date.from(item.getCreateTime().atZone(ZoneId.systemDefault()).toInstant()));
         return new TaskAssigneeDTO(page.getTotal(), handlers);

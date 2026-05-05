@@ -31,3 +31,14 @@ build/
 
 ### VS Code ###
 .vscode/
+
+### Local temp / diagnostics ###
+.m2repo/
+.mvn-home/
+.tmp-agent/
+Db*.java
+Db*.class
+warmflow-index.js
+
+### Generated UI backup artifacts ###
+src/main/resources/META-INF/resources/warm-flow-ui/js/*.raw.js
