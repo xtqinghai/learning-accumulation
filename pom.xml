@@ -348,6 +348,23 @@
                     </annotationProcessorPaths>
                 </configuration>
             </plugin>
+            <!-- 找到你的 exec-maven-plugin，替换成这个配置 -->
+            <plugin>
+                <groupId>org.codehaus.mojo</groupId>
+                <artifactId>exec-maven-plugin</artifactId>
+                <version>3.6.3</version>
+                <configuration>
+                    <!-- 关键配置：解决命令行过长 -->
+                    <longClasspath>true</longClasspath>
+
+                    <!-- 你原来的配置保留 -->
+                    <executable>${java.home}/bin/java.exe</executable>
+                    <workingDirectory>${project.basedir}</workingDirectory>
+                    <arguments>
+                        <!-- 你的程序参数 -->
+                    </arguments>
+                </configuration>
+            </plugin>
         </plugins>
     </build>
 </project>
