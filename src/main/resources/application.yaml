@@ -31,7 +31,7 @@ spring:
       datasource:
         hboot:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://localhost:3306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
           username: root
           password: 123456
           type: com.alibaba.druid.pool.DruidDataSource
@@ -48,11 +48,13 @@ spring:
             test-on-return: false
             # 应用过滤器
             filters: stat,wall,slf4j
-            connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000
+            connection-properties:
+              druid.stat.mergeSql: true
+              druid.stat.slowSqlMillis: 2000
 
         engine:
           driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://localhost:3306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
+          url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
           username: root
           password: 123456
           type: com.alibaba.druid.pool.DruidDataSource
@@ -69,7 +71,9 @@ spring:
             test-on-return: false
             # 应用过滤器
             filters: stat,wall,slf4j
-            connection-properties: druid.stat.mergeSql=true;druid.stat.slowSqlMillis=2000
+            connection-properties:
+              druid.stat.mergeSql: true
+              druid.stat.slowSqlMillis: 2000
   data:
     redis:
       # 基础配置
