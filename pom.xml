@@ -43,7 +43,7 @@
 
         <!-- 未来扩展 -->
         <easyexcel.version>4.0.3</easyexcel.version>
-        <xxl-job.version>2.4.1</xxl-job.version>
+        <xxl-job.version>2.4.2</xxl-job.version>
         <!-- IP 地区转换 -->
         <ip2region.version>2.7.0</ip2region.version>
         <!--工作流flowable-->
