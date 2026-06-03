@@ -1,4 +1,4 @@
-package com.quinn.hboot.js;
+package com.quinn.hboot.playground.poker;
 
 import java.util.*;
 import java.util.stream.Collectors;

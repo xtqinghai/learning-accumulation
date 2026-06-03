@@ -13,7 +13,7 @@ import com.quinn.hboot.common.R;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.security.access.prepost.PreAuthorize;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -36,7 +36,7 @@ public class CmsContentController  {
 
     @Operation(summary = "系统内容管理分页列表")
     @GetMapping("/page")
-    @PreAuthorize("@ss.hasPerm('system:cms-content:query')")
+    @SaCheckPermission("system:cms-content:query")
     @SysLog(module = "系统内容管理", type = "分页列表查询")
     public R<?> getCmsContentPage(CmsContentQuery queryParams ) {
         IPage<CmsContentVO> result = cmsContentService.getCmsContentPage(queryParams);
@@ -45,7 +45,7 @@ public class CmsContentController  {
 
     @Operation(summary = "新增系统内容管理")
     @PostMapping
-    @PreAuthorize("@ss.hasPerm('system:cms-content:add')")
+    @SaCheckPermission("system:cms-content:add")
     @SysLog(module = "系统内容管理", type = "新增")
     public R<Void> saveCmsContent(@RequestBody @Valid CmsContentForm formData ) {
         boolean result = cmsContentService.saveCmsContent(formData);
@@ -54,7 +54,7 @@ public class CmsContentController  {
 
     @Operation(summary = "获取系统内容管理表单数据")
     @GetMapping("/{id}/form")
-    @PreAuthorize("@ss.hasPerm('system:cms-content:edit')")
+    @SaCheckPermission("system:cms-content:edit")
     @SysLog(module = "系统内容管理", type = "获取表单数据")
     public R<CmsContentForm> getCmsContentForm(
         @Parameter(description = "系统内容管理ID") @PathVariable Long id
@@ -65,7 +65,7 @@ public class CmsContentController  {
 
     @Operation(summary = "修改系统内容管理")
     @PutMapping(value = "/{id}")
-    @PreAuthorize("@ss.hasPerm('system:cms-content:edit')")
+    @SaCheckPermission("system:cms-content:edit")
     @SysLog(module = "系统内容管理", type = "修改")
     public R<Void> updateCmsContent(
             @Parameter(description = "系统内容管理ID") @PathVariable Long id,
@@ -77,7 +77,7 @@ public class CmsContentController  {
 
     @Operation(summary = "删除系统内容管理")
     @DeleteMapping("/{ids}")
-    @PreAuthorize("@ss.hasPerm('system:cms-content:delete')")
+    @SaCheckPermission("system:cms-content:delete")
     @SysLog(module = "系统内容管理", type = "删除")
     public R<Void> deleteCmsContents(
         @Parameter(description = "系统内容管理ID，多个以英文逗号(,)分割") @PathVariable String ids

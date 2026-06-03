@@ -17,7 +17,7 @@ import com.quinn.hboot.common.R;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.security.access.prepost.PreAuthorize;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -42,7 +42,7 @@ public class FileController  {
 
     @Operation(summary = "文件管理分页列表")
     @GetMapping("/page")
-    @PreAuthorize("@ss.hasPerm('system:file:query')")
+    @SaCheckPermission("system:file:query")
     @SysLog(module = "文件管理", type = "分页列表查询")
     public R<?> getFilePage(FileQuery queryParams ) {
         IPage<FileVO> result = fileService.getFilePage(queryParams);
@@ -64,7 +64,7 @@ public class FileController  {
 
     @Operation(summary = "新增文件管理")
     @PostMapping
-    @PreAuthorize("@ss.hasPerm('system:file:add')")
+    @SaCheckPermission("system:file:add")
     @SysLog(module = "文件管理", type = "新增")
     public R<Void> saveFile(@RequestBody @Valid FileForm formData ) {
         boolean result = fileService.saveFile(formData);
@@ -73,7 +73,7 @@ public class FileController  {
 
     @Operation(summary = "获取文件管理表单数据")
     @GetMapping("/{id}/form")
-    @PreAuthorize("@ss.hasPerm('system:file:edit')")
+    @SaCheckPermission("system:file:edit")
     @SysLog(module = "文件管理", type = "获取表单数据")
     public R<FileForm> getFileForm(
         @Parameter(description = "文件管理ID") @PathVariable Long id
@@ -84,7 +84,7 @@ public class FileController  {
 
     @Operation(summary = "修改文件管理")
     @PutMapping(value = "/{id}")
-    @PreAuthorize("@ss.hasPerm('system:file:edit')")
+    @SaCheckPermission("system:file:edit")
     @SysLog(module = "文件管理", type = "修改")
     public R<Void> updateFile(
             @Parameter(description = "文件管理ID") @PathVariable Long id,
@@ -96,7 +96,7 @@ public class FileController  {
 
     @Operation(summary = "删除文件管理")
     @DeleteMapping("/{ids}")
-    @PreAuthorize("@ss.hasPerm('system:file:delete')")
+    @SaCheckPermission("system:file:delete")
     @SysLog(module = "文件管理", type = "删除")
     public R<Void> deleteFiles(
         @Parameter(description = "文件管理ID，多个以英文逗号(,)分割") @PathVariable String ids

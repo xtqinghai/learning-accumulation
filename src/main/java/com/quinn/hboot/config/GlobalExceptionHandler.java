@@ -1,5 +1,7 @@
 package com.quinn.hboot.config;
 
+import cn.dev33.satoken.exception.NotLoginException;
+import cn.dev33.satoken.exception.NotPermissionException;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.common.exception.BusinessException;
 import lombok.extern.slf4j.Slf4j;
@@ -22,6 +24,16 @@ public class GlobalExceptionHandler {
     @ExceptionHandler(BusinessException.class)
     public R<String> handleBusinessException(BusinessException ex) {
         return R.fail(ex.getCode(), ex.getMessage());
+    }
+
+    @ExceptionHandler(NotLoginException.class)
+    public R<String> handleNotLoginException(NotLoginException ex) {
+        return R.fail(401, "未登录或登录状态已失效");
+    }
+
+    @ExceptionHandler(NotPermissionException.class)
+    public R<String> handleNotPermissionException(NotPermissionException ex) {
+        return R.fail(403, "无权限访问当前资源");
     }
 
     @ExceptionHandler({MethodArgumentNotValidException.class, BindException.class})

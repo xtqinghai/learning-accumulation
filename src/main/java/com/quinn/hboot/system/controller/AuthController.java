@@ -15,7 +15,6 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestHeader;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
@@ -63,8 +62,8 @@ public class AuthController {
      * 便于后续接入单点登录、在线会话管理等功能。
      */
     @PostMapping("/auth/logout")
-    public R<Void> logout(@RequestHeader(value = "Authorization", required = false) String authorizationHeader) {
-        authService.logout(authorizationHeader);
+    public R<Void> logout() {
+        authService.logout();
         return R.ok();
     }
 

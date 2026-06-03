@@ -8,7 +8,7 @@ server:
 logging:
   level:
     com.quinn.hboot: debug
-    com.alibaba.druid: info  # 调整为info，避免过多日志
+    com.alibaba.druid: info  # 璋冩暣涓篿nfo锛岄伩鍏嶈繃澶氭棩蹇?
     org.springframework.web: debug
 
 spring:
@@ -22,7 +22,7 @@ spring:
       max-file-size: 100MB
       max-request-size: 100MB
 
-  # ========== 动态多数据源配置（简化）==========
+  # ========== 鍔ㄦ€佸鏁版嵁婧愰厤缃紙绠€鍖栵級==========
   datasource:
     dynamic:
       strict: false
@@ -46,7 +46,7 @@ spring:
             validation-query: SELECT 1 FROM DUAL
             test-on-borrow: false
             test-on-return: false
-            # 应用过滤器
+            # 搴旂敤杩囨护鍣?
             filters: stat,wall,slf4j
             connection-properties:
               druid.stat.mergeSql: true
@@ -69,36 +69,36 @@ spring:
             validation-query: SELECT 1 FROM DUAL
             test-on-borrow: false
             test-on-return: false
-            # 应用过滤器
+            # 搴旂敤杩囨护鍣?
             filters: stat,wall,slf4j
             connection-properties:
               druid.stat.mergeSql: true
               druid.stat.slowSqlMillis: 2000
   data:
     redis:
-      # 基础配置
+      # 鍩虹閰嶇疆
       host: localhost
       port: 6379
-      password:  # 无密码则空，有密码填写你的redis密码
+      password:  # 鏃犲瘑鐮佸垯绌猴紝鏈夊瘑鐮佸～鍐欎綘鐨剅edis瀵嗙爜
       database: 0
-      # 超时配置
-      timeout: 10000ms  # 连接超时时间，单位ms
-      # lettuce客户端配置（SpringBoot3.x默认客户端，不用改）
+      # 瓒呮椂閰嶇疆
+      timeout: 10000ms  # 杩炴帴瓒呮椂鏃堕棿锛屽崟浣峬s
+      # lettuce瀹㈡埛绔厤缃紙SpringBoot3.x榛樿瀹㈡埛绔紝涓嶇敤鏀癸級
       lettuce:
         pool:
-          max-active: 8    # 连接池最大连接数
-          max-idle: 8      # 连接池最大空闲连接数
-          min-idle: 2      # 连接池最小空闲连接数
-          max-wait: 5000ms # 连接池获取连接的最大等待时间，超时会报错
-# 允许循环引用 turbo使用
+          max-active: 8    # 杩炴帴姹犳渶澶ц繛鎺ユ暟
+          max-idle: 8      # 杩炴帴姹犳渶澶х┖闂茶繛鎺ユ暟
+          min-idle: 2      # 杩炴帴姹犳渶灏忕┖闂茶繛鎺ユ暟
+          max-wait: 5000ms # 杩炴帴姹犺幏鍙栬繛鎺ョ殑鏈€澶х瓑寰呮椂闂达紝瓒呮椂浼氭姤閿?
+# 鍏佽寰幆寮曠敤 turbo浣跨敤
   main:
     allow-circular-references: true
 
-# MyBatis-Plus 配置保持不变...
+# MyBatis-Plus 閰嶇疆淇濇寔涓嶅彉...
 
-# MyBatis-Plus 配置保持不变...
+# MyBatis-Plus 閰嶇疆淇濇寔涓嶅彉...
 
-# MyBatis-Plus 配置
+# MyBatis-Plus 閰嶇疆
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.quinn.hboot.**.entity
@@ -111,10 +111,10 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
 
-# 其他配置保持不变...
+# 鍏朵粬閰嶇疆淇濇寔涓嶅彉...
 
 
-# springdoc/swagger 配置 不变
+# springdoc/swagger 閰嶇疆 涓嶅彉
 springdoc:
   api-docs:
     path: /v3/api-docs
@@ -133,7 +133,7 @@ springdoc:
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-# 文件存储配置 不变
+# 鏂囦欢瀛樺偍閰嶇疆 涓嶅彉
 file:
   storage: local
   local:
@@ -141,57 +141,55 @@ file:
     public-url: http://localhost:8080/api/v1/file/preview
 
 warm-flow:
-  # 是否开启工作流，默认true
+  # 鏄惁寮€鍚伐浣滄祦锛岄粯璁rue
   enabled: true
-  # 是否显示banner图，默认是
+  # 鏄惁鏄剧ずbanner鍥撅紝榛樿鏄?
   banner: true
-  # id生成器类型, 不填默认为orm扩展自带生成器或者warm-flow内置的19位雪花算法, SnowId14:14位，SnowId15:15位， SnowFlake19：19位
+  # id鐢熸垚鍣ㄧ被鍨? 涓嶅～榛樿涓簅rm鎵╁睍鑷甫鐢熸垚鍣ㄦ垨鑰厀arm-flow鍐呯疆鐨?9浣嶉洩鑺辩畻娉? SnowId14:14浣嶏紝SnowId15:15浣嶏紝 SnowFlake19锛?9浣?
   key_type: SnowId19
-  # 是否开启设计器ui，默认true
+  # 鏄惁寮€鍚璁″櫒ui锛岄粯璁rue
   ui: true
-  # 如果需要工作流共享业务系统权限，默认Authorization，如果有多个token，用逗号分隔
+  # 濡傛灉闇€瑕佸伐浣滄祦鍏变韩涓氬姟绯荤粺鏉冮檺锛岄粯璁uthorization锛屽鏋滄湁澶氫釜token锛岀敤閫楀彿鍒嗛殧
   token-name: Authorization
-  # 是否显示流程图顶部文字，默认为true：显示
+  # 鏄惁鏄剧ず娴佺▼鍥鹃《閮ㄦ枃瀛楋紝榛樿涓簍rue锛氭樉绀?
   top-text-show: true
-#  # 公共模型流程状态对应的三元色：如果只配置了这个，经典模式和仿钉钉模型的节点颜色共用这个
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  is-read-header: true
+  is-read-cookie: false
+  is-read-body: false
+  is-read-param: false
+  timeout: 1800
+  active-timeout: 1800
+  auto-renew: true
+#  # 鍏叡妯″瀷娴佺▼鐘舵€佸搴旂殑涓夊厓鑹诧細濡傛灉鍙厤缃簡杩欎釜锛岀粡鍏告ā寮忓拰浠块拤閽夋ā鍨嬬殑鑺傜偣棰滆壊鍏辩敤杩欎釜
 #  chart-status-color:
-#    ## 未办理
+#    ## 鏈姙鐞?
 #    - 166,178,189
-#    ## 待办理
+#    ## 寰呭姙鐞?
 #    - 255,197,90
-#    ## 已办理
+#    ## 宸插姙鐞?
 #    - 135,206,250
-#  # 经典模型流程状态对应的三元色：如果配置了，经典模型优先这个
+#  # 缁忓吀妯″瀷娴佺▼鐘舵€佸搴旂殑涓夊厓鑹诧細濡傛灉閰嶇疆浜嗭紝缁忓吀妯″瀷浼樺厛杩欎釜
 #  chart-status-color-classics:
-#    ## 未办理
+#    ## 鏈姙鐞?
 #    - 166,178,189
-#    ## 待办理
+#    ## 寰呭姙鐞?
 #    - 255,197,90
-#    ## 已办理
+#    ## 宸插姙鐞?
 #    - 135,206,250
-#  # 仿钉钉模型流程状态对应的三元色：如果配置了，仿钉钉模型优先这个
+#  # 浠块拤閽夋ā鍨嬫祦绋嬬姸鎬佸搴旂殑涓夊厓鑹诧細濡傛灉閰嶇疆浜嗭紝浠块拤閽夋ā鍨嬩紭鍏堣繖涓?
 #  chart-status-color-mimic:
-#    ## 未办理
+#    ## 鏈姙鐞?
 #    - 62,62,62
-#    ## 待办理
+#    ## 寰呭姙鐞?
 #    - 255,205,23
-#    ## 已办理
+#    ## 宸插姙鐞?
 #    - 157,255,0
 
 app:
   auth:
-    # JWT 令牌签名密钥，生产环境建议放到安全配置中心。
-    jwt-secret: "yuqinghai-hboot-438704315@qq.com"
-    # JWT 本身的有效期，单位：分钟。这里保持 24 小时。
-    jwt-expire-minutes: 1440
-    # Redis 登录会话有效期，单位：分钟。
-    # 每次携带有效 token 访问时都会自动续期，减少活跃用户被动退出。
-    session-expire-minutes: 30
-    # 登录会话缓存 key 前缀。
-    login-session-prefix: "login:"
-    # 登录失败次数缓存 key 前缀。
     login-fail-prefix: "login:fail:"
-    # 最大连续失败次数。
     max-retry-count: 5
-    # 达到失败阈值后的锁定时长，单位：分钟。
     retry-lock-minutes: 10

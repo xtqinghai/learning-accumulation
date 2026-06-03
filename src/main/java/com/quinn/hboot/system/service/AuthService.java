@@ -31,5 +31,5 @@ public interface AuthService {
     /**
      * 退出登录。
      */
-    void logout(String authorizationHeader);
+    void logout();
 }

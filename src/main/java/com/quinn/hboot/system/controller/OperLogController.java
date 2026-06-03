@@ -12,7 +12,7 @@ import com.quinn.hboot.common.R;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.security.access.prepost.PreAuthorize;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -33,7 +33,7 @@ public class OperLogController  {
 
     @Operation(summary = "系统操作日志分页列表")
     @GetMapping("/page")
-    @PreAuthorize("@ss.hasPerm('system:oper-log:query')")
+    @SaCheckPermission("system:oper-log:query")
     public R<?> getOperLogPage(OperLogQuery queryParams ) {
         IPage<OperLogVO> result = operLogService.getOperLogPage(queryParams);
         return R.ok(result);
@@ -41,7 +41,7 @@ public class OperLogController  {
 
     @Operation(summary = "新增系统操作日志")
     @PostMapping
-    @PreAuthorize("@ss.hasPerm('system:oper-log:add')")
+    @SaCheckPermission("system:oper-log:add")
     public R<Void> saveOperLog(@RequestBody @Valid OperLogForm formData ) {
         boolean result = operLogService.saveOperLog(formData);
         return R.ok();
@@ -49,7 +49,7 @@ public class OperLogController  {
 
     @Operation(summary = "获取系统操作日志表单数据")
     @GetMapping("/{id}/form")
-    @PreAuthorize("@ss.hasPerm('system:oper-log:edit')")
+    @SaCheckPermission("system:oper-log:edit")
     public R<OperLogForm> getOperLogForm(
         @Parameter(description = "系统操作日志ID") @PathVariable Long id
     ) {
@@ -59,7 +59,7 @@ public class OperLogController  {
 
     @Operation(summary = "修改系统操作日志")
     @PutMapping(value = "/{id}")
-    @PreAuthorize("@ss.hasPerm('system:oper-log:edit')")
+    @SaCheckPermission("system:oper-log:edit")
     public R<Void> updateOperLog(
             @Parameter(description = "系统操作日志ID") @PathVariable Long id,
             @RequestBody @Validated OperLogForm formData
@@ -70,7 +70,7 @@ public class OperLogController  {
 
     @Operation(summary = "删除系统操作日志")
     @DeleteMapping("/{ids}")
-    @PreAuthorize("@ss.hasPerm('system:oper-log:delete')")
+    @SaCheckPermission("system:oper-log:delete")
     public R<Void> deleteOperLogs(
         @Parameter(description = "系统操作日志ID，多个以英文逗号(,)分割") @PathVariable String ids
     ) {

@@ -55,12 +55,12 @@ public class SwaggerConfig {
                                 .name("Apache 2.0")
                                 .url("http://www.apache.org/licenses/LICENSE-2.0.html")))
                 .components(new Components()
-                        .addSecuritySchemes("bearer-jwt", new SecurityScheme()
+                        .addSecuritySchemes("bearer-token", new SecurityScheme()
                                 .type(SecurityScheme.Type.HTTP)
                                 .scheme("bearer")
-                                .bearerFormat("JWT")
+                                .bearerFormat("Bearer Token")
                                 .in(SecurityScheme.In.HEADER)
                                 .name("Authorization")))
-                .addSecurityItem(new SecurityRequirement().addList("bearer-jwt"));
+                .addSecurityItem(new SecurityRequirement().addList("bearer-token"));
     }
 }

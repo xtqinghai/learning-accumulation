@@ -12,7 +12,7 @@ import com.baomidou.mybatisplus.core.metadata.IPage;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.tags.Tag;
 import io.swagger.v3.oas.annotations.Operation;
-import org.springframework.security.access.prepost.PreAuthorize;
+import cn.dev33.satoken.annotation.SaCheckPermission;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
 import jakarta.validation.Valid;
@@ -33,7 +33,7 @@ public class LoginLogController  {
 
     @Operation(summary = "系统登录日志分页列表")
     @GetMapping("/page")
-    @PreAuthorize("@ss.hasPerm('system:login-log:query')")
+    @SaCheckPermission("system:login-log:query")
     public R<?> getLoginLogPage(LoginLogQuery queryParams ) {
         IPage<LoginLogVO> result = loginLogService.getLoginLogPage(queryParams);
         return R.ok(result);
@@ -41,7 +41,7 @@ public class LoginLogController  {
 
     @Operation(summary = "新增系统登录日志")
     @PostMapping
-    @PreAuthorize("@ss.hasPerm('system:login-log:add')")
+    @SaCheckPermission("system:login-log:add")
     public R<Void> saveLoginLog(@RequestBody @Valid LoginLogForm formData ) {
         boolean result = loginLogService.saveLoginLog(formData);
         return R.ok();
@@ -49,7 +49,7 @@ public class LoginLogController  {
 
     @Operation(summary = "获取系统登录日志表单数据")
     @GetMapping("/{id}/form")
-    @PreAuthorize("@ss.hasPerm('system:login-log:edit')")
+    @SaCheckPermission("system:login-log:edit")
     public R<LoginLogForm> getLoginLogForm(
         @Parameter(description = "系统登录日志ID") @PathVariable Long id
     ) {
@@ -59,7 +59,7 @@ public class LoginLogController  {
 
     @Operation(summary = "修改系统登录日志")
     @PutMapping(value = "/{id}")
-    @PreAuthorize("@ss.hasPerm('system:login-log:edit')")
+    @SaCheckPermission("system:login-log:edit")
     public R<Void> updateLoginLog(
             @Parameter(description = "系统登录日志ID") @PathVariable Long id,
             @RequestBody @Validated LoginLogForm formData
@@ -70,7 +70,7 @@ public class LoginLogController  {
 
     @Operation(summary = "删除系统登录日志")
     @DeleteMapping("/{ids}")
-    @PreAuthorize("@ss.hasPerm('system:login-log:delete')")
+    @SaCheckPermission("system:login-log:delete")
     public R<Void> deleteLoginLogs(
         @Parameter(description = "系统登录日志ID，多个以英文逗号(,)分割") @PathVariable String ids
     ) {
