@@ -92,8 +92,8 @@ public class SysTaskAssigneeServiceImpl implements TaskAssigneeService {
         }
         queryWrapper.eq(SysDept::getStatus, 1);
 
-        Page<SysDept> page = new Page<>(taskQuery.getPageNum(), taskQuery.getPageSize());
-        IPage<SysDept> deptPage = deptService.page(page, queryWrapper);
+        PageQuery pageQuery = new PageQuery(taskQuery.getPageSize(), taskQuery.getPageNum());
+        IPage<SysDept> deptPage = deptService.page(pageQuery.buildPage(), queryWrapper);
         List<SysDept> deptList = deptPage.getRecords();
 
         List<TaskAssigneeDTO.TaskHandler> handlers = TaskAssigneeDTO.<SysDept>convertToHandlerList(
@@ -124,8 +124,9 @@ public class SysTaskAssigneeServiceImpl implements TaskAssigneeService {
 
         // Reuse the system user query so workflow assignee search stays aligned with
         // the current org-post model and doesn't depend on a single hard-coded status value.
+        PageQuery pageQuery = new PageQuery(taskQuery.getPageSize(), taskQuery.getPageNum());
         Page<SysUser> page = (Page<SysUser>) userService.pageAll(
-            new Page<>(taskQuery.getPageNum(), taskQuery.getPageSize()),
+            pageQuery.buildPage(),
             queryUser
         );
         List<TaskAssigneeDTO.TaskHandler> handlers = TaskAssigneeDTO.<SysUser>convertToHandlerList(page.getRecords(),

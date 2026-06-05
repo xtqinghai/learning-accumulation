@@ -41,10 +41,7 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
     */
     @Override
     public IPage<OperLogVO> getOperLogPage(OperLogQuery queryParams) {
-        Page<OperLogVO> pageVO = this.baseMapper.getOperLogPage(
-                new Page<>(queryParams.getPageNum(), queryParams.getPageSize()),
-                queryParams
-        );
+        Page<OperLogVO> pageVO = this.baseMapper.getOperLogPage(queryParams.buildPage(), queryParams);
         return pageVO;
     }
     
@@ -102,7 +99,7 @@ public class OperLogServiceImpl extends ServiceImpl<OperLogMapper, OperLog> impl
     }
 
     @Override
-    @Async
+    @Async("applicationTaskExecutor")
     public boolean saveAsync(OperLogForm formData) {
         OperLog entity = operLogConverter.toEntity(formData);
         return this.save(entity);

@@ -12,6 +12,7 @@ import java.util.Map;
 import java.util.Set;
 
 public interface SysUserService extends IService<SysUser> {
+
     void register(RegisterUserDTO dto);
 
     SysUser getByUsername(String username);

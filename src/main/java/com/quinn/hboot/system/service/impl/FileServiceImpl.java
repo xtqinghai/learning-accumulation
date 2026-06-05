@@ -68,10 +68,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
     */
     @Override
     public IPage<FileVO> getFilePage(FileQuery queryParams) {
-        Page<FileVO> pageVO = this.baseMapper.getFilePage(
-                new Page<>(queryParams.getPageNum(), queryParams.getPageSize()),
-                queryParams
-        );
+        Page<FileVO> pageVO = this.baseMapper.getFilePage(queryParams.buildPage(), queryParams);
         return pageVO;
     }
 

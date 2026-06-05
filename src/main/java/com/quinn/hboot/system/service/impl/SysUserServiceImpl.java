@@ -5,6 +5,8 @@ import com.baomidou.mybatisplus.core.conditions.query.QueryWrapper;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.impl.ServiceImpl;
+import com.quinn.hboot.system.cache.SystemCacheNames;
+import com.quinn.hboot.system.cache.SystemCacheSupport;
 import com.quinn.hboot.system.mapper.SysDeptMapper;
 import com.quinn.hboot.system.mapper.SysPostMapper;
 import com.quinn.hboot.system.mapper.SysRoleMapper;
@@ -22,12 +24,14 @@ import com.quinn.hboot.system.model.entity.SysUserPost;
 import com.quinn.hboot.system.model.entity.SysUserRole;
 import com.quinn.hboot.system.service.SysMenuService;
 import com.quinn.hboot.system.service.SysUserService;
-import lombok.RequiredArgsConstructor;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.CollectionUtils;
 
+import java.io.Serializable;
 import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.HashSet;
@@ -39,7 +43,6 @@ import java.util.function.Function;
 import java.util.stream.Collectors;
 
 @Service
-@RequiredArgsConstructor
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
 
     private static final String SUPER_ADMIN_ROLE_CODE = "super-admin";
@@ -54,8 +57,37 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     private final SysUserPostMapper userPostMapper;
     private final SysUserOrgPostMapper userOrgPostMapper;
     private final PasswordEncoder passwordEncoder;
+    private final SystemCacheSupport cacheSupport;
+    private final SysUserService self;
+
+    public SysUserServiceImpl(
+        SysMenuService menuService,
+        SysUserMapper userMapper,
+        SysDeptMapper deptMapper,
+        SysRoleMapper roleMapper,
+        SysPostMapper postMapper,
+        SysUserRoleMapper userRoleMapper,
+        SysUserPostMapper userPostMapper,
+        SysUserOrgPostMapper userOrgPostMapper,
+        PasswordEncoder passwordEncoder,
+        SystemCacheSupport cacheSupport,
+        @Lazy SysUserService self
+    ) {
+        this.menuService = menuService;
+        this.userMapper = userMapper;
+        this.deptMapper = deptMapper;
+        this.roleMapper = roleMapper;
+        this.postMapper = postMapper;
+        this.userRoleMapper = userRoleMapper;
+        this.userPostMapper = userPostMapper;
+        this.userOrgPostMapper = userOrgPostMapper;
+        this.passwordEncoder = passwordEncoder;
+        this.cacheSupport = cacheSupport;
+        this.self = self;
+    }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public void register(RegisterUserDTO dto) {
         SysDept org = deptMapper.selectById(dto.getOrgId());
         if (org == null) {
@@ -76,31 +108,28 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setStatus(1);
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         this.getBaseMapper().insert(user);
+        clearUserCaches(user.getId(), user.getUsername());
     }
 
     @Override
+    @Cacheable(cacheNames = SystemCacheNames.USER_BY_USERNAME, key = "#username", unless = "#result == null")
     public SysUser getByUsername(String username) {
         SysUser user = this.getBaseMapper().selectOne(
             new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, username)
         );
-        if (user == null) {
-            return null;
-        }
-        return enrichUser(user);
+        return user == null ? null : enrichUser(user);
     }
 
     @Override
+    @Cacheable(cacheNames = SystemCacheNames.USER_BY_ID, key = "#id", unless = "#result == null")
     public SysUser getUserDetail(Long id) {
         SysUser user = userMapper.selectUserDetail(id);
-        if (user == null) {
-            return null;
-        }
-        return enrichUser(user);
+        return user == null ? null : enrichUser(user);
     }
 
     @Override
     public List<String> getUserPermissions(Long userId) {
-        Set<String> roleCodes = getUserRoleCodes(userId);
+        Set<String> roleCodes = self.getUserRoleCodes(userId);
         if (roleCodes.contains(SUPER_ADMIN_ROLE_CODE)) {
             return List.of(ALL_PERMISSION);
         }
@@ -108,8 +137,9 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Cacheable(cacheNames = SystemCacheNames.USER_ROLE_CODES, key = "#userId", unless = "#result == null")
     public Set<String> getUserRoleCodes(Long userId) {
-        List<Long> roleIds = getUserRoleIds(userId);
+        List<Long> roleIds = self.getUserRoleIds(userId);
         if (CollectionUtils.isEmpty(roleIds)) {
             return Set.of();
         }
@@ -121,6 +151,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Cacheable(cacheNames = SystemCacheNames.USER_ROLE_IDS, key = "#userId", unless = "#result == null")
     public List<Long> getUserRoleIds(Long userId) {
         return userRoleMapper.selectList(new QueryWrapper<SysUserRole>().eq("user_id", userId)).stream()
             .map(SysUserRole::getRoleId)
@@ -130,6 +161,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Cacheable(cacheNames = SystemCacheNames.USER_ORG_POSTS, key = "#userId", unless = "#result == null")
     public List<SysUserOrgPost> getUserOrgPosts(Long userId) {
         List<SysUserOrgPost> orgPosts = userOrgPostMapper.selectList(
             new QueryWrapper<SysUserOrgPost>().eq("user_id", userId).orderByDesc("is_primary").orderByAsc("id")
@@ -154,15 +186,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
+    @Transactional(rollbackFor = Exception.class)
     public Boolean resetPwd(Long id) {
         if (id == null || id <= 0) {
             throw new IllegalArgumentException("用户ID不能为空且必须为正数");
         }
 
+        SysUser current = this.getById(id);
         SysUser user = new SysUser();
         user.setId(id);
         user.setPassword(passwordEncoder.encode("123456"));
-        return this.updateById(user);
+        boolean result = this.updateById(user);
+        if (result) {
+            clearUserCaches(id, current == null ? null : current.getUsername());
+        }
+        return result;
     }
 
     @Override
@@ -193,16 +231,19 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         this.baseMapper.insert(entity);
         replaceUserRoles(entity.getId(), entity.getRoleIds());
         replaceUserOrgPosts(entity.getId(), entity.getOrgPosts());
+        clearUserCaches(entity.getId(), entity.getUsername());
         return true;
     }
 
     @Override
     @Transactional(rollbackFor = Exception.class)
     public Object updateAllById(SysUser entity) {
+        SysUser current = this.getById(entity.getId());
         normalizeBeforeSave(entity, false);
         this.baseMapper.updateById(entity);
         replaceUserRoles(entity.getId(), entity.getRoleIds());
         replaceUserOrgPosts(entity.getId(), entity.getOrgPosts());
+        clearUserCaches(entity.getId(), entity.getUsername() != null ? entity.getUsername() : current == null ? null : current.getUsername());
         return true;
     }
 
@@ -211,6 +252,21 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         IPage<SysUser> result = this.baseMapper.selectUserPage(page, queryWrapper);
         if (result.getRecords() != null) {
             result.setRecords(result.getRecords().stream().map(this::enrichUser).toList());
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean removeById(Serializable id) {
+        Long userId = id instanceof Long ? (Long) id : null;
+        SysUser current = userId == null ? null : this.getById(userId);
+        boolean result = super.removeById(id);
+        if (result && userId != null) {
+            userRoleMapper.delete(new QueryWrapper<SysUserRole>().eq("user_id", userId));
+            userPostMapper.delete(new QueryWrapper<SysUserPost>().eq("user_id", userId));
+            userOrgPostMapper.delete(new QueryWrapper<SysUserOrgPost>().eq("user_id", userId));
+            clearUserCaches(userId, current == null ? null : current.getUsername());
         }
         return result;
     }
@@ -227,9 +283,8 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
         }
 
-        List<Long> roleIds = getUserRoleIds(user.getId());
+        List<Long> roleIds = self.getUserRoleIds(user.getId());
         user.setRoleIds(roleIds);
-
         if (!CollectionUtils.isEmpty(roleIds)) {
             Map<Long, SysRole> roleMap = roleMapper.selectBatchIds(roleIds).stream()
                 .collect(Collectors.toMap(SysRole::getId, Function.identity()));
@@ -243,7 +298,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             }
         }
 
-        List<SysUserOrgPost> orgPosts = getUserOrgPosts(user.getId());
+        List<SysUserOrgPost> orgPosts = self.getUserOrgPosts(user.getId());
         user.setOrgPosts(orgPosts);
         if (!CollectionUtils.isEmpty(orgPosts)) {
             user.setPostName(orgPosts.stream()
@@ -317,11 +372,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
             entity.setPostId(primary.getPostId());
         }
 
-        if (!entity.getRoleIds().isEmpty()) {
-            entity.setRoleId(entity.getRoleIds().get(0));
-        } else {
-            entity.setRoleId(null);
-        }
+        entity.setRoleId(entity.getRoleIds().isEmpty() ? null : entity.getRoleIds().get(0));
 
         if (create) {
             if (entity.getPassword() == null || entity.getPassword().isBlank()) {
@@ -371,5 +422,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
                 userPostMapper.insert(userPost);
             }
         }
+    }
+
+    private void clearUserCaches(Long userId, String username) {
+        cacheSupport.evictUserBase(userId, username);
+        cacheSupport.clearUserBaseCaches();
+        cacheSupport.clearUserAuthorizationCaches();
     }
 }

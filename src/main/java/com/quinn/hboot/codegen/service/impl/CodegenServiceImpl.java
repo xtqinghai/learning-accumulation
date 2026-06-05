@@ -56,7 +56,7 @@ public class CodegenServiceImpl implements CodegenService {
      * @return 分页结果
      */
     public Page<TablePageVO> getTablePage(TablePageQuery queryParams) {
-        Page<TablePageVO> page = new Page<>(queryParams.getPageNum(), queryParams.getPageSize());
+        Page<TablePageVO> page = queryParams.buildPage();
         // 设置排除的表
         List<String> excludeTables = codegenProperties.getExcludeTables();
         queryParams.setExcludeTables(excludeTables);

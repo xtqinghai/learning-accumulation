@@ -2,6 +2,7 @@ package com.quinn.hboot.system.service.impl;
 
 import cn.hutool.core.util.StrUtil;
 import com.quinn.hboot.common.exception.BusinessException;
+import com.quinn.hboot.common.exception.ErrorCode;
 import com.quinn.hboot.config.properties.AuthProperties;
 import com.quinn.hboot.system.service.AuthCacheService;
 import lombok.RequiredArgsConstructor;
@@ -33,7 +34,7 @@ public class AuthCacheServiceImpl implements AuthCacheService {
 
         Long ttl = redisTemplate.getExpire(key, TimeUnit.SECONDS);
         long remainSeconds = ttl == null || ttl < 0 ? authProperties.getRetryLockMinutes() * 60 : ttl;
-        throw new BusinessException(429, "登录失败次数过多，请 " + remainSeconds + " 秒后重试");
+        throw new BusinessException(ErrorCode.TOO_MANY_REQUESTS, "登录失败次数过多，请 " + remainSeconds + " 秒后重试");
     }
 
     @Override

@@ -3,6 +3,8 @@ package com.quinn.hboot.system.service.impl;
 import cn.dev33.satoken.stp.StpUtil;
 import cn.hutool.core.util.StrUtil;
 import com.quinn.hboot.common.exception.BusinessException;
+import com.quinn.hboot.common.trace.TraceContext;
+import com.quinn.hboot.system.cache.SystemCacheSupport;
 import com.quinn.hboot.system.model.dto.LoginReqDTO;
 import com.quinn.hboot.system.model.entity.SysMenu;
 import com.quinn.hboot.system.model.vo.AuthMeVO;
@@ -36,6 +38,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final LoginUserResolver loginUserResolver;
     private final AuthCacheService authCacheService;
+    private final SystemCacheSupport cacheSupport;
     private final SysMenuService menuService;
     private final LoginLogService loginLogService;
 
@@ -46,6 +49,16 @@ public class AuthServiceImpl implements AuthService {
 
         authCacheService.checkLoginAllowed(username, clientIp);
         String plainPassword = decryptPassword(req.getPassword());
+        return doLogin(request, username, clientIp, plainPassword, false);
+    }
+
+    private LoginRespVO doLogin(
+        HttpServletRequest request,
+        String username,
+        String clientIp,
+        String plainPassword,
+        boolean cacheRetried
+    ) {
 
         try {
             LoginUser loginUser = loginUserResolver.loadByUsername(username);
@@ -67,6 +80,7 @@ public class AuthServiceImpl implements AuthService {
 
             authCacheService.clearLoginFailure(username, clientIp);
             recordLoginLog(request, username, true, "登录成功");
+            log.info("auth login success traceId={} username={} ip={}", TraceContext.getTraceId(), username, clientIp);
 
             LoginRespVO resp = new LoginRespVO();
             resp.setToken(StpUtil.getTokenValue());
@@ -74,12 +88,47 @@ public class AuthServiceImpl implements AuthService {
             resp.setMenus(MenuTreeUtil.buildTree(menuService.findMenusByUserId(loginUser.getUserId())));
             return resp;
         } catch (BusinessException ex) {
+            log.warn(
+                "auth login rejected traceId={} username={} ip={} code={} message={}",
+                TraceContext.getTraceId(),
+                username,
+                clientIp,
+                ex.getCode(),
+                ex.getMessage()
+            );
             throw ex;
         } catch (Exception ex) {
-            log.warn("用户登录认证失败，username={}，message={}", username, ex.getMessage());
+            if (!cacheRetried) {
+                clearLoginRelatedCaches();
+                log.warn(
+                    "auth login retry after cache clear traceId={} username={} ip={} exceptionType={} message={}",
+                    TraceContext.getTraceId(),
+                    username,
+                    clientIp,
+                    ex.getClass().getName(),
+                    ex.getMessage()
+                );
+                return doLogin(request, username, clientIp, plainPassword, true);
+            }
+            log.error(
+                "auth login failed traceId={} username={} ip={} exceptionType={} message={}",
+                TraceContext.getTraceId(),
+                username,
+                clientIp,
+                ex.getClass().getName(),
+                ex.getMessage(),
+                ex
+            );
             handleLoginFailure(request, username, clientIp, "登录认证失败");
             throw new BusinessException(401, "登录失败，请检查账号状态或密码");
         }
+    }
+
+    private void clearLoginRelatedCaches() {
+        cacheSupport.clearUserBaseCaches();
+        cacheSupport.clearUserAuthorizationCaches();
+        cacheSupport.clearRoleMenuCaches();
+        cacheSupport.clearMenuCaches();
     }
 
     @Override

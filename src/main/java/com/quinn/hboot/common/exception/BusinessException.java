@@ -2,23 +2,27 @@ package com.quinn.hboot.common.exception;
 
 import lombok.Getter;
 
-/**
- * 业务异常。
- * <p>
- * 用于承载可预期的业务校验失败场景，
- * 例如登录失败、参数非法、状态不允许等。
- */
 @Getter
 public class BusinessException extends RuntimeException {
 
     private final int code;
+    private final ErrorCode errorCode;
 
     public BusinessException(String message) {
-        this(400, message);
+        this(ErrorCode.BUSINESS_RULE_FAILED, message);
     }
 
     public BusinessException(int code, String message) {
-        super(message);
-        this.code = code;
+        this(ErrorCode.fromCode(code), message);
+    }
+
+    public BusinessException(ErrorCode errorCode) {
+        this(errorCode, errorCode.getDefaultMessage());
+    }
+
+    public BusinessException(ErrorCode errorCode, String message) {
+        super(message == null || message.isBlank() ? errorCode.getDefaultMessage() : message);
+        this.errorCode = errorCode;
+        this.code = errorCode.getCode();
     }
 }

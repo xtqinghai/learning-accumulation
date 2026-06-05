@@ -8,7 +8,6 @@ import com.alibaba.druid.wall.WallFilter;
 import com.quinn.hboot.config.properties.DruidMonitorProperties;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
-import lombok.RequiredArgsConstructor;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
@@ -21,11 +20,14 @@ import java.util.HashMap;
 import java.util.Map;
 
 @Configuration
-@RequiredArgsConstructor
 @ConditionalOnProperty(name = "app.druid.monitor.enabled", havingValue = "true")
 public class DruidMonitorConfig {
 
-    private final DruidMonitorProperties monitorProperties;
+    private final DruidMonitorProperties druidMonitorProperties;
+
+    public DruidMonitorConfig(DruidMonitorProperties druidMonitorProperties) {
+        this.druidMonitorProperties = druidMonitorProperties;
+    }
 
     /**
      * 1. 注册 Druid 监控页面的 Servlet
@@ -33,22 +35,22 @@ public class DruidMonitorConfig {
      */
     @Bean
     public ServletRegistrationBean<Servlet> druidStatViewServlet() {
-        Assert.hasText(monitorProperties.getUsername(), "app.druid.monitor.username must not be blank when monitor is enabled");
-        Assert.hasText(monitorProperties.getPassword(), "app.druid.monitor.password must not be blank when monitor is enabled");
+        Assert.hasText(druidMonitorProperties.getUsername(), "app.druid.monitor.username must not be blank when monitor is enabled");
+        Assert.hasText(druidMonitorProperties.getPassword(), "app.druid.monitor.password must not be blank when monitor is enabled");
 
         ServletRegistrationBean<Servlet> registrationBean = new ServletRegistrationBean<>();
         registrationBean.setServlet(new StatViewServlet());
         registrationBean.addUrlMappings("/druid/*");
 
         Map<String, String> initParams = new HashMap<>();
-        initParams.put("loginUsername", monitorProperties.getUsername());
-        initParams.put("loginPassword", monitorProperties.getPassword());
-        initParams.put("resetEnable", Boolean.toString(monitorProperties.isResetEnable()));
-        if (StringUtils.hasText(monitorProperties.getAllow())) {
-            initParams.put("allow", monitorProperties.getAllow());
+        initParams.put("loginUsername", druidMonitorProperties.getUsername());
+        initParams.put("loginPassword", druidMonitorProperties.getPassword());
+        initParams.put("resetEnable", Boolean.toString(druidMonitorProperties.isResetEnable()));
+        if (StringUtils.hasText(druidMonitorProperties.getAllow())) {
+            initParams.put("allow", druidMonitorProperties.getAllow());
         }
-        if (StringUtils.hasText(monitorProperties.getDeny())) {
-            initParams.put("deny", monitorProperties.getDeny());
+        if (StringUtils.hasText(druidMonitorProperties.getDeny())) {
+            initParams.put("deny", druidMonitorProperties.getDeny());
         }
         registrationBean.setInitParameters(initParams);
         return registrationBean;
@@ -62,9 +64,9 @@ public class DruidMonitorConfig {
 
         Map<String, String> initParams = new HashMap<>();
         initParams.put("exclusions", "*.js,*.gif,*.jpg,*.png,*.css,*.ico,/druid/*");
-        initParams.put("sessionStatEnable", Boolean.toString(monitorProperties.isSessionStatEnable()));
-        initParams.put("sessionStatMaxCount", Integer.toString(monitorProperties.getSessionStatMaxCount()));
-        initParams.put("profileEnable", Boolean.toString(monitorProperties.isProfileEnable()));
+        initParams.put("sessionStatEnable", Boolean.toString(druidMonitorProperties.isSessionStatEnable()));
+        initParams.put("sessionStatMaxCount", Integer.toString(druidMonitorProperties.getSessionStatMaxCount()));
+        initParams.put("profileEnable", Boolean.toString(druidMonitorProperties.isProfileEnable()));
         registrationBean.setInitParameters(initParams);
         return registrationBean;
     }
@@ -72,9 +74,9 @@ public class DruidMonitorConfig {
     @Bean
     public StatFilter statFilter() {
         StatFilter statFilter = new StatFilter();
-        statFilter.setLogSlowSql(monitorProperties.isLogSlowSql());
-        statFilter.setMergeSql(monitorProperties.isMergeSql());
-        statFilter.setSlowSqlMillis(monitorProperties.getSlowSqlMillis());
+        statFilter.setLogSlowSql(druidMonitorProperties.isLogSlowSql());
+        statFilter.setMergeSql(druidMonitorProperties.isMergeSql());
+        statFilter.setSlowSqlMillis(druidMonitorProperties.getSlowSqlMillis());
         return statFilter;
     }
 
@@ -82,7 +84,7 @@ public class DruidMonitorConfig {
     public WallFilter wallFilter() {
         WallFilter wallFilter = new WallFilter();
         WallConfig wallConfig = new WallConfig();
-        wallConfig.setMultiStatementAllow(monitorProperties.isMultiStatementAllow());
+        wallConfig.setMultiStatementAllow(druidMonitorProperties.isMultiStatementAllow());
         wallFilter.setConfig(wallConfig);
         return wallFilter;
     }

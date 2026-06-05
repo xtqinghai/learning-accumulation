@@ -11,9 +11,21 @@ import java.util.stream.Collectors;
 public class MenuTreeUtil {
 
     public static List<SysMenu> buildTree(List<SysMenu> list) {
-        Map<Long, SysMenu> map = list.stream().collect(Collectors.toMap(SysMenu::getId, m -> m));
+        if (list == null || list.isEmpty()) {
+            return Collections.emptyList();
+        }
+
+        Map<Long, SysMenu> map = new LinkedHashMap<>();
+        for (SysMenu menu : list) {
+            if (menu == null || menu.getId() == null) {
+                continue;
+            }
+            menu.setChildren(null);
+            map.putIfAbsent(menu.getId(), menu);
+        }
+
         List<SysMenu> roots = new ArrayList<>();
-        for (SysMenu m : list) {
+        for (SysMenu m : map.values()) {
             Long pid = m.getParentId();
             if (pid == null || pid == 0) {
                 roots.add(m);
@@ -29,7 +41,6 @@ public class MenuTreeUtil {
                 }
             }
         }
-        // optional: sort children by sort field if needed
         return roots;
     }
 }

@@ -42,10 +42,7 @@ public class SysPostServiceImpl extends ServiceImpl<SysPostMapper, SysPost> impl
      */
     @Override
     public IPage<PostVO> getPostPage(PostQuery queryParams) {
-        Page<PostVO> pageVO = this.baseMapper.getPostPage(
-                new Page<>(queryParams.getPageNum(), queryParams.getPageSize()),
-                queryParams
-        );
+        Page<PostVO> pageVO = this.baseMapper.getPostPage(queryParams.buildPage(), queryParams);
         return pageVO;
     }
 

@@ -42,10 +42,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     */
     @Override
     public IPage<CmsContentVO> getCmsContentPage(CmsContentQuery queryParams) {
-        Page<CmsContentVO> pageVO = this.baseMapper.getCmsContentPage(
-                new Page<>(queryParams.getPageNum(), queryParams.getPageSize()),
-                queryParams
-        );
+        Page<CmsContentVO> pageVO = this.baseMapper.getCmsContentPage(queryParams.buildPage(), queryParams);
         return pageVO;
     }
 

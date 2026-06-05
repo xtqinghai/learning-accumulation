@@ -6,6 +6,7 @@ import cn.hutool.core.lang.TypeReference;
 import cn.hutool.core.map.MapUtil;
 import cn.hutool.core.util.ObjectUtil;
 import cn.hutool.core.util.StrUtil;
+import com.quinn.hboot.common.trace.TraceContext;
 import com.quinn.hboot.system.service.SysUserService;
 import com.quinn.hboot.utils.StringUtils;
 import com.quinn.hboot.workflow.common.ConditionalOnEnable;
@@ -186,6 +187,8 @@ public class WorkflowGlobalListener implements GlobalListener {
     @Override
     public void finish(ListenerVariable listenerVariable) {
         Instance instance = listenerVariable.getInstance();
+        TraceContext.bindBusinessId(instance == null ? null : instance.getBusinessId());
+        TraceContext.bindInstanceId(instance == null ? null : instance.getId());
         Definition definition = listenerVariable.getDefinition();
         Task task = listenerVariable.getTask();
         List<Task> nextTasks = listenerVariable.getNextTasks();
@@ -205,11 +208,15 @@ public class WorkflowGlobalListener implements GlobalListener {
         Boolean submit = MapUtil.getBool(variable, FlowConstant.SUBMIT);
         if (submit != null && submit) {
             String status = determineFlowStatus(instance);
+            log.info("workflow listener submit traceId={} businessId={} instanceId={} status={}",
+                TraceContext.getTraceId(), TraceContext.getBusinessId(), TraceContext.getInstanceId(), status);
             flowProcessEventHandler.processHandler(definition.getFlowCode(), instance, status, variable, true);
         } else {
             // 判断流程状态（发布：撤销，退回，作废，终止，已完成事件）
             String status = determineFlowStatus(instance);
             if (StringUtils.isNotBlank(status)) {
+                log.info("workflow listener transition traceId={} businessId={} instanceId={} status={}",
+                    TraceContext.getTraceId(), TraceContext.getBusinessId(), TraceContext.getInstanceId(), status);
                 flowProcessEventHandler.processHandler(definition.getFlowCode(), instance, status, params, false);
             }
             if (!BusinessStatusEnum.initialState(instance.getFlowStatus())) {

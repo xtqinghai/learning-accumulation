@@ -11,7 +11,10 @@ import java.util.Map;
  * @author yu-qh
  */
 public interface SysDeptService extends IService<SysDept> {
+
     List<SysDept> selectDeptList(Wrapper<SysDept> bo);
 
     Map<Long, String> selectDeptNamesByIds(List<Long> longIds);
+
+    List<SysDept> listDeptTree();
 }

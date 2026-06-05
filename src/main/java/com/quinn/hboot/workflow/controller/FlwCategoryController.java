@@ -3,6 +3,7 @@ package com.quinn.hboot.workflow.controller;
 //import cn.dev33.satoken.annotation.SaCheckPermission;
 import cn.hutool.core.lang.tree.Tree;
 import com.quinn.hboot.common.R;
+import com.quinn.hboot.common.exception.ErrorCode;
 import com.quinn.hboot.workflow.common.ConditionalOnEnable;
 import com.quinn.hboot.workflow.common.constant.FlowConstant;
 import com.quinn.hboot.workflow.domain.bo.FlowCategoryBo;
@@ -84,7 +85,7 @@ public class FlwCategoryController {////extends BaseController {
     @PostMapping()
     public R<Void> add(@RequestBody FlowCategoryBo category) {
         if (!flwCategoryService.checkCategoryNameUnique(category)) {
-            return R.fail(R.HttpStatusCodeEnum.BAD_REQUEST.getCode(),"新增流程分类'" + category.getCategoryName() + "'失败，流程分类名称已存在");
+            return R.fail(ErrorCode.BAD_REQUEST, "新增流程分类'" + category.getCategoryName() + "'失败，流程分类名称已存在");
         }
         flwCategoryService.insertByBo(category);
         return R.ok();
@@ -100,9 +101,9 @@ public class FlwCategoryController {////extends BaseController {
     public R<Void> edit( @RequestBody FlowCategoryBo category) {
         Long categoryId = category.getCategoryId();
         if (!flwCategoryService.checkCategoryNameUnique(category)) {
-            return R.fail(R.HttpStatusCodeEnum.BAD_REQUEST.getCode(),"修改流程分类'" + category.getCategoryName() + "'失败，流程分类名称已存在");
+            return R.fail(ErrorCode.BAD_REQUEST, "修改流程分类'" + category.getCategoryName() + "'失败，流程分类名称已存在");
         } else if (category.getParentId().equals(categoryId)) {
-            return R.fail(R.HttpStatusCodeEnum.BAD_REQUEST.getCode(),"修改流程分类'" + category.getCategoryName() + "'失败，上级流程分类不能是自己");
+            return R.fail(ErrorCode.BAD_REQUEST, "修改流程分类'" + category.getCategoryName() + "'失败，上级流程分类不能是自己");
         }
         flwCategoryService.updateByBo(category);
         return R.ok();
@@ -118,13 +119,13 @@ public class FlwCategoryController {////extends BaseController {
     @DeleteMapping("/{categoryId}")
     public R remove(@PathVariable Long categoryId) {
         if (FlowConstant.FLOW_CATEGORY_ID.equals(categoryId)) {
-            return R.fail(R.HttpStatusCodeEnum.BAD_REQUEST.getCode(),"默认流程分类,不允许删除");
+            return R.fail(ErrorCode.BAD_REQUEST, "默认流程分类,不允许删除");
         }
         if (flwCategoryService.hasChildByCategoryId(categoryId)) {
-            return R.fail(R.HttpStatusCodeEnum.BAD_REQUEST.getCode(),"存在下级流程分类,不允许删除");
+            return R.fail(ErrorCode.BAD_REQUEST, "存在下级流程分类,不允许删除");
         }
         if (flwCategoryService.checkCategoryExistDefinition(categoryId)) {
-            return R.fail(R.HttpStatusCodeEnum.BAD_REQUEST.getCode(),"流程分类存在流程定义,不允许删除");
+            return R.fail(ErrorCode.BAD_REQUEST, "流程分类存在流程定义,不允许删除");
         }
         return R.ok(flwCategoryService.deleteWithValidById(categoryId));
     }

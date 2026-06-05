@@ -65,6 +65,8 @@ spring:
           max-wait: 5000ms
 
 logging:
+  pattern:
+    level: "%5p [traceId:%X{traceId} biz:%X{businessId} inst:%X{instanceId}]"
   level:
     com.quinn.hboot: debug
     com.alibaba.druid: info
@@ -89,6 +91,16 @@ file:
 app:
   api-docs:
     enabled: true
+  cache:
+    menu: 30m
+    menu-tree: 30m
+    role-menu: 30m
+    dict: 1h
+    dept: 30m
+    user-base: 20m
+    user-auth: 20m
+  sql-audit:
+    top-n: 20
   security:
     auth-excludes:
       - /api/auth/**

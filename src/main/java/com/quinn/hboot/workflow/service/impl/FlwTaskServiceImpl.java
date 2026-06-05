@@ -13,6 +13,7 @@ import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.common.exception.BusinessException;
+import com.quinn.hboot.common.trace.TraceContext;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.service.SysUserService;
 import com.quinn.hboot.utils.*;
@@ -133,6 +134,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
 //    @Lock4j(keys = {"#startProcessBo.flowCode + #startProcessBo.businessId"})
     public StartProcessReturnDTO startWorkFlow(StartProcessBo startProcessBo) {
         String businessId = startProcessBo.getBusinessId();
+        TraceContext.bindBusinessId(businessId);
         if (StringUtils.isBlank(businessId)) {
             throw new BusinessException("启动工作流时必须包含业务ID");
         }
@@ -152,6 +154,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
             .eq(FlowInstance::getBusinessId, businessId));
 
         if (ObjectUtil.isNotNull(flowInstance)) {
+            TraceContext.bindInstanceId(flowInstance.getId());
             // 已存在流程
             BusinessStatusEnum.checkStartStatus(flowInstance.getFlowStatus());
             List<Task> taskList = taskService.list(new FlowTask().setInstanceId(flowInstance.getId()));
@@ -165,6 +168,8 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
             dto.setTaskId(taskList.get(0).getId());
             // 保存流程实例业务信息
             this.buildFlowInstanceBizExt(flowInstance, bizExt);
+            log.info("workflow start reused traceId={} businessId={} instanceId={} flowCode={}",
+                TraceContext.getTraceId(), businessId, flowInstance.getId(), startProcessBo.getFlowCode());
             return dto;
         }
 
@@ -183,6 +188,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
             .variable(startProcessBo.getVariables())
             .flowStatus(BusinessStatusEnum.DRAFT.getStatus());
         Instance instance = insService.start(businessId, flowParams);
+        TraceContext.bindInstanceId(instance.getId());
         // 保存流程实例业务信息
         this.buildFlowInstanceBizExt(instance, bizExt);
         // 申请人执行流程
@@ -196,6 +202,8 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         StartProcessReturnDTO dto = new StartProcessReturnDTO();
         dto.setProcessInstanceId(instance.getId());
         dto.setTaskId(taskList.get(0).getId());
+        log.info("workflow start created traceId={} businessId={} instanceId={} flowCode={}",
+            TraceContext.getTraceId(), businessId, instance.getId(), startProcessBo.getFlowCode());
         return dto;
     }
 
@@ -256,6 +264,10 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         if (ObjectUtil.isNull(ins)) {
             throw new BusinessException("流程实例不存在");
         }
+        TraceContext.bindBusinessId(ins.getBusinessId());
+        TraceContext.bindInstanceId(ins.getId());
+        log.info("workflow complete traceId={} businessId={} instanceId={} taskId={}",
+            TraceContext.getTraceId(), ins.getBusinessId(), ins.getId(), taskId);
         // 检查流程状态是否为草稿、已撤销或已退回状态，若是则执行流程提交监听
         if (BusinessStatusEnum.isDraftOrCancelOrBack(ins.getFlowStatus())) {
             variables.put(FlowConstant.SUBMIT, true);

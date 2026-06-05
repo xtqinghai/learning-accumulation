@@ -1,25 +1,24 @@
 package com.quinn.hboot.common;
 
+import com.quinn.hboot.common.exception.ErrorCode;
+import com.quinn.hboot.common.trace.TraceContext;
 import lombok.Data;
 
 import java.io.Serializable;
 
-/**
- * 通用响应对象。
- *
- * @param <T> 响应数据类型
- */
 @Data
 public class R<T> implements Serializable {
 
     private int code;
     private String message;
     private T data;
+    private String traceId;
 
     public static <T> R<T> ok() {
         R<T> r = new R<>();
-        r.setCode(HttpStatusCodeEnum.OK.getCode());
-        r.setMessage("success");
+        r.setCode(ErrorCode.OK.getCode());
+        r.setMessage(ErrorCode.OK.getDefaultMessage());
+        r.setTraceId(TraceContext.getTraceId());
         return r;
     }
 
@@ -33,29 +32,12 @@ public class R<T> implements Serializable {
         R<T> r = new R<>();
         r.setCode(code);
         r.setMessage(message);
+        r.setTraceId(TraceContext.getTraceId());
         return r;
     }
 
-    /**
-     * 常用 HTTP 状态码枚举。
-     */
-    public enum HttpStatusCodeEnum {
-        OK(200),
-        BAD_REQUEST(400),
-        UNAUTHORIZED(401),
-        FORBIDDEN(403),
-        NOT_FOUND(404),
-        TOO_MANY_REQUESTS(429),
-        INTERNAL_SERVER_ERROR(500);
-
-        private final int code;
-
-        HttpStatusCodeEnum(int code) {
-            this.code = code;
-        }
-
-        public int getCode() {
-            return code;
-        }
+    public static <T> R<T> fail(ErrorCode errorCode, String message) {
+        String finalMessage = message == null || message.isBlank() ? errorCode.getDefaultMessage() : message;
+        return fail(errorCode.getCode(), finalMessage);
     }
 }
