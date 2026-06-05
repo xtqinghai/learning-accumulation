@@ -36,6 +36,9 @@ build/
 .m2repo/
 .mvn-home/
 .tmp-agent/
+.env
+.env.*
+!.env.example
 Db*.java
 Db*.class
 warmflow-index.js

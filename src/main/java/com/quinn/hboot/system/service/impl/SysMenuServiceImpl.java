@@ -11,6 +11,7 @@ import com.quinn.hboot.system.model.entity.SysUserRole;
 import com.quinn.hboot.system.service.SysMenuService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
+import org.springframework.util.StringUtils;
 
 import java.util.Collections;
 import java.util.Comparator;
@@ -38,6 +39,26 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
 
     @Override
     public List<SysMenu> findMenusByUserId(Long userId) {
+        List<SysMenu> menus = listAssignedMenus(userId);
+        return filterVisibleMenus(menus);
+    }
+
+    @Override
+    public List<String> findPermissionsByUserId(Long userId) {
+        return listAssignedMenus(userId).stream()
+                .map(SysMenu::getPermission)
+                .filter(StringUtils::hasText)
+                .distinct()
+                .toList();
+    }
+
+    @Override
+    public List<SysMenu> listVisibleMenus() {
+        List<SysMenu> menus = menuMapper.selectList(new QueryWrapper<SysMenu>().orderByAsc("sort"));
+        return filterVisibleMenus(menus);
+    }
+
+    private List<SysMenu> listAssignedMenus(Long userId) {
         List<SysUserRole> userRoles = userRoleMapper.selectList(
                 new QueryWrapper<SysUserRole>().eq("user_id", userId)
         );
@@ -63,13 +84,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
         List<SysMenu> menus = menuMapper.selectList(
                 new QueryWrapper<SysMenu>().in("id", menuIds).orderByAsc("sort")
         );
-        return filterVisibleMenus(menus);
-    }
-
-    @Override
-    public List<SysMenu> listVisibleMenus() {
-        List<SysMenu> menus = menuMapper.selectList(new QueryWrapper<SysMenu>().orderByAsc("sort"));
-        return filterVisibleMenus(menus);
+        return menus == null ? Collections.emptyList() : menus;
     }
 
     private List<SysMenu> filterVisibleMenus(List<SysMenu> menus) {

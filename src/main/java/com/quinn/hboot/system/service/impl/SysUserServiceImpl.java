@@ -14,7 +14,6 @@ import com.quinn.hboot.system.mapper.SysUserPostMapper;
 import com.quinn.hboot.system.mapper.SysUserRoleMapper;
 import com.quinn.hboot.system.model.dto.RegisterUserDTO;
 import com.quinn.hboot.system.model.entity.SysDept;
-import com.quinn.hboot.system.model.entity.SysMenu;
 import com.quinn.hboot.system.model.entity.SysPost;
 import com.quinn.hboot.system.model.entity.SysRole;
 import com.quinn.hboot.system.model.entity.SysUser;
@@ -42,6 +41,9 @@ import java.util.stream.Collectors;
 @Service
 @RequiredArgsConstructor
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
+
+    private static final String SUPER_ADMIN_ROLE_CODE = "super-admin";
+    private static final String ALL_PERMISSION = "*:*:*";
 
     private final SysMenuService menuService;
     private final SysUserMapper userMapper;
@@ -98,13 +100,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
     @Override
     public List<String> getUserPermissions(Long userId) {
-        List<SysMenu> menus = menuService.findMenusByUserId(userId);
-        return menus.stream()
-            .map(SysMenu::getPermission)
-            .filter(Objects::nonNull)
-            .filter(permission -> !permission.isBlank())
-            .distinct()
-            .toList();
+        Set<String> roleCodes = getUserRoleCodes(userId);
+        if (roleCodes.contains(SUPER_ADMIN_ROLE_CODE)) {
+            return List.of(ALL_PERMISSION);
+        }
+        return menuService.findPermissionsByUserId(userId);
     }
 
     @Override

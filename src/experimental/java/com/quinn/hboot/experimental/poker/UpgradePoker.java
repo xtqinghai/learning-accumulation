@@ -1,4 +1,4 @@
-package com.quinn.hboot.playground.poker;
+package com.quinn.hboot.experimental.poker;
 
 import java.util.*;
 import java.util.stream.Collectors;

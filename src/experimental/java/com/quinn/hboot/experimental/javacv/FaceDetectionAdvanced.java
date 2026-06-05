@@ -1,4 +1,4 @@
-package com.quinn.hboot.playground.javacv;
+package com.quinn.hboot.experimental.javacv;
 
 /**
  * @program: h-boot

@@ -1,104 +1,30 @@
 server:
-  port: 8080
-  multipart:
-    enabled: true
-    max-file-size: 100MB
-    max-request-size: 100MB
+  port: ${SERVER_PORT:8080}
 
 logging:
   level:
-    com.quinn.hboot: debug
-    com.alibaba.druid: info  # 璋冩暣涓篿nfo锛岄伩鍏嶈繃澶氭棩蹇?
-    org.springframework.web: debug
+    com.quinn.hboot: info
+    com.alibaba.druid: info
+    org.springframework.web: info
 
 spring:
   application:
     name: hboot-system
   config:
     import: classpath:codegen.yml
+  profiles:
+    default: dev
+    group:
+      debug:
+        - dev
   servlet:
     multipart:
       enabled: true
-      max-file-size: 100MB
-      max-request-size: 100MB
-
-  # ========== 鍔ㄦ€佸鏁版嵁婧愰厤缃紙绠€鍖栵級==========
-  datasource:
-    dynamic:
-      strict: false
-      public-key: "438704315@qq.com"
-      primary: hboot
-      datasource:
-        hboot:
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-          username: root
-          password: 123456
-          type: com.alibaba.druid.pool.DruidDataSource
-          druid:
-            initial-size: 5
-            min-idle: 5
-            max-active: 20
-            max-wait: 60000
-            test-while-idle: true
-            time-between-eviction-runs-millis: 60000
-            min-evictable-idle-time-millis: 300000
-            validation-query: SELECT 1 FROM DUAL
-            test-on-borrow: false
-            test-on-return: false
-            # 搴旂敤杩囨护鍣?
-            filters: stat,wall,slf4j
-            connection-properties:
-              druid.stat.mergeSql: true
-              druid.stat.slowSqlMillis: 2000
-
-        engine:
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          url: jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true
-          username: root
-          password: 123456
-          type: com.alibaba.druid.pool.DruidDataSource
-          druid:
-            initial-size: 5
-            min-idle: 5
-            max-active: 20
-            max-wait: 60000
-            test-while-idle: true
-            time-between-eviction-runs-millis: 60000
-            min-evictable-idle-time-millis: 300000
-            validation-query: SELECT 1 FROM DUAL
-            test-on-borrow: false
-            test-on-return: false
-            # 搴旂敤杩囨护鍣?
-            filters: stat,wall,slf4j
-            connection-properties:
-              druid.stat.mergeSql: true
-              druid.stat.slowSqlMillis: 2000
-  data:
-    redis:
-      # 鍩虹閰嶇疆
-      host: localhost
-      port: 6379
-      password:  # 鏃犲瘑鐮佸垯绌猴紝鏈夊瘑鐮佸～鍐欎綘鐨剅edis瀵嗙爜
-      database: 0
-      # 瓒呮椂閰嶇疆
-      timeout: 10000ms  # 杩炴帴瓒呮椂鏃堕棿锛屽崟浣峬s
-      # lettuce瀹㈡埛绔厤缃紙SpringBoot3.x榛樿瀹㈡埛绔紝涓嶇敤鏀癸級
-      lettuce:
-        pool:
-          max-active: 8    # 杩炴帴姹犳渶澶ц繛鎺ユ暟
-          max-idle: 8      # 杩炴帴姹犳渶澶х┖闂茶繛鎺ユ暟
-          min-idle: 2      # 杩炴帴姹犳渶灏忕┖闂茶繛鎺ユ暟
-          max-wait: 5000ms # 杩炴帴姹犺幏鍙栬繛鎺ョ殑鏈€澶х瓑寰呮椂闂达紝瓒呮椂浼氭姤閿?
-# 鍏佽寰幆寮曠敤 turbo浣跨敤
+      max-file-size: ${APP_MAX_FILE_SIZE:100MB}
+      max-request-size: ${APP_MAX_REQUEST_SIZE:100MB}
   main:
     allow-circular-references: true
 
-# MyBatis-Plus 閰嶇疆淇濇寔涓嶅彉...
-
-# MyBatis-Plus 閰嶇疆淇濇寔涓嶅彉...
-
-# MyBatis-Plus 閰嶇疆
 mybatis-plus:
   mapper-locations: classpath:mapper/**/*.xml
   type-aliases-package: com.quinn.hboot.**.entity
@@ -111,17 +37,13 @@ mybatis-plus:
   configuration:
     map-underscore-to-camel-case: true
 
-# 鍏朵粬閰嶇疆淇濇寔涓嶅彉...
-
-
-# springdoc/swagger 閰嶇疆 涓嶅彉
 springdoc:
   api-docs:
     path: /v3/api-docs
-    enabled: true
+    enabled: ${APP_API_DOCS_ENABLED:false}
   swagger-ui:
     path: /swagger-ui.html
-    enabled: true
+    enabled: ${APP_API_DOCS_ENABLED:false}
     config-url: /v3/api-docs/swagger-config
     url: /v3/api-docs
     display-request-duration: true
@@ -129,67 +51,50 @@ springdoc:
     tags-sorter: alpha
     default-model-expand-depth: 2
     default-model-rendering: example
-  show-actuator: true
+  show-actuator: false
   default-consumes-media-type: application/json
   default-produces-media-type: application/json
 
-# 鏂囦欢瀛樺偍閰嶇疆 涓嶅彉
 file:
-  storage: local
+  storage: ${FILE_STORAGE:local}
   local:
-    base-path: c:/upload
-    public-url: http://localhost:8080/api/v1/file/preview
+    base-path: ${FILE_LOCAL_BASE_PATH:${user.home}/upload}
+    public-url: ${FILE_PUBLIC_URL:http://localhost:${server.port}/api/v1/file/preview}
 
 warm-flow:
-  # 鏄惁寮€鍚伐浣滄祦锛岄粯璁rue
-  enabled: true
-  # 鏄惁鏄剧ずbanner鍥撅紝榛樿鏄?
-  banner: true
-  # id鐢熸垚鍣ㄧ被鍨? 涓嶅～榛樿涓簅rm鎵╁睍鑷甫鐢熸垚鍣ㄦ垨鑰厀arm-flow鍐呯疆鐨?9浣嶉洩鑺辩畻娉? SnowId14:14浣嶏紝SnowId15:15浣嶏紝 SnowFlake19锛?9浣?
+  enabled: ${WARM_FLOW_ENABLED:true}
+  banner: ${WARM_FLOW_BANNER:false}
   key_type: SnowId19
-  # 鏄惁寮€鍚璁″櫒ui锛岄粯璁rue
-  ui: true
-  # 濡傛灉闇€瑕佸伐浣滄祦鍏变韩涓氬姟绯荤粺鏉冮檺锛岄粯璁uthorization锛屽鏋滄湁澶氫釜token锛岀敤閫楀彿鍒嗛殧
+  ui: ${WARM_FLOW_UI_ENABLED:false}
   token-name: Authorization
-  # 鏄惁鏄剧ず娴佺▼鍥鹃《閮ㄦ枃瀛楋紝榛樿涓簍rue锛氭樉绀?
   top-text-show: true
-sa-token:
-  token-name: Authorization
-  token-prefix: Bearer
-  is-read-header: true
-  is-read-cookie: false
-  is-read-body: false
-  is-read-param: false
-  timeout: 1800
-  active-timeout: 1800
-  auto-renew: true
-#  # 鍏叡妯″瀷娴佺▼鐘舵€佸搴旂殑涓夊厓鑹诧細濡傛灉鍙厤缃簡杩欎釜锛岀粡鍏告ā寮忓拰浠块拤閽夋ā鍨嬬殑鑺傜偣棰滆壊鍏辩敤杩欎釜
-#  chart-status-color:
-#    ## 鏈姙鐞?
-#    - 166,178,189
-#    ## 寰呭姙鐞?
-#    - 255,197,90
-#    ## 宸插姙鐞?
-#    - 135,206,250
-#  # 缁忓吀妯″瀷娴佺▼鐘舵€佸搴旂殑涓夊厓鑹诧細濡傛灉閰嶇疆浜嗭紝缁忓吀妯″瀷浼樺厛杩欎釜
-#  chart-status-color-classics:
-#    ## 鏈姙鐞?
-#    - 166,178,189
-#    ## 寰呭姙鐞?
-#    - 255,197,90
-#    ## 宸插姙鐞?
-#    - 135,206,250
-#  # 浠块拤閽夋ā鍨嬫祦绋嬬姸鎬佸搴旂殑涓夊厓鑹诧細濡傛灉閰嶇疆浜嗭紝浠块拤閽夋ā鍨嬩紭鍏堣繖涓?
-#  chart-status-color-mimic:
-#    ## 鏈姙鐞?
-#    - 62,62,62
-#    ## 寰呭姙鐞?
-#    - 255,205,23
-#    ## 宸插姙鐞?
-#    - 157,255,0
 
 app:
+  api-docs:
+    enabled: ${APP_API_DOCS_ENABLED:false}
   auth:
-    login-fail-prefix: "login:fail:"
-    max-retry-count: 5
-    retry-lock-minutes: 10
+    login-fail-prefix: ${APP_AUTH_LOGIN_FAIL_PREFIX:login:fail:}
+    max-retry-count: ${APP_AUTH_MAX_RETRY_COUNT:5}
+    retry-lock-minutes: ${APP_AUTH_RETRY_LOCK_MINUTES:10}
+  security:
+    auth-excludes:
+      - /api/auth/**
+      - /api/register/**
+      - /api/v1/file/preview/**
+      - /public/**
+      - /favicon.ico
+  druid:
+    monitor:
+      enabled: ${APP_DRUID_MONITOR_ENABLED:false}
+      username: ${APP_DRUID_MONITOR_USERNAME:}
+      password: ${APP_DRUID_MONITOR_PASSWORD:}
+      allow: ${APP_DRUID_MONITOR_ALLOW:}
+      deny: ${APP_DRUID_MONITOR_DENY:}
+      reset-enable: false
+      session-stat-enable: true
+      session-stat-max-count: 1000
+      profile-enable: false
+      log-slow-sql: true
+      merge-sql: true
+      slow-sql-millis: 2000
+      multi-statement-allow: false

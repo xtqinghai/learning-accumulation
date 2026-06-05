@@ -22,5 +22,4 @@ public class HBootApplication {
         System.out.println("OpenAPI JSON: http://localhost:8080/v3/api-docs");
         System.out.println("=========================================\n");
     }
-
 }
