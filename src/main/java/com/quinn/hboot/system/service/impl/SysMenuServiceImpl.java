@@ -11,6 +11,7 @@ import com.quinn.hboot.system.model.entity.SysMenu;
 import com.quinn.hboot.system.model.entity.SysRoleMenu;
 import com.quinn.hboot.system.model.entity.SysUserRole;
 import com.quinn.hboot.system.service.SysMenuService;
+import com.quinn.hboot.utils.MenuTreeUtil;
 import com.quinn.hboot.utils.TreeBuildUtils;
 import lombok.RequiredArgsConstructor;
 import org.springframework.cache.annotation.Cacheable;
@@ -39,13 +40,19 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     private final SystemCacheSupport cacheSupport;
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.USER_MENU_LIST, key = "#userId", unless = "#result == null")
+    @Cacheable(cacheNames = SystemCacheNames.USER_MENU_LIST, key = "#userId", sync = true)
     public List<SysMenu> findMenusByUserId(Long userId) {
         return filterVisibleMenus(listAssignedMenus(userId));
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.USER_PERMISSION_LIST, key = "#userId", unless = "#result == null")
+    @Cacheable(cacheNames = SystemCacheNames.USER_MENU_TREE, key = "#userId", sync = true)
+    public List<SysMenu> findMenuTreeByUserId(Long userId) {
+        return MenuTreeUtil.buildTree(copyMenus(findMenusByUserId(userId)));
+    }
+
+    @Override
+    @Cacheable(cacheNames = SystemCacheNames.USER_PERMISSION_LIST, key = "#userId", sync = true)
     public List<String> findPermissionsByUserId(Long userId) {
         return listAssignedMenus(userId).stream()
             .map(SysMenu::getPermission)
@@ -55,19 +62,19 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.MENU_VISIBLE_LIST, key = "'all'")
+    @Cacheable(cacheNames = SystemCacheNames.MENU_VISIBLE_LIST, key = "'all'", sync = true)
     public List<SysMenu> listVisibleMenus() {
         List<SysMenu> menus = menuMapper.selectList(new QueryWrapper<SysMenu>().orderByAsc("sort"));
         return filterVisibleMenus(menus);
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.MENU_VISIBLE_TREE, key = "'tree'")
+    @Cacheable(cacheNames = SystemCacheNames.MENU_VISIBLE_TREE, key = "'tree'", sync = true)
     public List<SysMenu> listVisibleMenuTree() {
         List<SysMenu> menus = menuMapper.selectList(new QueryWrapper<SysMenu>().orderByAsc("sort"));
         List<SysMenu> visibleMenus = filterVisibleMenus(menus);
         return TreeBuildUtils.buildTree(
-            visibleMenus.stream().sorted(Comparator.comparing(SysMenu::getSort)).toList(),
+            copyMenus(visibleMenus).stream().sorted(Comparator.comparing(SysMenu::getSort)).toList(),
             SysMenu::getId,
             SysMenu::getParentId,
             SysMenu::setChildren,
@@ -80,7 +87,7 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public boolean save(SysMenu entity) {
         boolean result = super.save(entity);
         if (result) {
-            refreshMenuCaches();
+            refreshMenuCaches(entity == null ? null : entity.getId());
         }
         return result;
     }
@@ -89,16 +96,21 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
     public boolean updateById(SysMenu entity) {
         boolean result = super.updateById(entity);
         if (result) {
-            refreshMenuCaches();
+            refreshMenuCaches(entity == null ? null : entity.getId());
         }
         return result;
     }
 
     @Override
     public boolean removeById(Serializable id) {
+        Long menuId = id instanceof Long value ? value : null;
+        Set<Long> affectedRoleIds = findAssignedRoleIdsByMenuId(menuId);
+        if (menuId != null) {
+            roleMenuMapper.delete(new QueryWrapper<SysRoleMenu>().eq("menu_id", menuId));
+        }
         boolean result = super.removeById(id);
         if (result) {
-            refreshMenuCaches();
+            refreshMenuCaches(menuId, affectedRoleIds);
         }
         return result;
     }
@@ -148,9 +160,63 @@ public class SysMenuServiceImpl extends ServiceImpl<SysMenuMapper, SysMenu> impl
             || WORKFLOW_DESIGN_COMPONENT.equals(menu.getComponent());
     }
 
-    private void refreshMenuCaches() {
+    private List<SysMenu> copyMenus(List<SysMenu> menus) {
+        if (menus == null || menus.isEmpty()) {
+            return Collections.emptyList();
+        }
+        return menus.stream().map(this::copyMenu).toList();
+    }
+
+    private SysMenu copyMenu(SysMenu source) {
+        SysMenu target = new SysMenu();
+        target.setId(source.getId());
+        target.setParentId(source.getParentId());
+        target.setName(source.getName());
+        target.setPath(source.getPath());
+        target.setComponent(source.getComponent());
+        target.setPermission(source.getPermission());
+        target.setIcon(source.getIcon());
+        target.setSort(source.getSort());
+        target.setStatus(source.getStatus());
+        target.setType(source.getType());
+        return target;
+    }
+
+    private Set<Long> findAssignedRoleIdsByMenuId(Long menuId) {
+        if (menuId == null) {
+            return Collections.emptySet();
+        }
+        return roleMenuMapper.selectList(new QueryWrapper<SysRoleMenu>().eq("menu_id", menuId)).stream()
+            .map(SysRoleMenu::getRoleId)
+            .collect(Collectors.toSet());
+    }
+
+    private Set<Long> findAssignedUserIdsByRoleIds(Set<Long> roleIds) {
+        if (roleIds == null || roleIds.isEmpty()) {
+            return Collections.emptySet();
+        }
+        return userRoleMapper.selectList(new QueryWrapper<SysUserRole>().in("role_id", roleIds)).stream()
+            .map(SysUserRole::getUserId)
+            .collect(Collectors.toSet());
+    }
+
+    private void refreshMenuCaches(Long menuId) {
+        refreshMenuCaches(menuId, findAssignedRoleIdsByMenuId(menuId));
+    }
+
+    private void refreshMenuCaches(Long menuId, Set<Long> affectedRoleIds) {
         cacheSupport.clearMenuCaches();
-        cacheSupport.clearRoleMenuCaches();
-        cacheSupport.clearUserAuthorizationCaches();
+        if (menuId == null) {
+            cacheSupport.clearRoleMenuCaches();
+            cacheSupport.clearUserAuthorizationCaches();
+            return;
+        }
+
+        if (affectedRoleIds == null || affectedRoleIds.isEmpty()) {
+            return;
+        }
+
+        affectedRoleIds.forEach(cacheSupport::evictRoleMenuCache);
+        findAssignedUserIdsByRoleIds(affectedRoleIds).forEach(cacheSupport::evictUserAuthorization);
     }
 }

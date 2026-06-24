@@ -18,4 +18,14 @@ public class AppCacheProperties {
     private Duration dept = Duration.ofMinutes(30);
     private Duration userBase = Duration.ofMinutes(20);
     private Duration userAuth = Duration.ofMinutes(20);
+    private Duration flowCategory = Duration.ofDays(30);
+
+    private long menuMaxSize = 256;
+    private long menuTreeMaxSize = 256;
+    private long roleMenuMaxSize = 512;
+    private long dictMaxSize = 256;
+    private long deptMaxSize = 256;
+    private long userBaseMaxSize = 2048;
+    private long userAuthMaxSize = 2048;
+    private long flowCategoryMaxSize = 256;
 }

@@ -5,6 +5,7 @@ public final class SystemCacheNames {
     public static final String MENU_VISIBLE_LIST = "sys:menu:visible:list";
     public static final String MENU_VISIBLE_TREE = "sys:menu:visible:tree";
     public static final String USER_MENU_LIST = "sys:user:menu:list";
+    public static final String USER_MENU_TREE = "sys:user:menu:tree";
     public static final String USER_PERMISSION_LIST = "sys:user:permission:list";
     public static final String ROLE_MENU_IDS = "sys:role:menu:ids";
     public static final String DICT_LIST = "sys:dict:list";

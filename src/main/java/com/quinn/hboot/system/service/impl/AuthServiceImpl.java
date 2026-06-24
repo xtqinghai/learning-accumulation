@@ -18,7 +18,6 @@ import com.quinn.hboot.system.service.LoginUserResolver;
 import com.quinn.hboot.system.service.SysMenuService;
 import com.quinn.hboot.utils.AESUtils;
 import com.quinn.hboot.utils.IPUtils;
-import com.quinn.hboot.utils.MenuTreeUtil;
 import com.quinn.hboot.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletRequest;
 import lombok.RequiredArgsConstructor;
@@ -85,7 +84,7 @@ public class AuthServiceImpl implements AuthService {
             LoginRespVO resp = new LoginRespVO();
             resp.setToken(StpUtil.getTokenValue());
             resp.setUser(toCurrentUser(loginUser));
-            resp.setMenus(MenuTreeUtil.buildTree(menuService.findMenusByUserId(loginUser.getUserId())));
+            resp.setMenus(menuService.findMenuTreeByUserId(loginUser.getUserId()));
             return resp;
         } catch (BusinessException ex) {
             log.warn(
@@ -133,19 +132,19 @@ public class AuthServiceImpl implements AuthService {
 
     @Override
     public AuthMeVO me() {
-        LoginUser loginUser = requireLoginUser();
+        LoginUser loginUser = refreshCurrentLoginUser();
 
         AuthMeVO resp = new AuthMeVO();
         resp.setUser(toCurrentUser(loginUser));
         resp.setPermissions(defaultIfNull(loginUser.getPermissions()));
-        resp.setMenus(MenuTreeUtil.buildTree(menuService.findMenusByUserId(loginUser.getUserId())));
+        resp.setMenus(menuService.findMenuTreeByUserId(loginUser.getUserId()));
         return resp;
     }
 
     @Override
     public List<SysMenu> menus() {
         LoginUser loginUser = requireLoginUser();
-        return MenuTreeUtil.buildTree(menuService.findMenusByUserId(loginUser.getUserId()));
+        return menuService.findMenuTreeByUserId(loginUser.getUserId());
     }
 
     @Override
@@ -153,6 +152,20 @@ public class AuthServiceImpl implements AuthService {
         if (StpUtil.isLogin()) {
             StpUtil.logout();
         }
+    }
+
+    private LoginUser refreshCurrentLoginUser() {
+        Long userId = parseCurrentLoginId();
+        if (userId == null) {
+            return requireLoginUser();
+        }
+
+        LoginUser loginUser = loginUserResolver.loadByUserId(userId);
+        if (loginUser == null) {
+            throw new BusinessException(401, "未登录或登录状态已失效");
+        }
+        SecurityUtils.setLoginUser(loginUser);
+        return loginUser;
     }
 
     private LoginUser requireLoginUser() {

@@ -4,6 +4,8 @@ import org.springframework.cache.Cache;
 import org.springframework.cache.CacheManager;
 import org.springframework.stereotype.Component;
 
+import java.util.Collection;
+
 @Component
 public class SystemCacheSupport {
 
@@ -28,6 +30,7 @@ public class SystemCacheSupport {
 
     public void clearUserAuthorizationCaches() {
         clear(SystemCacheNames.USER_MENU_LIST);
+        clear(SystemCacheNames.USER_MENU_TREE);
         clear(SystemCacheNames.USER_PERMISSION_LIST);
     }
 
@@ -40,13 +43,25 @@ public class SystemCacheSupport {
     }
 
     public void evictUserBase(Long userId, String username) {
+        evictUserBase(userId, username == null ? java.util.List.of() : java.util.List.of(username));
+    }
+
+    public void evictUserBase(Long userId, Collection<String> usernames) {
         evict(SystemCacheNames.USER_BY_ID, userId);
         evict(SystemCacheNames.USER_ROLE_IDS, userId);
         evict(SystemCacheNames.USER_ROLE_CODES, userId);
         evict(SystemCacheNames.USER_ORG_POSTS, userId);
+        if (usernames != null) {
+            usernames.stream()
+                .filter(username -> username != null && !username.isBlank())
+                .forEach(username -> evict(SystemCacheNames.USER_BY_USERNAME, username));
+        }
+    }
+
+    public void evictUserAuthorization(Long userId) {
         evict(SystemCacheNames.USER_MENU_LIST, userId);
+        evict(SystemCacheNames.USER_MENU_TREE, userId);
         evict(SystemCacheNames.USER_PERMISSION_LIST, userId);
-        evict(SystemCacheNames.USER_BY_USERNAME, username);
     }
 
     public void clearDictCaches() {

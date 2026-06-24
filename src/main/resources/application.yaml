@@ -86,6 +86,15 @@ app:
     dept: 30m
     user-base: 20m
     user-auth: 20m
+    flow-category: 30d
+    menu-max-size: 256
+    menu-tree-max-size: 256
+    role-menu-max-size: 512
+    dict-max-size: 256
+    dept-max-size: 256
+    user-base-max-size: 2048
+    user-auth-max-size: 2048
+    flow-category-max-size: 256
   sql-audit:
     top-n: 20
   security:

@@ -8,7 +8,10 @@ import org.apache.ibatis.annotations.Param;
 
 @Mapper
 public interface SysRoleMenuMapper extends BaseMapper<SysRoleMenu> {
-    // 自定义删除：根据角色ID清空关联菜单
+
     @Delete("DELETE FROM sys_role_menu WHERE role_id = #{roleId}")
     int deleteByRoleId(@Param("roleId") Long roleId);
+
+    @Delete("DELETE FROM sys_role_menu WHERE menu_id = #{menuId}")
+    int deleteByMenuId(@Param("menuId") Long menuId);
 }

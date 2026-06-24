@@ -41,6 +41,7 @@ import java.util.Objects;
 import java.util.Set;
 import java.util.function.Function;
 import java.util.stream.Collectors;
+import java.util.stream.Stream;
 
 @Service
 public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> implements SysUserService {
@@ -112,7 +113,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.USER_BY_USERNAME, key = "#username", unless = "#result == null")
+    @Cacheable(cacheNames = SystemCacheNames.USER_BY_USERNAME, key = "#username", sync = true)
     public SysUser getByUsername(String username) {
         SysUser user = this.getBaseMapper().selectOne(
             new LambdaQueryWrapper<SysUser>().eq(SysUser::getUsername, username)
@@ -121,7 +122,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.USER_BY_ID, key = "#id", unless = "#result == null")
+    @Cacheable(cacheNames = SystemCacheNames.USER_BY_ID, key = "#id", sync = true)
     public SysUser getUserDetail(Long id) {
         SysUser user = userMapper.selectUserDetail(id);
         return user == null ? null : enrichUser(user);
@@ -137,7 +138,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.USER_ROLE_CODES, key = "#userId", unless = "#result == null")
+    @Cacheable(cacheNames = SystemCacheNames.USER_ROLE_CODES, key = "#userId", sync = true)
     public Set<String> getUserRoleCodes(Long userId) {
         List<Long> roleIds = self.getUserRoleIds(userId);
         if (CollectionUtils.isEmpty(roleIds)) {
@@ -151,7 +152,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.USER_ROLE_IDS, key = "#userId", unless = "#result == null")
+    @Cacheable(cacheNames = SystemCacheNames.USER_ROLE_IDS, key = "#userId", sync = true)
     public List<Long> getUserRoleIds(Long userId) {
         return userRoleMapper.selectList(new QueryWrapper<SysUserRole>().eq("user_id", userId)).stream()
             .map(SysUserRole::getRoleId)
@@ -161,7 +162,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     @Override
-    @Cacheable(cacheNames = SystemCacheNames.USER_ORG_POSTS, key = "#userId", unless = "#result == null")
+    @Cacheable(cacheNames = SystemCacheNames.USER_ORG_POSTS, key = "#userId", sync = true)
     public List<SysUserOrgPost> getUserOrgPosts(Long userId) {
         List<SysUserOrgPost> orgPosts = userOrgPostMapper.selectList(
             new QueryWrapper<SysUserOrgPost>().eq("user_id", userId).orderByDesc("is_primary").orderByAsc("id")
@@ -243,7 +244,16 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         this.baseMapper.updateById(entity);
         replaceUserRoles(entity.getId(), entity.getRoleIds());
         replaceUserOrgPosts(entity.getId(), entity.getOrgPosts());
-        clearUserCaches(entity.getId(), entity.getUsername() != null ? entity.getUsername() : current == null ? null : current.getUsername());
+        clearUserCaches(
+            entity.getId(),
+            Stream.of(
+                    current == null ? null : current.getUsername(),
+                    entity.getUsername()
+                )
+                .filter(Objects::nonNull)
+                .distinct()
+                .toList()
+        );
         return true;
     }
 
@@ -425,8 +435,11 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
     }
 
     private void clearUserCaches(Long userId, String username) {
-        cacheSupport.evictUserBase(userId, username);
-        cacheSupport.clearUserBaseCaches();
-        cacheSupport.clearUserAuthorizationCaches();
+        clearUserCaches(userId, username == null ? List.of() : List.of(username));
+    }
+
+    private void clearUserCaches(Long userId, List<String> usernames) {
+        cacheSupport.evictUserBase(userId, usernames);
+        cacheSupport.evictUserAuthorization(userId);
     }
 }
