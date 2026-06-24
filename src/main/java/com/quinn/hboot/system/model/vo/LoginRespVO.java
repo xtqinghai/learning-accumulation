@@ -12,6 +12,8 @@ import java.util.List;
 public class LoginRespVO {
 
     private String token;
+    private Long expiresInSeconds;
+    private Long activeTimeoutSeconds;
     private CurrentUserVO user;
     private List<SysMenu> menus;
 }

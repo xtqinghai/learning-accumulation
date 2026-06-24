@@ -23,4 +23,25 @@ public class AuthProperties {
      * Redis key prefix for failed login counters.
      */
     private String loginFailPrefix = "login:fail:";
+
+    /**
+     * Session timeout in seconds. Default 2 hours.
+     */
+    private long sessionTimeoutSeconds = 7200;
+
+    /**
+     * Active timeout in seconds. Requests after this idle period require re-login.
+     * Default 2 hours.
+     */
+    private long sessionActiveTimeoutSeconds = 7200;
+
+    /**
+     * Whether to allow concurrent sessions for the same account.
+     */
+    private boolean allowConcurrentLogin = true;
+
+    /**
+     * Whether a new login should kick out old sessions when concurrent login is disabled.
+     */
+    private boolean kickoutOldSession = true;
 }

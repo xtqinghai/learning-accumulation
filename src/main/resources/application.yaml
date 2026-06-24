@@ -62,6 +62,97 @@ file:
   local:
     base-path: ${FILE_LOCAL_BASE_PATH:${user.home}/upload}
     public-url: ${FILE_PUBLIC_URL:http://localhost:${server.port}/api/v1/file/preview}
+  security:
+    enabled: ${FILE_SECURITY_ENABLED:true}
+    max-file-size: ${FILE_SECURITY_MAX_FILE_SIZE:104857600}
+    antivirus-enabled: ${FILE_SECURITY_ANTIVIRUS_ENABLED:false}
+    allowed-extensions:
+      - pdf
+      - doc
+      - docx
+      - xls
+      - xlsx
+      - ppt
+      - pptx
+      - txt
+      - csv
+      - md
+      - json
+      - xml
+      - jpg
+      - jpeg
+      - png
+      - gif
+      - webp
+      - bmp
+      - svg
+      - mp3
+      - wav
+      - aac
+      - flac
+      - ogg
+      - mp4
+      - avi
+      - mov
+      - mkv
+      - webm
+      - zip
+      - rar
+      - 7z
+      - tar
+      - gz
+    allowed-mime-types:
+      - application/pdf
+      - application/msword
+      - application/vnd.openxmlformats-officedocument.wordprocessingml.document
+      - application/vnd.ms-excel
+      - application/vnd.openxmlformats-officedocument.spreadsheetml.sheet
+      - application/vnd.ms-powerpoint
+      - application/vnd.openxmlformats-officedocument.presentationml.presentation
+      - text/plain
+      - text/csv
+      - text/markdown
+      - application/json
+      - application/xml
+      - image/jpeg
+      - image/png
+      - image/gif
+      - image/webp
+      - image/bmp
+      - image/svg+xml
+      - audio/mpeg
+      - audio/wav
+      - audio/aac
+      - audio/flac
+      - audio/ogg
+      - video/mp4
+      - video/x-msvideo
+      - video/quicktime
+      - video/x-matroska
+      - video/webm
+      - application/zip
+      - application/x-rar-compressed
+      - application/x-7z-compressed
+      - application/x-tar
+      - application/gzip
+    blocked-extensions:
+      - exe
+      - bat
+      - cmd
+      - com
+      - msi
+      - sh
+      - ps1
+      - vbs
+      - js
+      - jse
+      - jar
+      - war
+      - php
+      - jsp
+      - aspx
+      - html
+      - htm
 
 warm-flow:
   enabled: ${WARM_FLOW_ENABLED:true}
@@ -71,6 +162,27 @@ warm-flow:
   token-name: Authorization
   top-text-show: true
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+  health:
+    defaults:
+      enabled: true
+
+sa-token:
+  token-name: Authorization
+  token-prefix: Bearer
+  timeout: ${APP_AUTH_SESSION_TIMEOUT_SECONDS:7200}
+  active-timeout: ${APP_AUTH_SESSION_ACTIVE_TIMEOUT_SECONDS:7200}
+  is-concurrent: ${APP_AUTH_ALLOW_CONCURRENT_LOGIN:true}
+  is-share: false
+  is-log: false
+
 app:
   api-docs:
     enabled: ${APP_API_DOCS_ENABLED:false}
@@ -78,6 +190,10 @@ app:
     login-fail-prefix: ${APP_AUTH_LOGIN_FAIL_PREFIX:login:fail:}
     max-retry-count: ${APP_AUTH_MAX_RETRY_COUNT:5}
     retry-lock-minutes: ${APP_AUTH_RETRY_LOCK_MINUTES:10}
+    session-timeout-seconds: ${APP_AUTH_SESSION_TIMEOUT_SECONDS:7200}
+    session-active-timeout-seconds: ${APP_AUTH_SESSION_ACTIVE_TIMEOUT_SECONDS:7200}
+    allow-concurrent-login: ${APP_AUTH_ALLOW_CONCURRENT_LOGIN:true}
+    kickout-old-session: ${APP_AUTH_KICKOUT_OLD_SESSION:true}
   cache:
     menu: 30m
     menu-tree: 30m

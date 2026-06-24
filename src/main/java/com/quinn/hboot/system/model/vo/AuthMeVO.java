@@ -15,4 +15,5 @@ public class AuthMeVO {
     private CurrentUserVO user;
     private Set<String> permissions;
     private List<SysMenu> menus;
+    private Long activeTimeoutSeconds;
 }

@@ -8,17 +8,18 @@ import com.alibaba.druid.wall.WallFilter;
 import com.quinn.hboot.config.properties.DruidMonitorProperties;
 import jakarta.servlet.Filter;
 import jakarta.servlet.Servlet;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
 import org.springframework.boot.web.servlet.FilterRegistrationBean;
 import org.springframework.boot.web.servlet.ServletRegistrationBean;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
-import org.springframework.util.Assert;
 import org.springframework.util.StringUtils;
 
 import java.util.HashMap;
 import java.util.Map;
 
+@Slf4j
 @Configuration
 @ConditionalOnProperty(name = "app.druid.monitor.enabled", havingValue = "true")
 public class DruidMonitorConfig {
@@ -29,14 +30,12 @@ public class DruidMonitorConfig {
         this.druidMonitorProperties = druidMonitorProperties;
     }
 
-    /**
-     * 1. 注册 Druid 监控页面的 Servlet
-     * 关键：urlMappings 必须是 "/druid/*"
-     */
     @Bean
     public ServletRegistrationBean<Servlet> druidStatViewServlet() {
-        Assert.hasText(druidMonitorProperties.getUsername(), "app.druid.monitor.username must not be blank when monitor is enabled");
-        Assert.hasText(druidMonitorProperties.getPassword(), "app.druid.monitor.password must not be blank when monitor is enabled");
+        if (!hasMonitorCredentials()) {
+            log.warn("Druid monitor enabled but username/password is blank, skip registering /druid/* servlet");
+            return null;
+        }
 
         ServletRegistrationBean<Servlet> registrationBean = new ServletRegistrationBean<>();
         registrationBean.setServlet(new StatViewServlet());
@@ -87,5 +86,10 @@ public class DruidMonitorConfig {
         wallConfig.setMultiStatementAllow(druidMonitorProperties.isMultiStatementAllow());
         wallFilter.setConfig(wallConfig);
         return wallFilter;
+    }
+
+    private boolean hasMonitorCredentials() {
+        return StringUtils.hasText(druidMonitorProperties.getUsername())
+            && StringUtils.hasText(druidMonitorProperties.getPassword());
     }
 }

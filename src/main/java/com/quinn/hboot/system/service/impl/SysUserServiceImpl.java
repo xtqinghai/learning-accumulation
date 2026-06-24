@@ -14,6 +14,7 @@ import com.quinn.hboot.system.mapper.SysUserMapper;
 import com.quinn.hboot.system.mapper.SysUserOrgPostMapper;
 import com.quinn.hboot.system.mapper.SysUserPostMapper;
 import com.quinn.hboot.system.mapper.SysUserRoleMapper;
+import com.quinn.hboot.system.model.dto.ChangePasswordDTO;
 import com.quinn.hboot.system.model.dto.RegisterUserDTO;
 import com.quinn.hboot.system.model.entity.SysDept;
 import com.quinn.hboot.system.model.entity.SysPost;
@@ -24,6 +25,7 @@ import com.quinn.hboot.system.model.entity.SysUserPost;
 import com.quinn.hboot.system.model.entity.SysUserRole;
 import com.quinn.hboot.system.service.SysMenuService;
 import com.quinn.hboot.system.service.SysUserService;
+import com.quinn.hboot.system.util.PasswordPolicyValidator;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.context.annotation.Lazy;
 import org.springframework.security.crypto.password.PasswordEncoder;
@@ -107,6 +109,7 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         user.setNickname(dto.getNickname());
         user.setDeptId(dto.getOrgId());
         user.setStatus(1);
+        PasswordPolicyValidator.validateOrThrow(dto.getPassword());
         user.setPassword(passwordEncoder.encode(dto.getPassword()));
         this.getBaseMapper().insert(user);
         clearUserCaches(user.getId(), user.getUsername());
@@ -200,6 +203,29 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
         boolean result = this.updateById(user);
         if (result) {
             clearUserCaches(id, current == null ? null : current.getUsername());
+        }
+        return result;
+    }
+
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public Boolean changePassword(ChangePasswordDTO dto) {
+        if (dto == null || dto.getUserId() == null || dto.getUserId() <= 0) {
+            throw new IllegalArgumentException("用户ID不能为空且必须为正数");
+        }
+        PasswordPolicyValidator.validateOrThrow(dto.getNewPassword());
+
+        SysUser current = this.getById(dto.getUserId());
+        if (current == null) {
+            throw new IllegalArgumentException("用户不存在");
+        }
+
+        SysUser user = new SysUser();
+        user.setId(dto.getUserId());
+        user.setPassword(passwordEncoder.encode(dto.getNewPassword()));
+        boolean result = this.updateById(user);
+        if (result) {
+            clearUserCaches(dto.getUserId(), current.getUsername());
         }
         return result;
     }
@@ -386,11 +412,13 @@ public class SysUserServiceImpl extends ServiceImpl<SysUserMapper, SysUser> impl
 
         if (create) {
             if (entity.getPassword() == null || entity.getPassword().isBlank()) {
-                entity.setPassword(passwordEncoder.encode("123456"));
+                throw new IllegalArgumentException("新增用户时密码不能为空");
             } else if (!entity.getPassword().startsWith("$2a$")) {
+                PasswordPolicyValidator.validateOrThrow(entity.getPassword());
                 entity.setPassword(passwordEncoder.encode(entity.getPassword()));
             }
         } else if (entity.getPassword() != null && !entity.getPassword().isBlank() && !entity.getPassword().startsWith("$2a$")) {
+            PasswordPolicyValidator.validateOrThrow(entity.getPassword());
             entity.setPassword(passwordEncoder.encode(entity.getPassword()));
         } else if (entity.getPassword() == null || entity.getPassword().isBlank()) {
             entity.setPassword(null);

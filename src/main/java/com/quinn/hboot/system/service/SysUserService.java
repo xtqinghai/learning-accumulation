@@ -3,6 +3,7 @@ package com.quinn.hboot.system.service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import com.baomidou.mybatisplus.extension.service.IService;
+import com.quinn.hboot.system.model.dto.ChangePasswordDTO;
 import com.quinn.hboot.system.model.dto.RegisterUserDTO;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.model.entity.SysUserOrgPost;
@@ -28,6 +29,8 @@ public interface SysUserService extends IService<SysUser> {
     List<SysUserOrgPost> getUserOrgPosts(Long userId);
 
     Object resetPwd(Long id);
+
+    Object changePassword(ChangePasswordDTO dto);
 
     List<SysUser> selectUsersByRoleIds(List<Long> roleIds);
 

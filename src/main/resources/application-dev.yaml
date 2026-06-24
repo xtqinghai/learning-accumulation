@@ -72,6 +72,15 @@ logging:
     com.alibaba.druid: info
     org.springframework.web: info
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info
+  endpoint:
+    health:
+      show-details: always
+
 springdoc:
   api-docs:
     enabled: true
@@ -85,7 +94,7 @@ warm-flow:
 
 file:
   local:
-    base-path: ${FILE_LOCAL_BASE_PATH:c:/upload}
+    base-path: ${FILE_LOCAL_BASE_PATH:${user.home}/upload-dev}
     public-url: ${FILE_PUBLIC_URL:http://localhost:${server.port}/api/v1/file/preview}
 
 app:
@@ -128,8 +137,8 @@ app:
   druid:
     monitor:
       enabled: true
-      username: ${APP_DRUID_MONITOR_USERNAME:devadmin}
-      password: ${APP_DRUID_MONITOR_PASSWORD:change-me}
+      username: ${APP_DRUID_MONITOR_USERNAME:admin}
+      password: ${APP_DRUID_MONITOR_PASSWORD:admin}
       allow: ${APP_DRUID_MONITOR_ALLOW:127.0.0.1}
       deny: ${APP_DRUID_MONITOR_DENY:}
       reset-enable: false

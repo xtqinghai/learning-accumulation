@@ -70,6 +70,15 @@ logging:
     com.alibaba.druid: warn
     org.springframework.web: warn
 
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health
+  endpoint:
+    health:
+      show-details: never
+
 springdoc:
   show-actuator: false
 
@@ -79,7 +88,7 @@ warm-flow:
 
 file:
   local:
-    base-path: ${FILE_LOCAL_BASE_PATH:/data/hboot/upload}
+    base-path: ${FILE_LOCAL_BASE_PATH}
     public-url: ${FILE_PUBLIC_URL}
 
 app:

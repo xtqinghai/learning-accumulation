@@ -2,6 +2,7 @@ package com.quinn.hboot.system.controller;
 
 import com.quinn.hboot.common.R;
 import com.quinn.hboot.common.log.SysLog;
+import com.quinn.hboot.system.model.dto.ChangePasswordDTO;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.system.model.query.SysUserPageQuery;
 import com.quinn.hboot.system.service.SysUserService;
@@ -51,5 +52,11 @@ public class SysUserController {
     @SysLog(module = "用户管理", type = "重置密码")
     public R<?> resetPwd(@PathVariable Long id) {
         return R.ok(userService.resetPwd(id));
+    }
+
+    @PutMapping("/password")
+    @SysLog(module = "用户管理", type = "修改密码")
+    public R<?> changePassword(@RequestBody ChangePasswordDTO dto) {
+        return R.ok(userService.changePassword(dto));
     }
 }

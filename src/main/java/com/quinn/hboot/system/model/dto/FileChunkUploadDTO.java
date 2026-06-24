@@ -17,5 +17,6 @@ public class FileChunkUploadDTO {
     private Integer chunkIndex;
     private Integer totalChunks;
     private String fileName;
+    private Long fileSize;
 }
 

@@ -1,6 +1,9 @@
 package com.quinn.hboot.system.service.impl;
 
 import cn.dev33.satoken.stp.StpUtil;
+import cn.dev33.satoken.stp.parameter.SaLoginParameter;
+import cn.dev33.satoken.stp.parameter.enums.SaReplacedLoginExitMode;
+import cn.dev33.satoken.stp.parameter.enums.SaReplacedRange;
 import cn.hutool.core.util.StrUtil;
 import com.quinn.hboot.common.exception.BusinessException;
 import com.quinn.hboot.common.trace.TraceContext;
@@ -16,6 +19,7 @@ import com.quinn.hboot.system.service.AuthService;
 import com.quinn.hboot.system.service.LoginLogService;
 import com.quinn.hboot.system.service.LoginUserResolver;
 import com.quinn.hboot.system.service.SysMenuService;
+import com.quinn.hboot.config.properties.AuthProperties;
 import com.quinn.hboot.utils.AESUtils;
 import com.quinn.hboot.utils.IPUtils;
 import com.quinn.hboot.utils.SecurityUtils;
@@ -37,6 +41,7 @@ public class AuthServiceImpl implements AuthService {
     private final PasswordEncoder passwordEncoder;
     private final LoginUserResolver loginUserResolver;
     private final AuthCacheService authCacheService;
+    private final AuthProperties authProperties;
     private final SystemCacheSupport cacheSupport;
     private final SysMenuService menuService;
     private final LoginLogService loginLogService;
@@ -74,7 +79,7 @@ public class AuthServiceImpl implements AuthService {
                 throw new BusinessException(403, "用户已锁定，请联系管理员");
             }
 
-            StpUtil.login(loginUser.getUserId());
+            StpUtil.login(loginUser.getUserId(), buildLoginParameter());
             SecurityUtils.setLoginUser(loginUser);
 
             authCacheService.clearLoginFailure(username, clientIp);
@@ -83,6 +88,8 @@ public class AuthServiceImpl implements AuthService {
 
             LoginRespVO resp = new LoginRespVO();
             resp.setToken(StpUtil.getTokenValue());
+            resp.setExpiresInSeconds(authProperties.getSessionTimeoutSeconds());
+            resp.setActiveTimeoutSeconds(authProperties.getSessionActiveTimeoutSeconds());
             resp.setUser(toCurrentUser(loginUser));
             resp.setMenus(menuService.findMenuTreeByUserId(loginUser.getUserId()));
             return resp;
@@ -130,6 +137,21 @@ public class AuthServiceImpl implements AuthService {
         cacheSupport.clearMenuCaches();
     }
 
+    private SaLoginParameter buildLoginParameter() {
+        return SaLoginParameter.create()
+            .setTimeout(authProperties.getSessionTimeoutSeconds())
+            .setActiveTimeout(authProperties.getSessionActiveTimeoutSeconds())
+            .setIsConcurrent(authProperties.isAllowConcurrentLogin())
+            .setIsShare(false)
+            .setMaxLoginCount(authProperties.isAllowConcurrentLogin() ? -1 : 1)
+            .setMaxTryTimes(authProperties.isKickoutOldSession() ? -1 : 1)
+            .setReplacedRange(SaReplacedRange.ALL_DEVICE_TYPE)
+            .setReplacedLoginExitMode(
+                authProperties.isKickoutOldSession() ? SaReplacedLoginExitMode.OLD_DEVICE : SaReplacedLoginExitMode.NEW_DEVICE
+            )
+            .setIsLastingCookie(false);
+    }
+
     @Override
     public AuthMeVO me() {
         LoginUser loginUser = refreshCurrentLoginUser();
@@ -138,6 +160,7 @@ public class AuthServiceImpl implements AuthService {
         resp.setUser(toCurrentUser(loginUser));
         resp.setPermissions(defaultIfNull(loginUser.getPermissions()));
         resp.setMenus(menuService.findMenuTreeByUserId(loginUser.getUserId()));
+        resp.setActiveTimeoutSeconds(authProperties.getSessionActiveTimeoutSeconds());
         return resp;
     }
 
