@@ -5,6 +5,7 @@ import com.quinn.hboot.common.log.SysLog;
 import com.quinn.hboot.system.model.dto.FileChunkUploadDTO;
 import com.quinn.hboot.system.model.entity.SysFile;
 import com.quinn.hboot.system.service.FileService;
+import com.quinn.hboot.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -137,6 +138,8 @@ public class FileController  {
     public R check(@RequestParam String hash) {
         SysFile sysFile = fileService.getOne(
                 new LambdaQueryWrapper<SysFile>()
+                        .eq(SysFile::getOwnerId, SecurityUtils.getUserId())
+                        .eq(SysFile::getBizType, "GENERAL")
                         .eq(SysFile::getFileHash, hash)
                         .eq(SysFile::getStatus, 1)
                         .last("limit 1")

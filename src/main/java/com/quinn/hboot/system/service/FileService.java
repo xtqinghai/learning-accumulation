@@ -64,6 +64,8 @@ public interface FileService extends IService<SysFile> {
 
     SysFile upload(MultipartFile file) throws Exception;
 
+    SysFile upload(MultipartFile file, String bizType) throws Exception;
+
     void download(Long id, HttpServletResponse response) throws Exception;
 
     void preview(Long id, HttpServletResponse response) throws Exception;

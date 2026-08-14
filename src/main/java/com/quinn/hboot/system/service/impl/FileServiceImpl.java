@@ -15,6 +15,7 @@ import com.quinn.hboot.system.model.query.FileQuery;
 import com.quinn.hboot.system.model.vo.FileVO;
 import com.quinn.hboot.system.service.FileService;
 import com.quinn.hboot.system.service.FileUploadSecurityService;
+import com.quinn.hboot.utils.SecurityUtils;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
@@ -90,14 +91,24 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
 
     @Override
     public SysFile upload(MultipartFile file) throws Exception {
+        return upload(file, "GENERAL");
+    }
+
+    @Override
+    public SysFile upload(MultipartFile file, String bizType) throws Exception {
         fileUploadSecurityService.validateUpload(file);
 
+        Long ownerId = SecurityUtils.getUserId();
+        String actualBizType = StrUtil.blankToDefault(bizType, "GENERAL");
         String fileName = file.getOriginalFilename();
         String ext = FilenameUtils.getExtension(fileName);
         String hash = DigestUtils.md5DigestAsHex(file.getInputStream());
 
         SysFile exists = fileMapper.selectOne(
             new LambdaQueryWrapper<SysFile>()
+                .eq(ownerId != null, SysFile::getOwnerId, ownerId)
+                .isNull(ownerId == null, SysFile::getOwnerId)
+                .eq(SysFile::getBizType, actualBizType)
                 .eq(SysFile::getFileHash, hash)
                 .eq(SysFile::getStatus, 1)
         );
@@ -111,12 +122,16 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
         save(file.getInputStream(), path, file.getContentType());
 
         SysFile entity = new SysFile();
+        entity.setOwnerId(ownerId);
+        entity.setBizType(actualBizType);
         entity.setFileName(fileName);
         entity.setContentType(file.getContentType());
         entity.setFileExt(ext);
         entity.setFileSize(file.getSize());
         entity.setFileHash(hash);
+        entity.setHashAlgorithm("MD5");
         entity.setStorageType("LOCAL");
+        entity.setStorageStatus("READY");
         entity.setStoragePath(path);
         entity.setUrl(publicUrl);
         entity.setCreateTime(LocalDateTime.now());
@@ -258,7 +273,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
         fileUploadSecurityService.validateDeclaredFile(dto.getFileName(), dto.getFileSize());
         fileUploadSecurityService.validateChunk(file, dto.getFileName());
 
-        String chunkDir = "chunk/" + dto.getFileHash();
+        String chunkDir = "chunk/" + SecurityUtils.getUserId() + "/" + dto.getFileHash();
         String chunkPath = chunkDir + "/" + dto.getChunkIndex();
         save(file.getInputStream(), chunkPath, file.getContentType());
     }
@@ -279,7 +294,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
 
         try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
             for (int i = 0; i < dto.getTotalChunks(); i++) {
-                String chunkPath = "chunk/" + dto.getFileHash() + "/" + i;
+                String chunkPath = "chunk/" + SecurityUtils.getUserId() + "/" + dto.getFileHash() + "/" + i;
                 try (InputStream in = get(chunkPath)) {
                     IOUtils.copy(in, out);
                 }
@@ -291,13 +306,17 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
         fileUploadSecurityService.validateMergedFile(targetFile, dto.getFileName());
 
         SysFile sysFile = new SysFile();
+        sysFile.setOwnerId(SecurityUtils.getUserId());
+        sysFile.setBizType("GENERAL");
         sysFile.setFileName(dto.getFileName());
         sysFile.setFileExt(ext);
         sysFile.setContentType(getContentTypeByExt(ext));
         sysFile.setFileSize(targetFile.length());
         sysFile.setFileHash(dto.getFileHash());
+        sysFile.setHashAlgorithm("MD5");
         sysFile.setStoragePath(finalPath);
         sysFile.setStorageType("LOCAL");
+        sysFile.setStorageStatus("READY");
         sysFile.setUrl(publicUrl);
         sysFile.setCreateTime(LocalDateTime.now());
         fileMapper.insert(sysFile);

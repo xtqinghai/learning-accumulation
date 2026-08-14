@@ -40,6 +40,7 @@
         <sa-token.version>1.45.0</sa-token.version>
 
         <springdoc.version>2.8.9</springdoc.version>
+        <spring-ai.version>1.1.2</spring-ai.version>
 
         <!-- 未来扩展 -->
         <easyexcel.version>4.0.3</easyexcel.version>
@@ -51,6 +52,17 @@
         <!-- 工作流 -->
         <warm-flow>1.8.5</warm-flow>
     </properties>
+    <dependencyManagement>
+        <dependencies>
+            <dependency>
+                <groupId>org.springframework.ai</groupId>
+                <artifactId>spring-ai-bom</artifactId>
+                <version>${spring-ai.version}</version>
+                <type>pom</type>
+                <scope>import</scope>
+            </dependency>
+        </dependencies>
+    </dependencyManagement>
     <dependencies>
 
         <!-- Web -->
@@ -62,6 +74,12 @@
         <dependency>
             <groupId>org.springframework.boot</groupId>
             <artifactId>spring-boot-starter-actuator</artifactId>
+        </dependency>
+
+        <!-- Spring AI：通过 OpenAI 兼容协议接入云模型或本地模型 -->
+        <dependency>
+            <groupId>org.springframework.ai</groupId>
+            <artifactId>spring-ai-starter-model-openai</artifactId>
         </dependency>
 
         <!--test-->
@@ -354,6 +372,16 @@
                         </path>
                     </annotationProcessorPaths>
                 </configuration>
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-compiler-plugin</artifactId>
+                <version>3.14.1</version> <!-- 与你项目要求一致 -->
+            </plugin>
+            <plugin>
+                <groupId>org.apache.maven.plugins</groupId>
+                <artifactId>maven-dependency-plugin</artifactId>
+                <version>3.8.1</version>
             </plugin>
             <!-- 找到你的 exec-maven-plugin，替换成这个配置 -->
             <plugin>

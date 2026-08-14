@@ -12,6 +12,14 @@ logging:
 spring:
   application:
     name: hboot-system
+  ai:
+    openai:
+      base-url: ${AI_BASE_URL:http://47.96.114.112:8080}
+      api-key: ${AI_API_KEY:not-configured}
+      chat:
+        options:
+          model: ${AI_MODEL:gpt-5.5}
+          temperature: ${AI_TEMPERATURE:0.7}
   config:
     import: classpath:codegen.yml
   profiles:
@@ -22,8 +30,8 @@ spring:
   servlet:
     multipart:
       enabled: true
-      max-file-size: ${APP_MAX_FILE_SIZE:100MB}
-      max-request-size: ${APP_MAX_REQUEST_SIZE:100MB}
+      max-file-size: ${APP_MAX_FILE_SIZE:2GB}
+      max-request-size: ${APP_MAX_REQUEST_SIZE:2GB}
   main:
     allow-circular-references: true
 
@@ -64,7 +72,7 @@ file:
     public-url: ${FILE_PUBLIC_URL:http://localhost:${server.port}/api/v1/file/preview}
   security:
     enabled: ${FILE_SECURITY_ENABLED:true}
-    max-file-size: ${FILE_SECURITY_MAX_FILE_SIZE:104857600}
+    max-file-size: ${FILE_SECURITY_MAX_FILE_SIZE:2147483648}
     antivirus-enabled: ${FILE_SECURITY_ANTIVIRUS_ENABLED:false}
     allowed-extensions:
       - pdf
@@ -85,6 +93,9 @@ file:
       - gif
       - webp
       - bmp
+      - tif
+      - tiff
+      - heic
       - svg
       - mp3
       - wav
@@ -96,6 +107,9 @@ file:
       - mov
       - mkv
       - webm
+      - m4v
+      - mpeg
+      - mpg
       - zip
       - rar
       - 7z
@@ -119,6 +133,9 @@ file:
       - image/gif
       - image/webp
       - image/bmp
+      - image/tiff
+      - image/heic
+      - image/heif
       - image/svg+xml
       - audio/mpeg
       - audio/wav
@@ -130,6 +147,8 @@ file:
       - video/quicktime
       - video/x-matroska
       - video/webm
+      - video/x-m4v
+      - video/mpeg
       - application/zip
       - application/x-rar-compressed
       - application/x-7z-compressed
@@ -184,6 +203,11 @@ sa-token:
   is-log: false
 
 app:
+  ai:
+    enabled: ${AI_ENABLED:true}
+    api-key: ${AI_API_KEY:not-configured}
+    model: ${AI_MODEL:gpt-5.5}
+    system-prompt: ${AI_SYSTEM_PROMPT:你是 h-boot 管理系统中的 AI 助手。请使用清晰、准确、简洁的中文回答用户问题；不确定时应明确说明，不要编造信息。}
   api-docs:
     enabled: ${APP_API_DOCS_ENABLED:false}
   auth:

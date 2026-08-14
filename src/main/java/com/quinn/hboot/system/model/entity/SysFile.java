@@ -25,6 +25,11 @@ public class SysFile extends BaseEntity implements Serializable {
     @Serial
     private static final long serialVersionUID = 1L;
 
+    /** 文件所有者用户ID */
+    private Long ownerId;
+    /** 业务类型 */
+    private String bizType;
+
     /**
      * 原始文件名
      */
@@ -45,10 +50,14 @@ public class SysFile extends BaseEntity implements Serializable {
      * 文件hash(SHA256/MD5)
      */
     private String fileHash;
+    /** 哈希算法 */
+    private String hashAlgorithm;
     /**
      * 存储类型
      */
     private String storageType;
+    /** 存储状态 */
+    private String storageStatus;
     /**
      * 存储路径或对象key
      */
