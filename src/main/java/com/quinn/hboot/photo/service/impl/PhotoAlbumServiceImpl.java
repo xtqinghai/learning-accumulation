@@ -229,6 +229,48 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
+    public PhotoMediaVO replaceImage(Long id, MultipartFile file) throws Exception {
+        PhotoMedia media = requireMedia(id);
+        if (!"IMAGE".equals(media.getMediaType())) {
+            throw new BusinessException("仅支持编辑图片内容");
+        }
+        if (file == null || file.isEmpty()) {
+            throw new BusinessException("编辑后的图片不能为空");
+        }
+        if (!"IMAGE".equals(detectMediaType(file)) || ImageIO.read(file.getInputStream()) == null) {
+            throw new BusinessException("编辑结果不是有效图片");
+        }
+
+        SysFile previousFile = fileService.getById(media.getOriginalFileId());
+        SysFile editedFile = fileService.upload(file, "PHOTO_EDITED");
+        long previousSize = previousFile == null || previousFile.getFileSize() == null ? 0L : previousFile.getFileSize();
+        long editedSize = editedFile.getFileSize() == null ? 0L : editedFile.getFileSize();
+
+        media.setOriginalFileId(editedFile.getId());
+        media.setOrientation(1);
+        media.setProcessStatus("PENDING");
+        media.setProcessError(null);
+        media.setUpdateTime(LocalDateTime.now());
+        mediaMapper.updateById(media);
+        extractMetadata(media, editedFile);
+
+        PhotoSpace space = spaceMapper.selectById(media.getSpaceId());
+        if (space != null) {
+            space.setUsedBytes(Math.max(0L, Optional.ofNullable(space.getUsedBytes()).orElse(0L) - previousSize + editedSize));
+            space.setUpdateTime(LocalDateTime.now());
+            spaceMapper.updateById(space);
+        }
+
+        albumMediaMapper.selectList(new LambdaQueryWrapper<PhotoAlbumMedia>()
+                .eq(PhotoAlbumMedia::getMediaId, media.getId()))
+            .stream()
+            .map(PhotoAlbumMedia::getAlbumId)
+            .distinct()
+            .forEach(this::refreshAlbumStats);
+        return toVO(mediaMapper.selectById(media.getId()));
+    }
+
+    @Override
     public PhotoMediaVO updateMedia(Long id, PhotoRequests.MediaUpdate request) {
         PhotoMedia media = requireMedia(id);
         if (StringUtils.hasText(request.displayName())) media.setDisplayName(request.displayName().trim());

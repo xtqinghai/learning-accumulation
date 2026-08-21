@@ -32,8 +32,21 @@ public class AiChatService {
         validateConfiguration();
         validateConversation(request.messages());
 
+        return call(properties.systemPrompt(), request.messages());
+    }
+
+    public AiChatResponse chatWithSystemPrompt(String systemPrompt, List<AiChatMessage> messages) {
+        validateConfiguration();
+        validateConversation(messages);
+        if (systemPrompt == null || systemPrompt.isBlank()) {
+            throw new BusinessException("AI 系统提示词不能为空");
+        }
+        return call(systemPrompt, messages);
+    }
+
+    private AiChatResponse call(String systemPrompt, List<AiChatMessage> messages) {
         try {
-            ChatResponse response = chatModel.call(new Prompt(toSpringAiMessages(request.messages())));
+            ChatResponse response = chatModel.call(new Prompt(toSpringAiMessages(systemPrompt, messages)));
             String answer = response.getResult().getOutput().getText();
             if (answer == null || answer.isBlank()) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI 服务未返回有效内容，请稍后重试");
@@ -50,9 +63,9 @@ public class AiChatService {
         }
     }
 
-    private List<Message> toSpringAiMessages(List<AiChatMessage> messages) {
+    private List<Message> toSpringAiMessages(String systemPrompt, List<AiChatMessage> messages) {
         List<Message> promptMessages = new ArrayList<>(messages.size() + 1);
-        promptMessages.add(new SystemMessage(properties.systemPrompt()));
+        promptMessages.add(new SystemMessage(systemPrompt));
         for (AiChatMessage message : messages) {
             if ("assistant".equals(message.role())) {
                 promptMessages.add(new AssistantMessage(message.content()));

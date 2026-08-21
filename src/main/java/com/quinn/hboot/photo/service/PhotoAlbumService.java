@@ -19,6 +19,7 @@ public interface PhotoAlbumService {
     IPage<PhotoMediaVO> pageMedia(Long albumId, String keyword, String mediaType, Long tagId, long page, long size);
     PhotoMediaVO getMedia(Long id);
     PhotoMediaVO upload(MultipartFile file, Long albumId, String relativePath) throws Exception;
+    PhotoMediaVO replaceImage(Long id, MultipartFile file) throws Exception;
     PhotoMediaVO updateMedia(Long id, PhotoRequests.MediaUpdate request);
     void deleteMedia(List<Long> ids);
     void copyOrMove(PhotoRequests.MediaMove request);

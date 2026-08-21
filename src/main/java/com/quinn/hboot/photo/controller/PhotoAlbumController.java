@@ -91,6 +91,15 @@ public class PhotoAlbumController {
         return R.ok(photoAlbumService.upload(file, albumId, relativePath));
     }
 
+    @Operation(summary = "替换图片内容")
+    @PutMapping("/media/{id}/content")
+    public R<PhotoMediaVO> replaceImage(
+        @PathVariable Long id,
+        @RequestPart("file") MultipartFile file
+    ) throws Exception {
+        return R.ok(photoAlbumService.replaceImage(id, file));
+    }
+
     @Operation(summary = "编辑媒体信息")
     @PutMapping("/media/{id}")
     public R<PhotoMediaVO> updateMedia(@PathVariable Long id, @RequestBody PhotoRequests.MediaUpdate request) {

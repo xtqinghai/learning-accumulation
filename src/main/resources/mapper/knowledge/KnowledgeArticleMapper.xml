@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE mapper PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN" "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.quinn.hboot.knowledge.mapper.KnowledgeArticleMapper">
+    <select id="search" resultType="com.quinn.hboot.knowledge.model.entity.KnowledgeArticle">
+        SELECT
+            a.*,
+            <choose>
+                <when test="tokens != null and tokens.size() > 0">
+                    <foreach collection="tokens" item="token" separator=" + ">
+                        (CASE WHEN LOWER(a.title) LIKE CONCAT('%', #{token}, '%') THEN 5 ELSE 0 END
+                         + CASE WHEN LOWER(COALESCE(a.keywords, '')) LIKE CONCAT('%', #{token}, '%') THEN 4 ELSE 0 END
+                         + CASE WHEN LOWER(COALESCE(a.summary, '')) LIKE CONCAT('%', #{token}, '%') THEN 2 ELSE 0 END
+                         + CASE WHEN LOWER(a.search_content) LIKE CONCAT('%', #{token}, '%') THEN 1 ELSE 0 END)
+                    </foreach>
+                </when>
+                <otherwise>0</otherwise>
+            </choose> AS relevance,
+            (SELECT COUNT(1) FROM kb_article_annotation n
+             WHERE n.article_id = a.id AND n.status = 1) AS annotation_count
+        FROM kb_article a
+        WHERE a.space_id = #{spaceId}
+          AND a.deleted = 0
+        <if test="status != null and status != ''">
+          AND a.status = #{status}
+        </if>
+        <if test="tokens != null and tokens.size() > 0">
+          AND (
+            <foreach collection="tokens" item="token" separator=" OR ">
+              LOWER(a.title) LIKE CONCAT('%', #{token}, '%')
+              OR LOWER(COALESCE(a.keywords, '')) LIKE CONCAT('%', #{token}, '%')
+              OR LOWER(COALESCE(a.summary, '')) LIKE CONCAT('%', #{token}, '%')
+              OR LOWER(a.search_content) LIKE CONCAT('%', #{token}, '%')
+            </foreach>
+          )
+        </if>
+        ORDER BY
+        <if test="tokens != null and tokens.size() > 0">
+          relevance DESC,
+        </if>
+          a.update_time DESC,
+          a.id DESC
+    </select>
+</mapper>
