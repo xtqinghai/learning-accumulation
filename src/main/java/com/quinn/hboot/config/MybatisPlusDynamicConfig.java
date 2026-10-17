@@ -1,6 +1,5 @@
 package com.quinn.hboot.config;
 
-import com.baomidou.mybatisplus.annotation.DbType;
 import com.baomidou.mybatisplus.extension.plugins.MybatisPlusInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.BlockAttackInnerInterceptor;
 import com.baomidou.mybatisplus.extension.plugins.inner.PaginationInnerInterceptor;
@@ -30,7 +29,6 @@ public class MybatisPlusDynamicConfig {
 
         // 分页插件
         PaginationInnerInterceptor paginationInnerInterceptor = new PaginationInnerInterceptor();
-        paginationInnerInterceptor.setDbType(DbType.MYSQL);
         paginationInnerInterceptor.setOverflow(true);
         paginationInnerInterceptor.setMaxLimit(1000L);
         interceptor.addInnerInterceptor(paginationInnerInterceptor);

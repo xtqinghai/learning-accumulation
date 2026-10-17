@@ -9,10 +9,10 @@ spring:
       primary: hboot
       datasource:
         hboot:
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          url: ${HBOOT_DB_URL:jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
-          username: ${HBOOT_DB_USERNAME:root}
-          password: ${HBOOT_DB_PASSWORD:123456}
+          driver-class-name: org.postgresql.Driver
+          url: ${HBOOT_DB_URL:jdbc:postgresql://localhost:5432/h_boot}
+          username: ${HBOOT_DB_USERNAME:pingguo}
+          password: ${HBOOT_DB_PASSWORD:}
           type: com.alibaba.druid.pool.DruidDataSource
           druid:
             initial-size: 5
@@ -22,7 +22,7 @@ spring:
             test-while-idle: true
             time-between-eviction-runs-millis: 60000
             min-evictable-idle-time-millis: 300000
-            validation-query: SELECT 1 FROM DUAL
+            validation-query: SELECT 1
             test-on-borrow: false
             test-on-return: false
             filters: stat,wall,slf4j
@@ -30,10 +30,10 @@ spring:
               druid.stat.mergeSql: true
               druid.stat.slowSqlMillis: 2000
         engine:
-          driver-class-name: com.mysql.cj.jdbc.Driver
-          url: ${ENGINE_DB_URL:jdbc:mysql://localhost:13306/h_boot?useUnicode=true&characterEncoding=utf8&useSSL=false&serverTimezone=Asia/Shanghai&allowPublicKeyRetrieval=true}
-          username: ${ENGINE_DB_USERNAME:root}
-          password: ${ENGINE_DB_PASSWORD:123456}
+          driver-class-name: org.postgresql.Driver
+          url: ${ENGINE_DB_URL:jdbc:postgresql://localhost:5432/h_boot}
+          username: ${ENGINE_DB_USERNAME:pingguo}
+          password: ${ENGINE_DB_PASSWORD:}
           type: com.alibaba.druid.pool.DruidDataSource
           druid:
             initial-size: 5
@@ -43,7 +43,7 @@ spring:
             test-while-idle: true
             time-between-eviction-runs-millis: 60000
             min-evictable-idle-time-millis: 300000
-            validation-query: SELECT 1 FROM DUAL
+            validation-query: SELECT 1
             test-on-borrow: false
             test-on-return: false
             filters: stat,wall,slf4j
