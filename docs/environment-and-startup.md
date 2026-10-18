@@ -21,16 +21,16 @@
 
 ## 2. 配置文件职责
 
-- [application.yaml](/F:/daima/xuexi/personal/h-boot/src/main/resources/application.yaml)
+- [application.yaml](../src/main/resources/application.yaml)
   - 放跨环境通用基础配置
   - 包含认证、上传安全、缓存、通用开关默认值
-- [application-dev.yaml](/F:/daima/xuexi/personal/h-boot/src/main/resources/application-dev.yaml)
+- [application-dev.yaml](../src/main/resources/application-dev.yaml)
   - 开发环境专用
   - 默认开启 Swagger、Druid、Warm-Flow UI
-- [application-test.yaml](/F:/daima/xuexi/personal/h-boot/src/main/resources/application-test.yaml)
+- [application-test.yaml](../src/main/resources/application-test.yaml)
   - 测试环境专用
   - 默认关闭 Swagger、Druid、Warm-Flow UI
-- [application-prod.yaml](/F:/daima/xuexi/personal/h-boot/src/main/resources/application-prod.yaml)
+- [application-prod.yaml](../src/main/resources/application-prod.yaml)
   - 生产环境专用
   - 默认关闭 Swagger、Druid、Warm-Flow UI
   - 不再提供默认上传目录
@@ -38,7 +38,7 @@
 ## 3. `.env.example` 使用说明
 
 - 模板文件位置：
-  - [.env.example](/F:/daima/xuexi/personal/h-boot/.env.example)
+  - [.env.example](../.env.example)
 - 建议做法：
   - 本地开发复制为 `.env`
   - 测试 / 生产环境通过系统环境变量、容器平台、CI/CD Secret 注入

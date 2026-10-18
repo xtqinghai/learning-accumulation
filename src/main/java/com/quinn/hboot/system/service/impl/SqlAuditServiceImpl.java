@@ -57,17 +57,19 @@ public class SqlAuditServiceImpl implements SqlAuditService {
             if (identity == null) {
                 identity = dataSource.get("identity");
             }
-            if (identity == null) {
+            if (!(identity instanceof Number dataSourceId)) {
                 continue;
             }
-            allStats.addAll(DruidStatManagerFacade.getInstance().getSqlStatDataList(identity));
+            allStats.addAll(DruidStatManagerFacade.getInstance().getSqlStatDataList(dataSourceId.intValue()));
         }
 
         return allStats.stream()
             .sorted(Comparator
                 .comparingLong((Map<String, Object> item) -> getLong(item, "ExecuteMillisMax", "MaxTimespan", "executeMillisMax"))
                 .reversed()
-                .thenComparingLong(item -> getLong(item, "ExecuteCount", "executeCount")).reversed()
+                .thenComparing(Comparator
+                    .comparingLong((Map<String, Object> item) -> getLong(item, "ExecuteCount", "executeCount"))
+                    .reversed())
             )
             .limit(Math.max(sqlAuditProperties.getTopN(), 1))
             .map(this::simplifySqlStat)
@@ -88,7 +90,7 @@ public class SqlAuditServiceImpl implements SqlAuditService {
     }
 
     private List<Map<String, Object>> buildIndexAudit() {
-        String schema = jdbcTemplate.queryForObject("SELECT DATABASE()", String.class);
+        String schema = jdbcTemplate.queryForObject("SELECT current_schema()", String.class);
         List<IndexRecommendation> recommendations = List.of(
             new IndexRecommendation("sys_user", "idx_sys_user_dept_status", List.of("dept_id", "status"), false, "用户分页和组织维度筛选"),
             new IndexRecommendation("sys_menu", "idx_sys_menu_parent_sort_status", List.of("parent_id", "sort", "status"), false, "菜单树和可见菜单排序"),
@@ -121,23 +123,67 @@ public class SqlAuditServiceImpl implements SqlAuditService {
     }
 
     private Map<String, Map<String, Set<String>>> loadExistingIndexes(String schema) {
-        String sql = """
-            SELECT table_name, index_name, column_name, seq_in_index
-            FROM information_schema.statistics
-            WHERE table_schema = ?
-            ORDER BY table_name, index_name, seq_in_index
+        String columnSql = """
+            SELECT attr.attrelid AS table_oid,
+                   attr.attnum AS attribute_number,
+                   attr.attname AS column_name
+            FROM pg_catalog.pg_attribute attr
+            JOIN pg_catalog.pg_class tbl ON tbl.oid = attr.attrelid
+            JOIN pg_catalog.pg_namespace ns ON ns.oid = tbl.relnamespace
+            WHERE ns.nspname = ?
+              AND attr.attnum > 0
+              AND attr.attisdropped = FALSE
+            """;
+        Map<Long, Map<Integer, String>> columnsByTable = new LinkedHashMap<>();
+        for (Map<String, Object> row : jdbcTemplate.queryForList(columnSql, schema)) {
+            long tableOid = getLong(row, "table_oid");
+            int attributeNumber = (int) getLong(row, "attribute_number");
+            String columnName = Objects.toString(row.get("column_name"), "");
+            columnsByTable
+                .computeIfAbsent(tableOid, key -> new LinkedHashMap<>())
+                .put(attributeNumber, columnName);
+        }
+
+        String indexSql = """
+            SELECT tbl.oid AS table_oid,
+                   tbl.relname AS table_name,
+                   idx.relname AS index_name,
+                   CAST(index_meta.indkey AS VARCHAR) AS attribute_numbers,
+                   index_meta.indnkeyatts AS key_column_count
+            FROM pg_catalog.pg_index index_meta
+            JOIN pg_catalog.pg_class idx ON idx.oid = index_meta.indexrelid
+            JOIN pg_catalog.pg_class tbl ON tbl.oid = index_meta.indrelid
+            JOIN pg_catalog.pg_namespace ns ON ns.oid = tbl.relnamespace
+            WHERE ns.nspname = ?
+            ORDER BY tbl.relname, idx.relname
             """;
 
-        List<Map<String, Object>> rows = jdbcTemplate.queryForList(sql, schema);
         Map<String, Map<String, Set<String>>> result = new LinkedHashMap<>();
-        for (Map<String, Object> row : rows) {
+        for (Map<String, Object> row : jdbcTemplate.queryForList(indexSql, schema)) {
+            long tableOid = getLong(row, "table_oid");
             String tableName = Objects.toString(row.get("table_name"), "");
             String indexName = Objects.toString(row.get("index_name"), "");
-            String columnName = Objects.toString(row.get("column_name"), "");
-            result
+            String attributeNumbers = Objects.toString(row.get("attribute_numbers"), "").trim();
+            int keyColumnCount = (int) getLong(row, "key_column_count");
+            Map<Integer, String> tableColumns = columnsByTable.getOrDefault(tableOid, Map.of());
+            Set<String> indexColumns = result
                 .computeIfAbsent(tableName, key -> new LinkedHashMap<>())
-                .computeIfAbsent(indexName, key -> new LinkedHashSet<>())
-                .add(columnName);
+                .computeIfAbsent(indexName, key -> new LinkedHashSet<>());
+
+            if (attributeNumbers.isEmpty()) {
+                continue;
+            }
+            String[] attributes = attributeNumbers.split("\\s+");
+            for (int i = 0; i < Math.min(keyColumnCount, attributes.length); i++) {
+                try {
+                    String columnName = tableColumns.get(Integer.parseInt(attributes[i]));
+                    if (columnName != null) {
+                        indexColumns.add(columnName);
+                    }
+                } catch (NumberFormatException ignored) {
+                    // Ignore a malformed catalog vector item instead of failing the entire audit report.
+                }
+            }
         }
         return result;
     }

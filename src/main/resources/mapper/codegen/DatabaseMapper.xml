@@ -7,62 +7,83 @@
     <!-- 查询数据库表分页 -->
     <select id="getTablePage" resultType="com.quinn.hboot.codegen.model.vo.TablePageVO">
         SELECT
-            t1.TABLE_NAME ,
-            t1.TABLE_COMMENT ,
-            t1.TABLE_COLLATION,
-            t1.ENGINE,
-            t1.CREATE_TIME,
-            CASE WHEN t2.id IS NOT NULL THEN 1 ELSE 0 END AS isConfigured
+            t1.table_name,
+            obj_description(pc.oid, 'pg_class') AS table_comment,
+            (SELECT datcollate FROM pg_catalog.pg_database WHERE datname = current_database()) AS table_collation,
+            'PostgreSQL' AS engine,
+            NULL::timestamp AS create_time,
+            CASE WHEN t2.id IS NOT NULL THEN 1 ELSE 0 END AS is_configured
         FROM
             information_schema.tables t1
-            LEFT JOIN gen_config t2 on t1.TABLE_NAME = t2.table_name
+            JOIN pg_catalog.pg_namespace pn ON pn.nspname = t1.table_schema
+            JOIN pg_catalog.pg_class pc ON pc.relnamespace = pn.oid AND pc.relname = t1.table_name
+            LEFT JOIN gen_config t2 ON t1.table_name = t2.table_name
         WHERE
-            t1.TABLE_SCHEMA = (SELECT DATABASE())
+            t1.table_schema = current_schema()
             AND t1.table_type = 'BASE TABLE'
             <if test="queryParams.keywords != null and queryParams.keywords.trim() neq ''">
-                AND t1.TABLE_NAME LIKE CONCAT('%',#{queryParams.keywords},'%')
+                AND t1.table_name LIKE CONCAT('%', #{queryParams.keywords}, '%')
             </if>
         <!-- 排除的表 -->
         <if test="queryParams.excludeTables != null and queryParams.excludeTables.size() > 0">
-            AND t1.TABLE_NAME NOT IN
+            AND t1.table_name NOT IN
             <foreach collection="queryParams.excludeTables" item="excludeTable" open="(" close=")" separator=",">
                 #{excludeTable}
             </foreach>
         </if>
-        ORDER BY
-            CREATE_TIME DESC
+        ORDER BY t1.table_name
     </select>
 
     <select id="getTableMetadata" resultType="com.quinn.hboot.codegen.model.bo.TableMetaData">
         SELECT
-            TABLE_NAME ,
-            TABLE_COMMENT ,
-            TABLE_COLLATION,
-            ENGINE,
-            CREATE_TIME
+            t.table_name,
+            obj_description(pc.oid, 'pg_class') AS table_comment,
+            (SELECT datcollate FROM pg_catalog.pg_database WHERE datname = current_database()) AS table_collation,
+            'PostgreSQL' AS engine,
+            NULL::timestamp AS create_time
         FROM
-            information_schema.tables
+            information_schema.tables t
+            JOIN pg_catalog.pg_namespace pn ON pn.nspname = t.table_schema
+            JOIN pg_catalog.pg_class pc ON pc.relnamespace = pn.oid AND pc.relname = t.table_name
         WHERE
-            TABLE_SCHEMA = (SELECT DATABASE())
-          AND TABLE_NAME = #{tableName}
+            t.table_schema = current_schema()
+            AND t.table_type = 'BASE TABLE'
+            AND t.table_name = #{tableName}
     </select>
 
     <select id="getTableColumns" resultType="com.quinn.hboot.codegen.model.bo.ColumnMetaData">
         SELECT
-            COLUMN_NAME,
-            DATA_TYPE,
-            COLUMN_COMMENT,
-            CASE COLUMN_KEY WHEN 'PRI' THEN 1 ELSE 0 END AS isPrimaryKey,
-            IS_NULLABLE,
-            CHARACTER_MAXIMUM_LENGTH,
-            CHARACTER_SET_NAME,
-            COLLATION_NAME
+            c.column_name,
+            CASE c.data_type
+                WHEN 'character varying' THEN 'varchar'
+                WHEN 'character' THEN 'char'
+                WHEN 'integer' THEN 'int'
+                WHEN 'timestamp without time zone' THEN 'datetime'
+                WHEN 'timestamp with time zone' THEN 'timestamp'
+                WHEN 'double precision' THEN 'double'
+                WHEN 'real' THEN 'float'
+                WHEN 'numeric' THEN 'decimal'
+                WHEN 'bytea' THEN 'blob'
+                ELSE c.data_type
+            END AS data_type,
+            col_description(pc.oid, pa.attnum) AS column_comment,
+            CASE WHEN pi.indisprimary THEN 1 ELSE 0 END AS is_primary_key,
+            c.is_nullable,
+            c.character_maximum_length,
+            c.character_set_name,
+            c.collation_name
         FROM
-            information_schema.columns
+            information_schema.columns c
+            JOIN pg_catalog.pg_namespace pn ON pn.nspname = c.table_schema
+            JOIN pg_catalog.pg_class pc ON pc.relnamespace = pn.oid AND pc.relname = c.table_name
+            JOIN pg_catalog.pg_attribute pa ON pa.attrelid = pc.oid AND pa.attname = c.column_name
+            LEFT JOIN pg_catalog.pg_index pi ON pi.indrelid = pc.oid
+                AND pi.indisprimary
+                AND pa.attnum = ANY(pi.indkey)
         WHERE
-            TABLE_SCHEMA = (SELECT DATABASE())
-            AND TABLE_NAME = #{tableName}
-        ORDER BY ORDINAL_POSITION ASC
+            c.table_schema = current_schema()
+            AND c.table_name = #{tableName}
+        ORDER BY c.ordinal_position ASC
     </select>
 
 

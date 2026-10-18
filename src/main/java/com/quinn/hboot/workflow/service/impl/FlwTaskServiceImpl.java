@@ -316,7 +316,8 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         }
         for (FlowTask task : flowTaskList) {
             if (!task.getId().equals(taskId) && autoPass) {
-                List<User> users = StreamUtils.filter(userList, e -> ObjectUtil.equals(task.getId(), e.getAssociated()) && ObjectUtil.equal(e.getProcessedBy(), SecurityUtils.getUserId()));
+                String currentUserId = Convert.toStr(SecurityUtils.getUserId());
+                List<User> users = StreamUtils.filter(userList, e -> ObjectUtil.equals(task.getId(), e.getAssociated()) && ObjectUtil.equal(e.getProcessedBy(), currentUserId));
                 if (CollUtil.isEmpty(users)) {
                     continue;
                 }
@@ -414,7 +415,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     public R pageByTaskWait(FlowTaskBo flowTaskBo, PageQuery pageQuery) {
         QueryWrapper<FlowTaskBo> queryWrapper = buildQueryWrapper(flowTaskBo);
         queryWrapper.eq("t.node_type", NodeType.BETWEEN.getKey());
-        queryWrapper.in("t.processed_by", SecurityUtils.getUserId());
+        queryWrapper.in("t.processed_by", Convert.toStr(SecurityUtils.getUserId()));
         queryWrapper.in("t.flow_status", BusinessStatusEnum.WAITING.getStatus());
         Page<FlowTaskVo> page = flwTaskMapper.getListRunTask(pageQuery.build(), queryWrapper);
         this.wrapAssigneeInfo(page.getRecords());
@@ -431,7 +432,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     public R pageByTaskFinish(FlowTaskBo flowTaskBo, PageQuery pageQuery) {
         QueryWrapper<FlowTaskBo> queryWrapper = buildQueryWrapper(flowTaskBo);
         queryWrapper.eq("t.node_type", NodeType.BETWEEN.getKey());
-        queryWrapper.in("t.approver", SecurityUtils.getUserId());
+        queryWrapper.in("t.approver", Convert.toStr(SecurityUtils.getUserId()));
         Page<FlowHisTaskVo> page = flwTaskMapper.getListFinishTask(pageQuery.build(), queryWrapper);
         return R.ok(page);
     }
@@ -491,7 +492,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     @Override
     public R pageByTaskCopy(FlowTaskBo flowTaskBo, PageQuery pageQuery) {
         QueryWrapper<FlowTaskBo> queryWrapper = buildQueryWrapper(flowTaskBo);
-        queryWrapper.in("t.processed_by", SecurityUtils.getUserId());
+        queryWrapper.in("t.processed_by", Convert.toStr(SecurityUtils.getUserId()));
         Page<FlowTaskVo> page = flwTaskMapper.getTaskCopyByPage(pageQuery.build(), queryWrapper);
         return R.ok(page);
     }
@@ -503,7 +504,8 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         wrapper.like(StringUtils.isNotBlank(flowTaskBo.getFlowName()), "t.flow_name", flowTaskBo.getFlowName());
         wrapper.like(StringUtils.isNotBlank(flowTaskBo.getFlowCode()), "t.flow_code", flowTaskBo.getFlowCode());
         wrapper.like(StringUtils.isNotBlank(flowTaskBo.getFlowStatus()), "t.flow_status", flowTaskBo.getFlowStatus());
-        wrapper.in(CollUtil.isNotEmpty(flowTaskBo.getCreateByIds()), "t.create_by", flowTaskBo.getCreateByIds());
+        wrapper.in(CollUtil.isNotEmpty(flowTaskBo.getCreateByIds()), "t.create_by",
+            StreamUtils.toList(flowTaskBo.getCreateByIds(), Convert::toStr));
         if (StringUtils.isNotBlank(flowTaskBo.getCategory())) {
             List<Long> categoryIds = flwCategoryMapper.selectCategoryIdsByParentId(Convert.toLong(flowTaskBo.getCategory()));
             wrapper.in("t.category", StreamUtils.toList(categoryIds, Convert::toStr));

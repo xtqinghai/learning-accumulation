@@ -320,7 +320,7 @@ public class FlwInstanceServiceImpl implements IFlwInstanceService {
     @Override
     public R selectCurrentInstanceList(FlowInstanceBo instanceBo, PageQuery pageQuery) {
         QueryWrapper<FlowInstanceBo> queryWrapper = buildQueryWrapper(instanceBo);
-        queryWrapper.eq("fi.create_by", SecurityUtils.getUserId());
+        queryWrapper.eq("fi.create_by", Convert.toStr(SecurityUtils.getUserId()));
         Page<FlowInstanceVo> page = flwInstanceMapper.selectInstanceList(pageQuery.build(), queryWrapper);
         return R.ok(page);
     }
