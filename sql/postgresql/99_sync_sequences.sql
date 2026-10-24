@@ -75,6 +75,10 @@ BEGIN
   PERFORM setval(pg_get_serial_sequence('sys_menu', 'id'), next_value, false);
   SELECT COALESCE(MAX("id"), 0) + 1 INTO next_value FROM "sys_notification";
   PERFORM setval(pg_get_serial_sequence('sys_notification', 'id'), next_value, false);
+  SELECT COALESCE(MAX("id"), 0) + 1 INTO next_value FROM "sys_scheduled_job";
+  PERFORM setval(pg_get_serial_sequence('sys_scheduled_job', 'id'), next_value, false);
+  SELECT COALESCE(MAX("id"), 0) + 1 INTO next_value FROM "sys_scheduled_job_log";
+  PERFORM setval(pg_get_serial_sequence('sys_scheduled_job_log', 'id'), next_value, false);
   SELECT COALESCE(MAX("id"), 0) + 1 INTO next_value FROM "sys_oper_log";
   PERFORM setval(pg_get_serial_sequence('sys_oper_log', 'id'), next_value, false);
   SELECT COALESCE(MAX("id"), 0) + 1 INTO next_value FROM "sys_role";

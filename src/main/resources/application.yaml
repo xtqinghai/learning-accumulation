@@ -12,6 +12,12 @@ logging:
 spring:
   application:
     name: hboot-system
+  quartz:
+    job-store-type: memory
+    wait-for-jobs-to-complete-on-shutdown: true
+    properties:
+      org.quartz.scheduler.instanceName: hbootScheduler
+      org.quartz.threadPool.threadCount: 5
   ai:
     openai:
       base-url: ${AI_BASE_URL:http://47.96.114.112:8080}

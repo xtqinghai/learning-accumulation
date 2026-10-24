@@ -251,11 +251,19 @@
             <version>${easyexcel.version}</version>
         </dependency>
 
-        <!-- 任务调度 / 日志异步 -->
+        <!-- 外部 XXL-Job 调度中心未部署，保留版本号但不引入执行器依赖。 -->
+        <!--
         <dependency>
             <groupId>com.xuxueli</groupId>
             <artifactId>xxl-job-core</artifactId>
             <version>${xxl-job.version}</version>
+        </dependency>
+        -->
+
+        <!-- 内置任务调度：任务定义和执行日志由业务表管理。 -->
+        <dependency>
+            <groupId>org.springframework.boot</groupId>
+            <artifactId>spring-boot-starter-quartz</artifactId>
         </dependency>
 
         <!--切面-日志用到-->
