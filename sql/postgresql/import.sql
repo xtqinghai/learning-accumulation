@@ -8,6 +8,7 @@ BEGIN;
 \ir 30_sa_token_permission_patch_20260604.sql
 \ir 40_update_warm_flow_1_8_5.sql
 \ir 50_sql_audit_indexes.sql
+\ir 60_notification_v1.sql
 \ir 99_sync_sequences.sql
 COMMIT;
 \echo 'h_boot import completed.'

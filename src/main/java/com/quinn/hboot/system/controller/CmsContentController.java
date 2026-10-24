@@ -1,6 +1,7 @@
 package com.quinn.hboot.system.controller;
 
 import com.quinn.hboot.common.log.SysLog;
+import com.quinn.hboot.common.exception.BusinessException;
 import com.quinn.hboot.system.service.CmsContentService;
 import lombok.RequiredArgsConstructor;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -49,6 +50,9 @@ public class CmsContentController  {
     @SysLog(module = "系统内容管理", type = "新增")
     public R<Void> saveCmsContent(@RequestBody @Valid CmsContentForm formData ) {
         boolean result = cmsContentService.saveCmsContent(formData);
+        if (!result) {
+            throw new BusinessException("新增内容保存失败");
+        }
         return R.ok();
     }
 
@@ -72,6 +76,9 @@ public class CmsContentController  {
             @RequestBody @Validated CmsContentForm formData
     ) {
         boolean result = cmsContentService.updateCmsContent(id, formData);
+        if (!result) {
+            throw new BusinessException("内容不存在或保存失败");
+        }
         return R.ok();
     }
 

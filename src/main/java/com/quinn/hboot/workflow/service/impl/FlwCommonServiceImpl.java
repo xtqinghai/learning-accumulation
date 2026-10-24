@@ -2,6 +2,8 @@ package com.quinn.hboot.workflow.service.impl;
 
 import cn.hutool.core.collection.CollUtil;
 import cn.hutool.core.util.ObjectUtil;
+import com.quinn.hboot.notification.model.command.NotificationCommand;
+import com.quinn.hboot.notification.service.NotificationService;
 import com.quinn.hboot.system.model.entity.SysUser;
 import com.quinn.hboot.utils.SpringUtils;
 import com.quinn.hboot.utils.StringUtils;
@@ -31,7 +33,6 @@ import org.springframework.stereotype.Service;
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
-import java.util.Set;
 
 
 /**
@@ -46,6 +47,8 @@ import java.util.Set;
 public class FlwCommonServiceImpl implements IFlwCommonService {
 
     private static final String DEFAULT_SUBJECT = "单据审批提醒";
+
+    private final NotificationService notificationService;
 
     /**
      * 根据流程实例发送消息给当前处理人
@@ -72,7 +75,7 @@ public class FlwCommonServiceImpl implements IFlwCommonService {
         if (CollUtil.isEmpty(userList)) {
             return;
         }
-        sendMessage(messageType, message, DEFAULT_SUBJECT, userList);
+        dispatchMessage(messageType, message, DEFAULT_SUBJECT, userList, "WORKFLOW", String.valueOf(instId), "/taskWaiting");
     }
 
     /**
@@ -85,11 +88,15 @@ public class FlwCommonServiceImpl implements IFlwCommonService {
      */
     @Override
     public void sendMessage(List<String> messageType, String message, String subject, List<SysUser> userList) {
+        dispatchMessage(messageType, message, subject, userList, "WORKFLOW", null, null);
+    }
+
+    private void dispatchMessage(List<String> messageType, String message, String subject, List<SysUser> userList,
+                                 String businessType, String businessId, String actionUrl) {
         if (CollUtil.isEmpty(messageType) || CollUtil.isEmpty(userList)) {
             return;
         }
         List<Long> userIds = new ArrayList<>(StreamUtils.toSet(userList, SysUser::getId));
-        Set<String> emails = StreamUtils.toSet(userList, SysUser::getEmail);
 
         for (String code : messageType) {
             MessageTypeEnum messageTypeEnum = MessageTypeEnum.getByCode(code);
@@ -99,14 +106,18 @@ public class FlwCommonServiceImpl implements IFlwCommonService {
             try {
                 switch (messageTypeEnum) {
                     case SYSTEM_MESSAGE -> {
-//                        SseMessageDto dto = new SseMessageDto();
-//                        dto.setUserIds(userIds);
-//                        dto.setMessage(message);
-//                        SseMessageUtils.publishMessage(dto);
-                        log.info("【系统消息 - 】用户数量={} 内容={}");
+                        notificationService.send(NotificationCommand.builder()
+                            .recipientIds(userIds)
+                            .type("WORKFLOW")
+                            .title(StringUtils.isBlank(subject) ? DEFAULT_SUBJECT : subject)
+                            .content(message)
+                            .businessType(businessType)
+                            .businessId(businessId)
+                            .actionUrl(actionUrl)
+                            .build());
+                        log.info("【站内信发送】用户数量={} 内容={}", userIds.size(), message);
                     }
                     case EMAIL_MESSAGE -> {
-//                        MailUtils.sendText(emails, subject, message);
                         log.info("【邮件发送 - TODO】用户数量={} 内容={}", userList.size(), message);
                     }
                     case SMS_MESSAGE -> {

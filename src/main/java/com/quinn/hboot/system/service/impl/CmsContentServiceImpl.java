@@ -1,6 +1,7 @@
 package com.quinn.hboot.system.service.impl;
 
 import com.quinn.hboot.utils.SecurityUtils;
+import com.quinn.hboot.common.exception.BusinessException;
 import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 import com.baomidou.mybatisplus.core.metadata.IPage;
@@ -67,6 +68,8 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     @Override
     public boolean saveCmsContent(CmsContentForm formData) {
         CmsContent entity = cmsContentConverter.toEntity(formData);
+        validateContent(entity);
+        entity.setTop(entity.getTop() == null ? 0 : entity.getTop());
         entity.setCreator(SecurityUtils.getUsername());
         entity.setCreateTime(LocalDateTime.now());
         if(entity.getPublishTime()==null && entity.getStatus()==1){
@@ -85,6 +88,7 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
     @Override
     public boolean updateCmsContent(Long id,CmsContentForm formData) {
         CmsContent entity = cmsContentConverter.toEntity(formData);
+        validateContent(entity);
         entity.setId(id);
         return this.updateById(entity);
     }
@@ -103,6 +107,12 @@ public class CmsContentServiceImpl extends ServiceImpl<CmsContentMapper, CmsCont
                 .map(Long::parseLong)
                 .toList();
         return this.removeByIds(idList);
+    }
+
+    private void validateContent(CmsContent entity) {
+        if (entity == null || StrUtil.isBlank(entity.getContent())) {
+            throw new BusinessException("正文不能为空");
+        }
     }
 
 }
