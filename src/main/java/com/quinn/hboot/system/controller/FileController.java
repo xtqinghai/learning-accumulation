@@ -60,7 +60,9 @@ public class FileController  {
             .filter(id -> id != null && !id.isBlank())
             .map(Long::parseLong)
             .toList();
-        return R.ok(fileService.listByIds(idList));
+        return R.ok(fileService.list(new LambdaQueryWrapper<SysFile>()
+            .in(SysFile::getId, idList)
+            .eq(SysFile::getStatus, 1)));
     }
 
     @Operation(summary = "新增文件管理")
@@ -111,7 +113,7 @@ public class FileController  {
      */
 
     @PostMapping("/upload")
-    public R upload(@RequestPart MultipartFile file) throws Exception {
+    public R<SysFile> upload(@RequestPart("file") MultipartFile file) throws Exception {
         return R.ok(fileService.upload(file));
     }
 
@@ -151,16 +153,17 @@ public class FileController  {
      * 文件分片上传
      */
     @PostMapping("/upload/chunk")
-    public void uploadChunk(@RequestPart MultipartFile file,
-                            FileChunkUploadDTO dto) throws Exception {
+    public R<Void> uploadChunk(@RequestPart("file") MultipartFile file,
+                               @Validated FileChunkUploadDTO dto) throws Exception {
         fileService.uploadChunk(file, dto);
+        return R.ok();
     }
 
     /**
      * 文件分片合并
      */
     @PostMapping("/upload/merge")
-    public R<SysFile> merge(@RequestBody FileChunkUploadDTO dto) throws Exception {
+    public R<SysFile> merge(@RequestBody @Validated FileChunkUploadDTO dto) throws Exception {
         return R.ok(fileService.mergeChunks(dto));
     }
 }

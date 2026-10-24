@@ -15,31 +15,35 @@ import com.quinn.hboot.system.model.query.FileQuery;
 import com.quinn.hboot.system.model.vo.FileVO;
 import com.quinn.hboot.system.service.FileService;
 import com.quinn.hboot.system.service.FileUploadSecurityService;
+import com.quinn.hboot.system.storage.FileStorageAdapter;
 import com.quinn.hboot.utils.SecurityUtils;
+import com.quinn.hboot.common.exception.BusinessException;
 import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.poi.util.IOUtils;
-import org.springframework.beans.factory.annotation.Value;
 import org.springframework.boot.autoconfigure.condition.ConditionalOnProperty;
+import org.springframework.beans.factory.annotation.Value;
+import org.springframework.dao.DuplicateKeyException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 import org.springframework.util.DigestUtils;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
-import java.nio.file.StandardCopyOption;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.Arrays;
 import java.util.List;
 import java.util.UUID;
+import java.security.MessageDigest;
 
 @Service
 @RequiredArgsConstructor
@@ -49,12 +53,10 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
     private final FileConverter fileConverter;
     private final FileMapper fileMapper;
     private final FileUploadSecurityService fileUploadSecurityService;
+    private final FileStorageAdapter storageAdapter;
 
     @Value("${file.local.public-url}")
     private String publicUrl;
-
-    @Value("${file.local.base-path}")
-    private String basePath;
 
     @Override
     public IPage<FileVO> getFilePage(FileQuery queryParams) {
@@ -86,7 +88,8 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
         List<Long> idList = Arrays.stream(ids.split(","))
             .map(Long::parseLong)
             .toList();
-        return this.removeByIds(idList);
+        deleteBatch(idList);
+        return true;
     }
 
     @Override
@@ -104,40 +107,88 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
         String ext = FilenameUtils.getExtension(fileName);
         String hash = DigestUtils.md5DigestAsHex(file.getInputStream());
 
-        SysFile exists = fileMapper.selectOne(
-            new LambdaQueryWrapper<SysFile>()
-                .eq(ownerId != null, SysFile::getOwnerId, ownerId)
-                .isNull(ownerId == null, SysFile::getOwnerId)
-                .eq(SysFile::getBizType, actualBizType)
-                .eq(SysFile::getFileHash, hash)
-                .eq(SysFile::getStatus, 1)
-        );
-        if (exists != null) {
+        SysFile exists = findByOwnerBizAndHash(ownerId, actualBizType, hash);
+        if (exists != null && Integer.valueOf(1).equals(exists.getStatus())) {
             return exists;
         }
 
         String path = LocalDate.now().toString().replace("-", "/")
             + "/" + UUID.randomUUID() + "." + ext;
 
-        save(file.getInputStream(), path, file.getContentType());
+        save(file.getInputStream(), path, contentType(file.getContentType(), ext));
 
+        SysFile entity = newFileEntity(ownerId, actualBizType, fileName, ext, file.getSize(), hash, path,
+            contentType(file.getContentType(), ext));
+        try {
+            if (exists == null) {
+                fileMapper.insert(entity);
+            } else {
+                entity.setId(exists.getId());
+                entity.setUpdateTime(LocalDateTime.now());
+                fileMapper.updateById(entity);
+                deleteStaleStorage(exists.getStoragePath(), path);
+            }
+        } catch (DuplicateKeyException ex) {
+            // 并发/重试上传可能在预查询后先完成插入。此处按幂等上传返回既有记录。
+            SysFile concurrentFile = findByOwnerBizAndHash(ownerId, actualBizType, hash);
+            if (concurrentFile != null) {
+                try {
+                    delete(path);
+                } catch (IOException ignored) {
+                }
+                return concurrentFile;
+            }
+            throw ex;
+        } catch (RuntimeException ex) {
+            try {
+                delete(path);
+            } catch (IOException ignored) {
+            }
+            throw ex;
+        }
+        return entity;
+    }
+
+    private void deleteStaleStorage(String stalePath, String currentPath) {
+        if (stalePath == null || stalePath.isBlank() || stalePath.equals(currentPath)) {
+            return;
+        }
+        try {
+            delete(stalePath);
+        } catch (IOException ignored) {
+        }
+    }
+
+    private SysFile findByOwnerBizAndHash(Long ownerId, String bizType, String hash) {
+        return fileMapper.selectOne(new LambdaQueryWrapper<SysFile>()
+            .eq(ownerId != null, SysFile::getOwnerId, ownerId)
+            .isNull(ownerId == null, SysFile::getOwnerId)
+            .eq(SysFile::getBizType, bizType)
+            .eq(SysFile::getFileHash, hash));
+    }
+
+    private SysFile newFileEntity(Long ownerId, String bizType, String fileName, String ext, long fileSize,
+                                  String hash, String path, String contentType) {
         SysFile entity = new SysFile();
         entity.setOwnerId(ownerId);
-        entity.setBizType(actualBizType);
+        entity.setBizType(bizType);
         entity.setFileName(fileName);
-        entity.setContentType(file.getContentType());
+        entity.setContentType(contentType);
         entity.setFileExt(ext);
-        entity.setFileSize(file.getSize());
+        entity.setFileSize(fileSize);
         entity.setFileHash(hash);
         entity.setHashAlgorithm("MD5");
         entity.setStorageType("LOCAL");
         entity.setStorageStatus("READY");
         entity.setStoragePath(path);
         entity.setUrl(publicUrl);
+        entity.setStatus(1);
         entity.setCreateTime(LocalDateTime.now());
-
-        fileMapper.insert(entity);
         return entity;
+    }
+
+    private String contentType(String contentType, String ext) {
+        return contentType == null || contentType.isBlank() ? getContentTypeByExt(ext) : contentType;
     }
 
     private String getContentTypeByExt(String ext) {
@@ -190,52 +241,45 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
 
     @Override
     public void download(Long id, HttpServletResponse response) throws Exception {
+        writeFile(id, response, false);
+    }
+
+    @Override
+    public void preview(Long id, HttpServletResponse response) throws Exception {
+        writeFile(id, response, true);
+    }
+
+    private void writeFile(Long id, HttpServletResponse response, boolean inline) throws Exception {
         SysFile sysFile = fileMapper.selectById(id);
-        if (sysFile == null) {
-            return;
+        if (sysFile == null || !Integer.valueOf(1).equals(sysFile.getStatus())) {
+            throw new BusinessException("文件不存在或已失效");
+        }
+        if (sysFile.getStoragePath() == null || sysFile.getStoragePath().isBlank()) {
+            throw new BusinessException("文件存储路径为空");
         }
 
-        String contentType = sysFile.getContentType();
-        if (contentType == null || contentType.isEmpty()) {
-            contentType = getContentTypeByExt(sysFile.getFileExt());
-        }
+        String contentType = contentType(sysFile.getContentType(), sysFile.getFileExt());
         response.setContentType(contentType);
-
-        String fileName = sysFile.getFileName();
-        if (!fileName.contains(".") && sysFile.getFileExt() != null) {
-            fileName = fileName + "." + sysFile.getFileExt();
-        }
-
-        response.setHeader(
-            "Content-Disposition",
-            "attachment; filename=\"" + URLEncoder.encode(fileName, StandardCharsets.UTF_8) + "\""
-        );
+        response.setContentLengthLong(storageAdapter.size(sysFile.getStoragePath()));
+        String fileName = fileNameWithExtension(sysFile);
+        String disposition = inline ? "inline" : "attachment";
+        response.setHeader("Content-Disposition", disposition + "; filename*=UTF-8''"
+            + URLEncoder.encode(fileName, StandardCharsets.UTF_8));
 
         try (InputStream in = get(sysFile.getStoragePath()); OutputStream out = response.getOutputStream()) {
             IOUtils.copy(in, out);
         }
     }
 
-    @Override
-    public void preview(Long id, HttpServletResponse response) throws Exception {
-        SysFile sysFile = fileMapper.selectById(id);
-        if (sysFile == null) {
-            return;
+    private String fileNameWithExtension(SysFile file) {
+        String fileName = file.getFileName();
+        if (fileName == null || fileName.isBlank()) {
+            fileName = "download";
         }
-
-        String contentType = sysFile.getContentType();
-        if (contentType == null || contentType.isEmpty()) {
-            contentType = getContentTypeByExt(sysFile.getFileExt());
+        if (!fileName.contains(".") && file.getFileExt() != null && !file.getFileExt().isBlank()) {
+            fileName += "." + file.getFileExt();
         }
-        response.setContentType(contentType);
-        response.setHeader(
-            "Content-Disposition",
-            "inline; filename=\"" + URLEncoder.encode(sysFile.getFileName(), StandardCharsets.UTF_8) + "\""
-        );
-
-        try (InputStream in = get(sysFile.getStoragePath()); OutputStream out = response.getOutputStream()) {
-            IOUtils.copy(in, out);
-        }
+        return fileName;
     }
 
     @Override
@@ -270,79 +314,163 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
 
     @Override
     public void uploadChunk(MultipartFile file, FileChunkUploadDTO dto) throws IOException {
+        validateChunkRequest(dto);
         fileUploadSecurityService.validateDeclaredFile(dto.getFileName(), dto.getFileSize());
         fileUploadSecurityService.validateChunk(file, dto.getFileName());
 
         String chunkDir = "chunk/" + SecurityUtils.getUserId() + "/" + dto.getFileHash();
         String chunkPath = chunkDir + "/" + dto.getChunkIndex();
-        save(file.getInputStream(), chunkPath, file.getContentType());
+        save(file.getInputStream(), chunkPath,
+            contentType(file.getContentType(), FilenameUtils.getExtension(dto.getFileName())));
     }
 
     @Override
     @Transactional
     public SysFile mergeChunks(FileChunkUploadDTO dto) {
+        validateChunkRequest(dto);
         fileUploadSecurityService.validateDeclaredFile(dto.getFileName(), dto.getFileSize());
+        Long ownerId = SecurityUtils.getUserId();
+        SysFile exists = fileMapper.selectOne(new LambdaQueryWrapper<SysFile>()
+            .eq(ownerId != null, SysFile::getOwnerId, ownerId)
+            .isNull(ownerId == null, SysFile::getOwnerId)
+            .eq(SysFile::getBizType, "GENERAL")
+            .eq(SysFile::getFileHash, dto.getFileHash())
+            .eq(SysFile::getStatus, 1));
+        if (exists != null) {
+            cleanupChunks(dto);
+            return exists;
+        }
+
         String ext = FilenameUtils.getExtension(dto.getFileName());
         String finalPath = LocalDate.now().toString().replace("-", "/")
             + "/" + UUID.randomUUID() + "." + ext;
 
-        File targetFile = new File(basePath, finalPath);
-        File parentDir = targetFile.getParentFile();
-        if (!parentDir.exists()) {
-            parentDir.mkdirs();
-        }
-
-        try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
+        File targetFile = null;
+        boolean stored = false;
+        try {
+            targetFile = Files.createTempFile("hboot-merge-", "." + ext).toFile();
+            long mergedSize = 0L;
+            try (OutputStream out = Files.newOutputStream(targetFile.toPath())) {
             for (int i = 0; i < dto.getTotalChunks(); i++) {
                 String chunkPath = "chunk/" + SecurityUtils.getUserId() + "/" + dto.getFileHash() + "/" + i;
                 try (InputStream in = get(chunkPath)) {
                     IOUtils.copy(in, out);
+                    mergedSize += storageAdapter.size(chunkPath);
                 }
             }
+            }
+            if (mergedSize != dto.getFileSize()) {
+                throw new BusinessException("分片合并后的文件大小与声明不一致");
+            }
+
+            fileUploadSecurityService.validateMergedFile(targetFile, dto.getFileName());
+            String hashAlgorithm = dto.getFileHash().length() == 64 ? "SHA-256" : "MD5";
+            String actualHash = hashOf(targetFile, hashAlgorithm);
+            if (!dto.getFileHash().equalsIgnoreCase(actualHash)) {
+                throw new BusinessException("文件 hash 校验失败");
+            }
+            try (InputStream merged = new FileInputStream(targetFile)) {
+                storageAdapter.save(merged, finalPath, getContentTypeByExt(ext));
+            }
+            stored = true;
+
+            SysFile sysFile = new SysFile();
+            sysFile.setOwnerId(ownerId);
+            sysFile.setBizType("GENERAL");
+            sysFile.setFileName(dto.getFileName());
+            sysFile.setFileExt(ext);
+            sysFile.setContentType(getContentTypeByExt(ext));
+            sysFile.setFileSize(targetFile.length());
+            sysFile.setFileHash(dto.getFileHash().toLowerCase());
+            sysFile.setHashAlgorithm(hashAlgorithm);
+            sysFile.setStoragePath(finalPath);
+            sysFile.setStorageType("LOCAL");
+            sysFile.setStorageStatus("READY");
+            sysFile.setStatus(1);
+            sysFile.setUrl(publicUrl);
+            sysFile.setCreateTime(LocalDateTime.now());
+            fileMapper.insert(sysFile);
+            cleanupChunks(dto);
+            return sysFile;
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            if (stored) {
+                try {
+                    delete(finalPath);
+                } catch (IOException ignored) {
+                }
+            }
+            throw new BusinessException("分片合并失败: " + e.getMessage());
+        } catch (RuntimeException e) {
+            if (stored) {
+                try {
+                    delete(finalPath);
+                } catch (IOException ignored) {
+                }
+            }
+            throw e;
+        } finally {
+            if (targetFile != null) {
+                try {
+                    Files.deleteIfExists(targetFile.toPath());
+                } catch (IOException ignored) {
+                }
+            }
         }
+    }
 
-        fileUploadSecurityService.validateMergedFile(targetFile, dto.getFileName());
+    private void validateChunkRequest(FileChunkUploadDTO dto) {
+        if (dto == null || dto.getFileHash() == null || dto.getFileName() == null
+            || dto.getChunkIndex() == null || dto.getTotalChunks() == null || dto.getFileSize() == null) {
+            throw new BusinessException("分片参数不完整");
+        }
+        if (dto.getTotalChunks() > 10000 || dto.getChunkIndex() < 0
+            || dto.getChunkIndex() >= dto.getTotalChunks()) {
+            throw new BusinessException("分片序号或总数不合法");
+        }
+        if (!dto.getFileHash().matches("(?i)^[a-f0-9]{32}([a-f0-9]{32})?$")) {
+            throw new BusinessException("文件 hash 格式不合法");
+        }
+    }
 
-        SysFile sysFile = new SysFile();
-        sysFile.setOwnerId(SecurityUtils.getUserId());
-        sysFile.setBizType("GENERAL");
-        sysFile.setFileName(dto.getFileName());
-        sysFile.setFileExt(ext);
-        sysFile.setContentType(getContentTypeByExt(ext));
-        sysFile.setFileSize(targetFile.length());
-        sysFile.setFileHash(dto.getFileHash());
-        sysFile.setHashAlgorithm("MD5");
-        sysFile.setStoragePath(finalPath);
-        sysFile.setStorageType("LOCAL");
-        sysFile.setStorageStatus("READY");
-        sysFile.setUrl(publicUrl);
-        sysFile.setCreateTime(LocalDateTime.now());
-        fileMapper.insert(sysFile);
+    private String hashOf(File file, String algorithm) throws IOException {
+        try {
+            MessageDigest digest = MessageDigest.getInstance(algorithm);
+            try (InputStream in = new FileInputStream(file)) {
+                byte[] buffer = new byte[8192];
+                int read;
+                while ((read = in.read(buffer)) >= 0) {
+                    if (read > 0) digest.update(buffer, 0, read);
+                }
+            }
+            StringBuilder result = new StringBuilder();
+            for (byte item : digest.digest()) result.append(String.format("%02x", item));
+            return result.toString();
+        } catch (java.security.NoSuchAlgorithmException e) {
+            throw new IOException("计算文件 hash 失败", e);
+        }
+    }
 
-        return sysFile;
+    private void cleanupChunks(FileChunkUploadDTO dto) {
+        for (int i = 0; i < dto.getTotalChunks(); i++) {
+            try {
+                delete("chunk/" + SecurityUtils.getUserId() + "/" + dto.getFileHash() + "/" + i);
+            } catch (Exception ignored) {
+            }
+        }
     }
 
     @Override
     public String save(InputStream inputStream, String path, String contentType) throws IOException {
-        File file = new File(basePath, path);
-        File parent = file.getParentFile();
-        if (!parent.exists()) {
-            parent.mkdirs();
-        }
-
-        Files.copy(inputStream, file.toPath(), StandardCopyOption.REPLACE_EXISTING);
-        return path;
+        return storageAdapter.save(inputStream, path, contentType);
     }
 
     @Override
     public InputStream get(String path) throws IOException {
-        return Files.newInputStream(new File(basePath, path).toPath());
+        return storageAdapter.get(path);
     }
 
     @Override
     public void delete(String path) throws IOException {
-        Files.deleteIfExists(new File(basePath, path).toPath());
+        storageAdapter.delete(path);
     }
 }

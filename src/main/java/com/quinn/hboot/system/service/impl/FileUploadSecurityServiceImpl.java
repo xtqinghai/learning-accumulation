@@ -30,10 +30,13 @@ public class FileUploadSecurityServiceImpl implements FileUploadSecurityService 
 
     @Override
     public void validateUpload(MultipartFile file) {
+        if (file == null) {
+            throw new BusinessException("上传文件不能为空");
+        }
+        validateFileNameAndSize(file.getOriginalFilename(), file.getSize());
         if (!fileSecurityProperties.isEnabled()) {
             return;
         }
-        validateFileNameAndSize(file.getOriginalFilename(), file.getSize());
         validateExtension(file.getOriginalFilename());
         validateMimeType(file.getContentType());
         if (fileSecurityProperties.isAntivirusEnabled()) {
@@ -43,19 +46,25 @@ public class FileUploadSecurityServiceImpl implements FileUploadSecurityService 
 
     @Override
     public void validateChunk(MultipartFile file, String fileName) {
+        if (file == null) {
+            throw new BusinessException("上传分片不能为空");
+        }
+        validateFileNameAndSize(fileName, file.getSize());
         if (!fileSecurityProperties.isEnabled()) {
             return;
         }
-        validateFileNameAndSize(fileName, file.getSize());
         validateExtension(fileName);
     }
 
     @Override
     public void validateMergedFile(File mergedFile, String fileName) {
+        if (mergedFile == null || !mergedFile.isFile()) {
+            throw new BusinessException("合并后的文件不存在");
+        }
+        validateFileNameAndSize(fileName, mergedFile.length());
         if (!fileSecurityProperties.isEnabled()) {
             return;
         }
-        validateFileNameAndSize(fileName, mergedFile.length());
         validateExtension(fileName);
         if (fileSecurityProperties.isAntivirusEnabled()) {
             getFileAntivirusService().scan(mergedFile, fileName);
@@ -64,16 +73,20 @@ public class FileUploadSecurityServiceImpl implements FileUploadSecurityService 
 
     @Override
     public void validateDeclaredFile(String fileName, Long fileSize) {
+        validateFileNameAndSize(fileName, fileSize == null ? 0L : fileSize);
         if (!fileSecurityProperties.isEnabled()) {
             return;
         }
-        validateFileNameAndSize(fileName, fileSize == null ? 0L : fileSize);
         validateExtension(fileName);
     }
 
     private void validateFileNameAndSize(String fileName, long fileSize) {
         if (fileName == null || fileName.isBlank()) {
             throw new BusinessException("上传文件名不能为空");
+        }
+        if (fileName.indexOf('\0') >= 0 || fileName.contains("/") || fileName.contains("\\")
+            || fileName.equals(".") || fileName.equals("..")) {
+            throw new BusinessException("上传文件名不合法");
         }
         if (fileSize <= 0) {
             throw new BusinessException("上传文件不能为空");

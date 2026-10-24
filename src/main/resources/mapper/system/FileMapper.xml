@@ -20,6 +20,7 @@
         FROM
             sys_file
         <where>
+            status = 1
             <if test="queryParams.fileName != null and queryParams.fileName != ''">
                 AND file_name LIKE CONCAT('%', #{queryParams.fileName}, '%')
             </if>

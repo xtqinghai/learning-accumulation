@@ -110,6 +110,52 @@ export REDIS_PORT='6379'
 
 AI 功能不是启动系统的前置条件。需要使用时，再配置 `AI_BASE_URL`、`AI_API_KEY` 和 `AI_MODEL`。
 
+### MacBook 本地依赖启动
+
+以下命令适用于通过 Homebrew 安装的 PostgreSQL 17 和 Redis。命令均为手动启动，不会设置开机自动启动；`brew --prefix` 会自动适配 Apple Silicon 和 Intel Mac 的安装路径。
+
+安装依赖（首次使用）：
+
+```bash
+brew install postgresql@17 redis
+```
+
+#### PostgreSQL
+
+```bash
+# 启动
+PG_BIN="$(brew --prefix postgresql@17)/bin"
+PG_DATA="$(brew --prefix)/var/postgresql@17"
+PG_LOG="$(brew --prefix)/var/log/postgresql@17.log"
+"$PG_BIN/pg_ctl" -D "$PG_DATA" -l "$PG_LOG" start
+
+# 检查状态
+"$PG_BIN/pg_ctl" -D "$PG_DATA" status
+"$PG_BIN/pg_isready" -h localhost -p 5432
+
+# 连接项目数据库
+"$PG_BIN/psql" -h localhost -U pingguo -d h_boot
+
+# 停止
+"$PG_BIN/pg_ctl" -D "$PG_DATA" stop
+```
+
+#### Redis
+
+```bash
+REDIS_BIN="$(brew --prefix redis)/bin"
+REDIS_CONF="$(brew --prefix)/etc/redis.conf"
+
+# 后台启动
+"$REDIS_BIN/redis-server" "$REDIS_CONF" --daemonize yes
+
+# 检查状态，返回 PONG 表示已启动
+"$REDIS_BIN/redis-cli" ping
+
+# 停止后台 Redis
+"$REDIS_BIN/redis-cli" shutdown
+```
+
 ### 5. 启动后端
 
 ```bash
