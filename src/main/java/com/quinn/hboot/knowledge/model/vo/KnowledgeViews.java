@@ -13,7 +13,19 @@ public final class KnowledgeViews {
         Long sessionId,
         Long messageId,
         String answer,
-        String model
+        String model,
+        List<QaCitation> citations
+    ) {
+    }
+
+    public record QaCitation(
+        Long articleId,
+        String title,
+        Long chunkId,
+        Integer chunkNo,
+        Integer charStart,
+        Integer charEnd,
+        String quotedText
     ) {
     }
 

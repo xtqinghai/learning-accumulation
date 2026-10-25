@@ -26,5 +26,6 @@ public interface PhotoAlbumService {
     List<com.quinn.hboot.photo.model.entity.PhotoTag> listTags();
     List<com.quinn.hboot.photo.model.entity.PhotoTag> setTags(Long mediaId, List<String> names);
     void writeContent(Long mediaId, HttpServletResponse response, boolean download) throws Exception;
+    void writePoster(Long mediaId, HttpServletResponse response) throws Exception;
     void exportAlbum(Long albumId, HttpServletResponse response) throws Exception;
 }

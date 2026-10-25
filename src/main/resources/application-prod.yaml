@@ -99,6 +99,7 @@ app:
       - /api/auth/**
       - /api/register/**
       - /api/v1/file/preview/**
+      - /api/v1/family-assets/share/**
       - /public/**
       - /favicon.ico
   druid:

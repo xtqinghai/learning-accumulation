@@ -1,0 +1,3 @@
+package com.quinn.hboot.family.model.entity;
+import com.baomidou.mybatisplus.annotation.*; import com.quinn.hboot.common.base.BaseEntity; import lombok.Data; import java.time.LocalDateTime;
+@Data @TableName("family_document") public class FamilyDocument extends BaseEntity { private Long spaceId; private Long ownerId; private Long fileId; private String title; private String category; private String tags; private String extractedText; private Integer versionNo; private String status; private String errorMessage; private LocalDateTime createTime; private LocalDateTime updateTime; @TableLogic private Integer deleted; }

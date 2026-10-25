@@ -43,5 +43,7 @@ public interface KnowledgeService {
 
     KnowledgeViews.QaAnswer askArticle(Long articleId, KnowledgeRequests.ArticleQuestion request);
 
+    KnowledgeViews.QaAnswer askAll(KnowledgeRequests.ArticleQuestion request);
+
     KnowledgeViews.QaHistory getQaHistory(Long articleId, Long sessionId);
 }

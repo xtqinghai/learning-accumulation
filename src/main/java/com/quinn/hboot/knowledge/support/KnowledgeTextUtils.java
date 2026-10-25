@@ -49,4 +49,38 @@ public final class KnowledgeTextUtils {
             .replaceAll("\\s+", " ")
             .trim();
     }
+
+    public record Chunk(String content, String searchContent, int chunkNo, int charStart, int charEnd) {
+    }
+
+    public static List<Chunk> splitIntoChunks(String content, int size, int overlap) {
+        if (content == null || content.isBlank()) {
+            return List.of();
+        }
+        int safeSize = Math.max(200, size);
+        int safeOverlap = Math.min(Math.max(0, overlap), safeSize - 1);
+        String normalized = content.strip();
+        List<Chunk> chunks = new ArrayList<>();
+        int codePointCount = normalized.codePointCount(0, normalized.length());
+        int codePointStart = 0;
+        int chunkNo = 0;
+        while (codePointStart < codePointCount && chunkNo < 1000) {
+            int charOffset = normalized.offsetByCodePoints(0, codePointStart);
+            int length = Math.min(safeSize, codePointCount - codePointStart);
+            int charEnd = normalized.offsetByCodePoints(charOffset, length);
+            String chunkContent = normalized.substring(charOffset, charEnd);
+            chunks.add(new Chunk(
+                chunkContent,
+                toSearchText(chunkContent),
+                chunkNo++,
+                charOffset,
+                charEnd
+            ));
+            if (charEnd >= normalized.length()) {
+                break;
+            }
+            codePointStart += safeSize - safeOverlap;
+        }
+        return chunks;
+    }
 }

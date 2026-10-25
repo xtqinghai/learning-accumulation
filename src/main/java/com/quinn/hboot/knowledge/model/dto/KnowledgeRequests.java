@@ -89,5 +89,11 @@ public final class KnowledgeRequests {
         @Size(max = 4000, message = "问题不能超过 4000 个字符")
         String question
     ) {
+
+        public ArticleQuestion {
+            if (sessionId == null) {
+                sessionId = 0L;
+            }
+        }
     }
 }

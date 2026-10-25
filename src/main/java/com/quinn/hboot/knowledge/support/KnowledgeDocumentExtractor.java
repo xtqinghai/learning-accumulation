@@ -12,6 +12,8 @@ import org.apache.poi.xslf.usermodel.XSLFTextParagraph;
 import org.apache.poi.xslf.usermodel.XMLSlideShow;
 import org.apache.poi.xwpf.extractor.XWPFWordExtractor;
 import org.apache.poi.xwpf.usermodel.XWPFDocument;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
+import org.apache.poi.hssf.usermodel.HSSFWorkbook;
 import org.springframework.stereotype.Component;
 
 import java.io.BufferedInputStream;
@@ -35,6 +37,8 @@ public class KnowledgeDocumentExtractor {
                 case "pdf" -> extractPdf(input);
                 case "docx" -> extractDocx(input);
                 case "pptx" -> extractPptx(input);
+                case "xlsx" -> extractXlsx(input);
+                case "xls" -> extractXls(input);
                 default -> throw new BusinessException("不支持解析该文件类型");
             };
         }
@@ -71,6 +75,23 @@ public class KnowledgeDocumentExtractor {
              SlideShowExtractor<XSLFShape, XSLFTextParagraph> extractor = new SlideShowExtractor<>(slides)) {
             extractor.setNotesByDefault(true);
             return extractor.getText();
+        }
+    }
+
+    private String extractXlsx(BufferedInputStream input) throws IOException {
+        requireZipSignature(input, "文件内容不是有效的 xlsx");
+        try (XSSFWorkbook workbook = new XSSFWorkbook(input)) {
+            StringBuilder result = new StringBuilder();
+            workbook.forEach(sheet -> sheet.forEach(row -> { row.forEach(cell -> result.append(cell).append('\t')); result.append('\n'); }));
+            return result.toString();
+        }
+    }
+
+    private String extractXls(BufferedInputStream input) throws IOException {
+        try (HSSFWorkbook workbook = new HSSFWorkbook(input)) {
+            StringBuilder result = new StringBuilder();
+            workbook.forEach(sheet -> sheet.forEach(row -> { row.forEach(cell -> result.append(cell).append('\t')); result.append('\n'); }));
+            return result.toString();
         }
     }
 

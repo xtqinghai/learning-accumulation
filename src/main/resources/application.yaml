@@ -78,6 +78,7 @@ file:
     public-url: ${FILE_PUBLIC_URL:http://localhost:${server.port}/api/v1/file/preview}
   security:
     enabled: ${FILE_SECURITY_ENABLED:true}
+
     max-file-size: ${FILE_SECURITY_MAX_FILE_SIZE:2147483648}
     antivirus-enabled: ${FILE_SECURITY_ANTIVIRUS_ENABLED:false}
     allowed-extensions:
@@ -179,6 +180,19 @@ file:
       - html
       - htm
 
+system:
+  parameter:
+    # 敏感参数必须设置 16、24 或 32 字节的环境变量密钥；未设置时拒绝写入敏感值。
+    encryption-key: ${APP_SYSTEM_PARAMETER_ENCRYPTION_KEY:}
+
+backup:
+  directory: ${BACKUP_DIRECTORY:${user.home}/hboot-backups}
+  pg-dump-command: ${PG_DUMP_COMMAND:pg_dump}
+  pg-restore-command: ${PG_RESTORE_COMMAND:pg_restore}
+  process-timeout: ${BACKUP_PROCESS_TIMEOUT:10m}
+  # 恢复会修改数据库，必须在部署环境显式开启，并通过接口二次确认。
+  restore-enabled: ${BACKUP_RESTORE_ENABLED:false}
+
 warm-flow:
   enabled: ${WARM_FLOW_ENABLED:true}
   banner: ${WARM_FLOW_BANNER:false}
@@ -248,6 +262,7 @@ app:
       - /api/auth/**
       - /api/register/**
       - /api/v1/file/preview/**
+      - /api/v1/family-assets/share/**
       - /public/**
       - /favicon.ico
   druid:

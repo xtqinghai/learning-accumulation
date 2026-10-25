@@ -13,6 +13,7 @@ public class KnowledgeQaMessage extends BaseEntity {
     private Long sessionId;
     private String role;
     private String content;
+    private String quotedText;
     private String model;
     @JsonFormat(pattern = "yyyy-MM-dd HH:mm:ss")
     private LocalDateTime createTime;

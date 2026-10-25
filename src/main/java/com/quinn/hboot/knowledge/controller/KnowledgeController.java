@@ -149,6 +149,12 @@ public class KnowledgeController {
         return R.ok(knowledgeService.askArticle(id, request));
     }
 
+    @Operation(summary = "基于个人知识库进行全局问答")
+    @PostMapping("/qa")
+    public R<KnowledgeViews.QaAnswer> askAll(@RequestBody @Valid KnowledgeRequests.ArticleQuestion request) {
+        return R.ok(knowledgeService.askAll(request));
+    }
+
     @Operation(summary = "查看当前文章问答记录")
     @GetMapping("/articles/{id}/qa/{sessionId}")
     public R<KnowledgeViews.QaHistory> getQaHistory(@PathVariable Long id, @PathVariable Long sessionId) {

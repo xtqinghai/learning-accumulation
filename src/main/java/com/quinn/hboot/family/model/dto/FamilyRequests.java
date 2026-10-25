@@ -1,0 +1,3 @@
+package com.quinn.hboot.family.model.dto;
+import jakarta.validation.constraints.*; import java.time.LocalDateTime;
+public final class FamilyRequests { private FamilyRequests(){} public record DocumentSave(@NotBlank String title,@NotBlank String category,String tags,String changeNote){} public record ShareSave(@NotBlank String resourceType,Long resourceId,LocalDateTime expiresAt){} public record DeviceSave(@NotBlank String deviceName,@NotBlank String deviceType,@NotBlank String deviceKey){} public record SyncPush(String cursor,String entityType,Long entityId,String operation,String conflictStatus,String message){} public record MemberSave(@NotNull Long userId,@NotBlank String role){} }

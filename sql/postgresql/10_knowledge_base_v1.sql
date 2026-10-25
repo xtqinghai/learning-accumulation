@@ -143,6 +143,7 @@ CREATE TABLE IF NOT EXISTS "kb_qa_message" (
   "session_id" bigint NOT NULL,
   "role" varchar(20) NOT NULL,
   "content" text NOT NULL,
+  "quoted_text" text NULL,
   "model" varchar(100) NULL,
   "create_time" timestamp NOT NULL DEFAULT CURRENT_TIMESTAMP,
   PRIMARY KEY ("id")
@@ -160,3 +161,6 @@ WHERE m.path = '/knowledge'
   AND NOT EXISTS (
     SELECT 1 FROM "sys_role_menu" rm WHERE rm.role_id = 1 AND rm.menu_id = m.id
   );
+
+-- 兼容已执行过旧版脚本的数据库。
+ALTER TABLE "kb_qa_message" ADD COLUMN IF NOT EXISTS "quoted_text" text NULL;

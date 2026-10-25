@@ -1,0 +1,1 @@
+package com.quinn.hboot.family.mapper; import com.baomidou.mybatisplus.core.mapper.BaseMapper; import com.quinn.hboot.family.model.entity.FamilySyncLog; import org.apache.ibatis.annotations.Mapper; @Mapper public interface FamilySyncLogMapper extends BaseMapper<FamilySyncLog>{}

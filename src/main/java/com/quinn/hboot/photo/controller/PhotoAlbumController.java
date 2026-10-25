@@ -143,4 +143,10 @@ public class PhotoAlbumController {
     public void download(@PathVariable Long id, HttpServletResponse response) throws Exception {
         photoAlbumService.writeContent(id, response, true);
     }
+
+    @Operation(summary = "预览视频首帧缩略图")
+    @GetMapping("/media/{id}/poster")
+    public void poster(@PathVariable Long id, HttpServletResponse response) throws Exception {
+        photoAlbumService.writePoster(id, response);
+    }
 }

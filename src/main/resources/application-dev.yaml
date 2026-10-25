@@ -125,6 +125,7 @@ app:
       - /api/register/**
       - /api/test/**
       - /api/v1/file/preview/**
+      - /api/v1/family-assets/share/**
       - /public/**
       - /v3/api-docs/**
       - /swagger-ui/**

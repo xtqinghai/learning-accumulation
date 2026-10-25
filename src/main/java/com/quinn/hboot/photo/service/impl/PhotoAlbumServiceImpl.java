@@ -379,6 +379,24 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
     }
 
     @Override
+    public void writePoster(Long mediaId, HttpServletResponse response) throws Exception {
+        PhotoMedia media = requireMedia(mediaId);
+        if (!"VIDEO".equals(media.getMediaType())) throw new BusinessException("仅支持视频首帧");
+        SysFile file = fileService.getById(media.getOriginalFileId());
+        if (file == null) throw new BusinessException("原始视频不存在");
+        BufferedImage frame;
+        try (InputStream input = fileService.get(file.getStoragePath()); FFmpegFrameGrabber grabber = new FFmpegFrameGrabber(input)) {
+            grabber.start();
+            org.bytedeco.javacv.Java2DFrameConverter converter = new org.bytedeco.javacv.Java2DFrameConverter();
+            frame = converter.getBufferedImage(grabber.grabImage());
+            grabber.stop();
+        }
+        if (frame == null) throw new BusinessException("视频暂无可用首帧");
+        response.setContentType("image/jpeg");
+        ImageIO.write(frame, "jpg", response.getOutputStream());
+    }
+
+    @Override
     public void exportAlbum(Long albumId, HttpServletResponse response) throws Exception {
         PhotoAlbum album = requireAlbum(albumId);
         List<Long> mediaIds = albumMediaMapper.selectList(new LambdaQueryWrapper<PhotoAlbumMedia>()
