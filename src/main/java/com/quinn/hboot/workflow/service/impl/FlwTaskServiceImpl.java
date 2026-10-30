@@ -926,7 +926,8 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         }
         List<SysUser> sysUserList = new ArrayList<>();
         userList.forEach(e -> {
-            SysUser sysUser = userService.getById(e.getProcessedBy());
+            // Warm-Flow stores the assignee as a string; PostgreSQL requires a bigint for sys_user.id.
+            SysUser sysUser = userService.getById(Convert.toLong(e.getProcessedBy()));
             if (ObjectUtil.isNotNull(sysUser)) {
                 sysUserList.add(sysUser);
             }

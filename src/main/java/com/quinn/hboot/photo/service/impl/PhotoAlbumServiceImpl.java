@@ -220,6 +220,17 @@ public class PhotoAlbumServiceImpl implements PhotoAlbumService {
             extractMetadata(media, sysFile);
             space.setUsedBytes(space.getUsedBytes() + Optional.ofNullable(sysFile.getFileSize()).orElse(0L));
             spaceMapper.updateById(space);
+        } else if (!Objects.equals(media.getStatus(), 1)) {
+            // Re-uploading a previously deleted file reuses the deduplicated sys_file row.
+            // Restore its media row so subsequent edits and album operations see an active item.
+            media.setUploaderId(currentUserId());
+            media.setDisplayName(StringUtils.hasText(file.getOriginalFilename()) ? file.getOriginalFilename() : "未命名文件");
+            media.setRelativePath(normalizeRelativePath(relativePath));
+            media.setMediaType(mediaType);
+            media.setStatus(1);
+            media.setDeletedAt(null);
+            media.setUpdateTime(LocalDateTime.now());
+            mediaMapper.updateById(media);
         }
         if (album != null) {
             attach(album.getId(), media.getId());
