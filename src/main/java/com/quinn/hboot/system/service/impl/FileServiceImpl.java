@@ -314,7 +314,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
 
     @Override
     public void uploadChunk(MultipartFile file, FileChunkUploadDTO dto) throws IOException {
-        validateChunkRequest(dto);
+        validateChunkRequest(dto, true);
         fileUploadSecurityService.validateDeclaredFile(dto.getFileName(), dto.getFileSize());
         fileUploadSecurityService.validateChunk(file, dto.getFileName());
 
@@ -327,7 +327,7 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
     @Override
     @Transactional
     public SysFile mergeChunks(FileChunkUploadDTO dto) {
-        validateChunkRequest(dto);
+        validateChunkRequest(dto, false);
         fileUploadSecurityService.validateDeclaredFile(dto.getFileName(), dto.getFileSize());
         Long ownerId = SecurityUtils.getUserId();
         SysFile exists = fileMapper.selectOne(new LambdaQueryWrapper<SysFile>()
@@ -418,13 +418,15 @@ public class FileServiceImpl extends ServiceImpl<FileMapper, SysFile> implements
         }
     }
 
-    private void validateChunkRequest(FileChunkUploadDTO dto) {
+    private void validateChunkRequest(FileChunkUploadDTO dto, boolean requireChunkIndex) {
         if (dto == null || dto.getFileHash() == null || dto.getFileName() == null
-            || dto.getChunkIndex() == null || dto.getTotalChunks() == null || dto.getFileSize() == null) {
+            || dto.getTotalChunks() == null || dto.getFileSize() == null
+            || (requireChunkIndex && dto.getChunkIndex() == null)) {
             throw new BusinessException("分片参数不完整");
         }
-        if (dto.getTotalChunks() > 10000 || dto.getChunkIndex() < 0
-            || dto.getChunkIndex() >= dto.getTotalChunks()) {
+        if (dto.getTotalChunks() > 10000
+            || (requireChunkIndex && (dto.getChunkIndex() < 0
+            || dto.getChunkIndex() >= dto.getTotalChunks()))) {
             throw new BusinessException("分片序号或总数不合法");
         }
         if (!dto.getFileHash().matches("(?i)^[a-f0-9]{32}([a-f0-9]{32})?$")) {

@@ -19,7 +19,6 @@ public class FileChunkUploadDTO {
     @NotBlank(message = "文件 hash 不能为空")
     private String fileHash;
 
-    @NotNull(message = "分片序号不能为空")
     @Min(value = 0, message = "分片序号不能小于 0")
     private Integer chunkIndex;
 
