@@ -170,9 +170,12 @@ public class FlwTaskAssigneeServiceImpl implements IFlwTaskAssigneeService, Hand
             return DEFAULT_GROUP_NAME;
         }
         if (type.needsDeptService()) {
-            SysDept dept = deptService.getById(groupName);
-            if (dept != null && StringUtils.isNotEmpty(dept.getName())) {
-                return dept.getName();
+            Long groupId = Convert.toLong(groupName, null);
+            if (groupId != null) {
+                SysDept dept = deptService.getById(groupId);
+                if (dept != null && StringUtils.isNotEmpty(dept.getName())) {
+                    return dept.getName();
+                }
             }
         }
         return DEFAULT_GROUP_NAME;
