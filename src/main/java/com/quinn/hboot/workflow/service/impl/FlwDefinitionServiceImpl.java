@@ -7,6 +7,7 @@ import cn.hutool.core.io.IoUtil;
 import com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper;
 import com.baomidou.mybatisplus.core.toolkit.Wrappers;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
+import com.quinn.hboot.common.exception.BusinessException;
 import com.quinn.hboot.utils.JsonUtils;
 import com.quinn.hboot.utils.StringUtils;
 import com.quinn.hboot.workflow.common.ConditionalOnEnable;
@@ -26,9 +27,12 @@ import lombok.extern.slf4j.Slf4j;
 //import org.dromara.common.json.utils.JsonUtils;
 //import org.dromara.common.mybatis.core.page.PageQuery;
 //import org.dromara.common.mybatis.core.page.TableDataInfo;
+import org.dromara.warm.flow.core.FlowEngine;
 import org.dromara.warm.flow.core.dto.DefJson;
 import org.dromara.warm.flow.core.enums.NodeType;
 import org.dromara.warm.flow.core.enums.PublishStatus;
+import org.dromara.warm.flow.core.enums.ActivityStatus;
+import org.dromara.warm.flow.core.exception.FlowException;
 import org.dromara.warm.flow.core.service.DefService;
 import org.dromara.warm.flow.core.utils.StreamUtils;
 import org.dromara.warm.flow.orm.entity.FlowDefinition;
@@ -57,6 +61,7 @@ import java.util.Arrays;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 //import static org.dromara.common.core.constant.TenantConstants.DEFAULT_TENANT_ID;
 
@@ -90,6 +95,7 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
     public Page<FlowDefinitionVo> queryList(FlowDefinition flowDefinition, PageQuery pageQuery) {
         LambdaQueryWrapper<FlowDefinition> wrapper = buildQueryWrapper(flowDefinition);
         wrapper.eq(FlowDefinition::getIsPublish, PublishStatus.PUBLISHED.getKey());
+        onlyLatestDefinitionPerFlowCode(wrapper, PublishStatus.PUBLISHED.getKey());
         Page<FlowDefinition> page = flowDefinitionMapper.selectPage(pageQuery.build(), wrapper);
         return buildDefinitionVoPage(page);
     }
@@ -105,6 +111,7 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
     public Page<FlowDefinitionVo> unPublishList(FlowDefinition flowDefinition, PageQuery pageQuery) {
         LambdaQueryWrapper<FlowDefinition> wrapper = buildQueryWrapper(flowDefinition);
         wrapper.in(FlowDefinition::getIsPublish, Arrays.asList(PublishStatus.UNPUBLISHED.getKey(), PublishStatus.EXPIRED.getKey()));
+        onlyLatestDefinitionPerFlowCode(wrapper, PublishStatus.UNPUBLISHED.getKey(), PublishStatus.EXPIRED.getKey());
         Page<FlowDefinition> page = flowDefinitionMapper.selectPage(pageQuery.build(), wrapper);
         return buildDefinitionVoPage(page);
     }
@@ -137,6 +144,30 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
         return result;
     }
 
+    /**
+     * A flow code keeps its historical versions for traceability, but the
+     * definition list is a business list: show only the newest matching
+     * version in each tab. This keeps pagination and totals correct without
+     * deleting any history.
+     */
+    private void onlyLatestDefinitionPerFlowCode(LambdaQueryWrapper<FlowDefinition> wrapper, Integer... publishStatuses) {
+        String statusList = Arrays.stream(publishStatuses)
+            .map(String::valueOf)
+            .collect(Collectors.joining(", "));
+        wrapper.notExists("""
+            select 1
+            from flow_definition newer
+            where newer.flow_code = flow_definition.flow_code
+              and newer.del_flag = '0'
+              and newer.is_publish in (%s)
+              and coalesce(newer.tenant_id, '') = coalesce(flow_definition.tenant_id, '')
+              and (
+                newer.create_time > flow_definition.create_time
+                or (newer.create_time = flow_definition.create_time and newer.id > flow_definition.id)
+              )
+            """.formatted(statusList));
+    }
+
     private LambdaQueryWrapper<FlowDefinition> buildQueryWrapper(FlowDefinition flowDefinition) {
         LambdaQueryWrapper<FlowDefinition> wrapper = Wrappers.lambdaQuery();
         wrapper.like(StringUtils.isNotBlank(flowDefinition.getFlowCode()), FlowDefinition::getFlowCode, flowDefinition.getFlowCode());
@@ -157,20 +188,64 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean publish(Long id) {
-        List<FlowNode> flowNodes = flowNodeMapper.selectList(new LambdaQueryWrapper<FlowNode>().eq(FlowNode::getDefinitionId, id));
+        FlowDefinition definition = flowDefinitionMapper.selectById(id);
+        if (definition == null) {
+            throw new BusinessException("流程定义不存在或已删除");
+        }
+
+        List<FlowNode> flowNodes = flowNodeMapper.selectList(
+            new LambdaQueryWrapper<FlowNode>().eq(FlowNode::getDefinitionId, id)
+        );
+        if (CollUtil.isEmpty(flowNodes)) {
+            throw new BusinessException("未绘制流程图，请先完成流程图设计并保存后再发布");
+        }
+
         List<String> errorMsg = new ArrayList<>();
-        if (CollUtil.isNotEmpty(flowNodes)) {
-            String applyNodeCode = flwCommonService.applyNodeCode(id);
-            for (FlowNode flowNode : flowNodes) {
-                if (StringUtils.isBlank(flowNode.getPermissionFlag()) && !applyNodeCode.equals(flowNode.getNodeCode()) && NodeType.BETWEEN.getKey().equals(flowNode.getNodeType())) {
-                    errorMsg.add(flowNode.getNodeName());
-                }
-            }
-            if (CollUtil.isNotEmpty(errorMsg)) {
-                throw new RuntimeException("节点【"+StringUtils.joinComma(errorMsg)+"】未配置办理人!");
+        String applyNodeCode = flwCommonService.applyNodeCode(id);
+        for (FlowNode flowNode : flowNodes) {
+            if (StringUtils.isBlank(flowNode.getPermissionFlag())
+                && !applyNodeCode.equals(flowNode.getNodeCode())
+                && NodeType.BETWEEN.getKey().equals(flowNode.getNodeType())) {
+                errorMsg.add(flowNode.getNodeName());
             }
         }
-        return defService.publish(id);
+        if (CollUtil.isNotEmpty(errorMsg)) {
+            throw new BusinessException("节点【" + StringUtils.joinComma(errorMsg) + "】未配置办理人");
+        }
+
+        try {
+            return defService.publish(id);
+        } catch (FlowException e) {
+            log.warn("流程定义发布校验失败, id={}, reason={}", id, e.getMessage());
+            String message = StringUtils.isBlank(e.getMessage()) ? "流程发布校验失败，请检查流程图配置" : e.getMessage();
+            throw new BusinessException(message);
+        }
+    }
+
+    /**
+     * 取消发布流程定义。取消后版本回到可设计、可删除的未发布状态。
+     * 已产生过流程实例的版本必须保留发布历史，只能通过发布新版本使其失效。
+     */
+    @Override
+    @Transactional(rollbackFor = Exception.class)
+    public boolean unPublish(Long id) {
+        FlowDefinition definition = flowDefinitionMapper.selectById(id);
+        if (definition == null) {
+            throw new BusinessException("流程定义不存在");
+        }
+        if (!PublishStatus.PUBLISHED.getKey().equals(definition.getIsPublish())) {
+            throw new BusinessException("当前流程未发布，无需取消发布");
+        }
+        if (CollUtil.isNotEmpty(FlowEngine.insService().getByDefId(id))) {
+            throw new BusinessException("流程已发起过实例，不能取消发布；请复制新版本并发布，历史版本会自动失效");
+        }
+        if (ActivityStatus.isActivity(definition.getActivityStatus())) {
+            defService.unActive(id);
+        }
+        if (!defService.unPublish(id)) {
+            throw new BusinessException("取消发布失败，请稍后重试");
+        }
+        return true;
     }
 
     /**
@@ -219,6 +294,25 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
     @Override
     @Transactional(rollbackFor = Exception.class)
     public boolean removeDef(List<Long> ids) {
+        List<FlowDefinition> definitions = flowDefinitionMapper.selectByIds(ids);
+        List<String> publishedCodes = StreamUtils.toList(
+            definitions.stream()
+                .filter(item -> PublishStatus.PUBLISHED.getKey().equals(item.getIsPublish()))
+                .toList(),
+            FlowDefinition::getFlowCode
+        );
+        if (CollUtil.isNotEmpty(publishedCodes)) {
+            throw new BusinessException("流程定义【" + String.join("、", publishedCodes) + "】已发布，请先取消发布后再删除");
+        }
+        List<String> activeCodes = StreamUtils.toList(
+            definitions.stream()
+                .filter(item -> ActivityStatus.isActivity(item.getActivityStatus()))
+                .toList(),
+            FlowDefinition::getFlowCode
+        );
+        if (CollUtil.isNotEmpty(activeCodes)) {
+            throw new BusinessException("流程定义【" + String.join("、", activeCodes) + "】已激活，请先挂起后再删除");
+        }
         LambdaQueryWrapper<FlowHisTask> wrapper = Wrappers.lambdaQuery();
         wrapper.in(FlowHisTask::getDefinitionId, ids);
         List<FlowHisTask> flowHisTasks = flowHisTaskMapper.selectList(wrapper);
@@ -227,14 +321,17 @@ public class FlwDefinitionServiceImpl implements IFlwDefinitionService {
             if (CollUtil.isNotEmpty(flowDefinitions)) {
                 String join = StreamUtils.join(flowDefinitions, FlowDefinition::getFlowCode);
                 log.info("流程定义【{}】已被使用不可被删除！", join);
-                throw new RuntimeException("流程定义【"+join+"】已被使用不可被删除！");
+                throw new BusinessException("流程定义【" + join + "】已被使用，不可删除");
             }
         }
         try {
             defService.removeDef(ids);
         } catch (Exception e) {
             log.error("Error removing flow definitions: {}", e.getMessage(), e);
-            throw new RuntimeException("Failed to remove flow definitions", e);
+            if (StringUtils.isNotBlank(e.getMessage()) && e.getMessage().contains("已开启过审批任务")) {
+                throw new BusinessException("流程定义存在流程实例，已被使用，不可删除");
+            }
+            throw new BusinessException("删除流程定义失败，请稍后重试");
         }
         return true;
     }

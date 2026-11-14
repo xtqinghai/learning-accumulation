@@ -1,6 +1,7 @@
 package com.quinn.hboot.workflow.controller;
 
 import com.quinn.hboot.common.R;
+import com.quinn.hboot.common.exception.BusinessException;
 import com.quinn.hboot.workflow.common.ConditionalOnEnable;
 import com.quinn.hboot.workflow.domain.PageQuery;
 import com.quinn.hboot.workflow.domain.vo.FlowDefinitionVo;
@@ -9,6 +10,8 @@ import jakarta.servlet.http.HttpServletResponse;
 import lombok.RequiredArgsConstructor;
 import com.baomidou.mybatisplus.extension.plugins.pagination.Page;
 import org.dromara.warm.flow.core.entity.Definition;
+import org.dromara.warm.flow.core.enums.ActivityStatus;
+import org.dromara.warm.flow.core.enums.PublishStatus;
 import org.dromara.warm.flow.core.service.DefService;
 import org.dromara.warm.flow.orm.entity.FlowDefinition;
 //import org.dromara.workflow.common.ConditionalOnEnable;
@@ -79,6 +82,9 @@ public class FlwDefinitionController {////extends BaseController {
 //    @RepeatSubmit()
     @Transactional(rollbackFor = Exception.class)
     public R<Boolean> add(@RequestBody FlowDefinition flowDefinition) {
+        // A newly created definition must stay editable until it is explicitly
+        // activated from the definition list.
+        flowDefinition.setActivityStatus(ActivityStatus.SUSPENDED.getKey());
         return R.ok(defService.checkAndSave(flowDefinition));
     }
 
@@ -92,6 +98,13 @@ public class FlwDefinitionController {////extends BaseController {
 //    @RepeatSubmit()
     @Transactional(rollbackFor = Exception.class)
     public R<Boolean> edit(@RequestBody FlowDefinition flowDefinition) {
+        Definition current = flowDefinition.getId() == null ? null : defService.getById(flowDefinition.getId());
+        if (current == null) {
+            throw new BusinessException("流程定义不存在");
+        }
+        if (ActivityStatus.isActivity(current.getActivityStatus())) {
+            throw new BusinessException("流程已激活，请先挂起后再修改");
+        }
         return R.ok(defService.updateById(flowDefinition));
     }
 
@@ -117,7 +130,7 @@ public class FlwDefinitionController {////extends BaseController {
 //    @RepeatSubmit()
     @Transactional(rollbackFor = Exception.class)
     public R<Boolean> unPublish(@PathVariable Long id) {
-        return R.ok(defService.unPublish(id));
+        return R.ok(flwDefinitionService.unPublish(id));
     }
 
     /**
@@ -190,6 +203,13 @@ public class FlwDefinitionController {////extends BaseController {
     @Transactional(rollbackFor = Exception.class)
 //    @Log(title = "流程定义", businessType = BusinessType.UPDATE)
     public R<Boolean> active(@PathVariable Long id, @RequestParam boolean active) {
+        Definition definition = defService.getById(id);
+        if (definition == null) {
+            throw new BusinessException("流程定义不存在");
+        }
+        if (active && !PublishStatus.PUBLISHED.getKey().equals(definition.getIsPublish())) {
+            throw new BusinessException("流程未发布，请先发布后再激活");
+        }
         return R.ok(active ? defService.active(id) : defService.unActive(id));
     }
 

@@ -210,8 +210,82 @@
       opacity: 0.5;
     }
   </style>
-  <script type="module" crossorigin src="./js/index-B4cSnZcq.js"></script>
-  <link rel="stylesheet" crossorigin href="./css/index-DXtPEP5S.css">
+  <link rel="stylesheet" crossorigin href="./css/index-DlKfNZiv.css">
+  <style id="warm-flow-mimic-layout-fallback">
+    /* Keep the 1.8.9 MIMIC card sections inside the foreignObject even if the
+       compatibility script is stale. */
+    .base-node {
+      position: relative !important;
+      display: block !important;
+      width: 100% !important;
+      max-width: 100% !important;
+      height: 80px !important;
+      margin: 0 !important;
+      padding: 0 !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+    }
+
+    .base-node .top-section {
+      position: absolute !important;
+      top: 0 !important;
+      right: 0 !important;
+      bottom: auto !important;
+      left: 0 !important;
+      display: flex !important;
+      align-items: center !important;
+      width: auto !important;
+      max-width: none !important;
+      height: 25px !important;
+      min-width: 0 !important;
+      margin: 0 !important;
+      padding: 0 10px !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      transform: none !important;
+    }
+
+    .base-node .top-section > span:first-child {
+      min-width: 0;
+      max-width: 100%;
+      overflow: hidden;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+    }
+
+    .base-node .top-section > input {
+      width: 100% !important;
+      min-width: 0 !important;
+      box-sizing: border-box !important;
+    }
+
+    .base-node .bottom-section {
+      position: absolute !important;
+      top: 25px !important;
+      right: 0 !important;
+      bottom: 0 !important;
+      left: 0 !important;
+      width: auto !important;
+      max-width: none !important;
+      height: auto !important;
+      min-height: 0 !important;
+      margin: 0 !important;
+      box-sizing: border-box !important;
+      overflow: hidden !important;
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      transform: none !important;
+    }
+
+    /* Safari/WebKit can paint this transparent MIMIC backing rect away from
+       its foreignObject, producing a duplicate blank card. */
+    .lf-node:has(.base-node) rect[filter^="url(#shadow)"] {
+      visibility: hidden !important;
+      pointer-events: none !important;
+    }
+  </style>
+  <script src="./compat.js?v=20261114-5"></script>
+  <script type="module" crossorigin src="./js/index-BTmmNT3K.js"></script>
 </head>
 
 <body>
@@ -222,7 +296,8 @@
       <div class="loader-section section-right"></div>
       <div class="load_title">正在加载设计器中</div>
     </div>
-  </div>
+  </div>
+
 </body>
 
 </html>

@@ -11,8 +11,8 @@ spring:
         hboot:
           driver-class-name: org.postgresql.Driver
           url: ${HBOOT_DB_URL:jdbc:postgresql://localhost:5432/h_boot}
-          username: ${HBOOT_DB_USERNAME:pingguo}
-          password: ${HBOOT_DB_PASSWORD:}
+          username: ${HBOOT_DB_USERNAME:postgres}
+          password: ${HBOOT_DB_PASSWORD:85b1133bade8bdff24fef8dd14617f03}
           type: com.alibaba.druid.pool.DruidDataSource
           druid:
             initial-size: 5
@@ -32,8 +32,8 @@ spring:
         engine:
           driver-class-name: org.postgresql.Driver
           url: ${ENGINE_DB_URL:jdbc:postgresql://localhost:5432/h_boot}
-          username: ${ENGINE_DB_USERNAME:pingguo}
-          password: ${ENGINE_DB_PASSWORD:}
+          username: ${ENGINE_DB_USERNAME:postgres}
+          password: ${ENGINE_DB_PASSWORD:85b1133bade8bdff24fef8dd14617f03}
           type: com.alibaba.druid.pool.DruidDataSource
           druid:
             initial-size: 5
@@ -54,7 +54,7 @@ spring:
     redis:
       host: ${REDIS_HOST:localhost}
       port: ${REDIS_PORT:6379}
-      password: ${REDIS_PASSWORD:}
+      password: ${REDIS_PASSWORD:f3c4204f1a1d06c5ac63d606f878737c}
       database: ${REDIS_DATABASE:0}
       timeout: ${REDIS_TIMEOUT:10000ms}
       lettuce:

@@ -23,6 +23,7 @@ import com.quinn.hboot.workflow.common.enums.BusinessStatusEnum;
 import com.quinn.hboot.workflow.common.enums.TaskAssigneeType;
 import com.quinn.hboot.workflow.common.enums.TaskOperationEnum;
 import com.quinn.hboot.workflow.common.enums.TaskStatusEnum;
+import com.quinn.hboot.workflow.domain.FlowCategory;
 import com.quinn.hboot.workflow.domain.FlowInstanceBizExt;
 import com.quinn.hboot.workflow.domain.PageQuery;
 import com.quinn.hboot.workflow.domain.bo.*;
@@ -140,7 +141,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         }
 
         // 启动流程实例（提交申请）
-        Map<String, Object> variables = startProcessBo.getVariables();
+        Map<String, Object> variables = Optional.ofNullable(startProcessBo.getVariables()).orElseGet(HashMap::new);
         // 流程发起人
         variables.put(INITIATOR, SecurityUtils.getUserId());
         // 发起人部门id
@@ -185,7 +186,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         FlowParams flowParams = FlowParams.build()
             .handler(startProcessBo.getHandler())
             .flowCode(startProcessBo.getFlowCode())
-            .variable(startProcessBo.getVariables())
+            .variable(variables)
             .flowStatus(BusinessStatusEnum.DRAFT.getStatus());
         Instance instance = insService.start(businessId, flowParams);
         TraceContext.bindInstanceId(instance.getId());
@@ -248,7 +249,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         // 获取抄送人
         List<FlowCopyBo> flowCopyList = completeTaskBo.getFlowCopyList();
         // 设置抄送人
-        Map<String, Object> variables = completeTaskBo.getVariables();
+        Map<String, Object> variables = Optional.ofNullable(completeTaskBo.getVariables()).orElseGet(HashMap::new);
         variables.put(FlowConstant.FLOW_COPY_LIST, flowCopyList);
         // 消息类型
         variables.put(FlowConstant.MESSAGE_TYPE, messageType);
@@ -416,9 +417,10 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         QueryWrapper<FlowTaskBo> queryWrapper = buildQueryWrapper(flowTaskBo);
         queryWrapper.eq("t.node_type", NodeType.BETWEEN.getKey());
         queryWrapper.in("t.processed_by", Convert.toStr(SecurityUtils.getUserId()));
-        queryWrapper.in("t.flow_status", BusinessStatusEnum.WAITING.getStatus());
+        queryWrapper.eq("t.flow_task_status", BusinessStatusEnum.WAITING.getStatus());
         Page<FlowTaskVo> page = flwTaskMapper.getListRunTask(pageQuery.build(), queryWrapper);
         this.wrapAssigneeInfo(page.getRecords());
+        this.fillRunTaskDisplayNames(page.getRecords());
         return R.ok(page);
     }
 
@@ -434,6 +436,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         queryWrapper.eq("t.node_type", NodeType.BETWEEN.getKey());
         queryWrapper.in("t.approver", Convert.toStr(SecurityUtils.getUserId()));
         Page<FlowHisTaskVo> page = flwTaskMapper.getListFinishTask(pageQuery.build(), queryWrapper);
+        this.fillHisTaskDisplayNames(page.getRecords());
         return R.ok(page);
     }
 
@@ -447,8 +450,10 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     public R pageByAllTaskWait(FlowTaskBo flowTaskBo, PageQuery pageQuery) {
         QueryWrapper<FlowTaskBo> queryWrapper = buildQueryWrapper(flowTaskBo);
         queryWrapper.eq("t.node_type", NodeType.BETWEEN.getKey());
+        queryWrapper.eq("t.flow_task_status", BusinessStatusEnum.WAITING.getStatus());
         Page<FlowTaskVo> page = flwTaskMapper.getListRunTask(pageQuery.build(), queryWrapper);
         this.wrapAssigneeInfo(page.getRecords());
+        this.fillRunTaskDisplayNames(page.getRecords());
         return R.ok(page);
     }
 
@@ -471,6 +476,121 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     }
 
     /**
+     * 补齐待办列表直接展示的用户、办理人和流程分类名称。
+     * 当前工程未启用原框架的通用翻译序列化器，因此不能在 VO 上依赖 @Translation。
+     */
+    private void fillRunTaskDisplayNames(List<FlowTaskVo> taskList) {
+        if (CollUtil.isEmpty(taskList)) {
+            return;
+        }
+        Set<Long> userIds = new HashSet<>();
+        Set<Long> categoryIds = new HashSet<>();
+        for (FlowTaskVo task : taskList) {
+            addId(userIds, task.getCreateBy());
+            if (StrUtil.isNotBlank(task.getAssigneeIds())) {
+                for (String id : StrUtil.split(task.getAssigneeIds(), ',')) {
+                    addId(userIds, id);
+                }
+            }
+            addId(categoryIds, task.getCategory());
+        }
+        Map<Long, String> userNames = loadUserNames(userIds);
+        Map<Long, String> categoryNames = loadCategoryNames(categoryIds);
+        for (FlowTaskVo task : taskList) {
+            task.setCreateByName(resolveName(task.getCreateBy(), userNames));
+            task.setAssigneeNames(joinNames(task.getAssigneeIds(), userNames));
+            task.setCategoryName(resolveName(task.getCategory(), categoryNames));
+        }
+    }
+
+    /**
+     * 补齐已办列表的审批人、申请人和流程分类名称。
+     */
+    private void fillHisTaskDisplayNames(List<FlowHisTaskVo> taskList) {
+        if (CollUtil.isEmpty(taskList)) {
+            return;
+        }
+        Set<Long> userIds = new HashSet<>();
+        Set<Long> categoryIds = new HashSet<>();
+        for (FlowHisTaskVo task : taskList) {
+            addId(userIds, task.getApprover());
+            addId(userIds, task.getCreateBy());
+            addId(categoryIds, task.getCategory());
+        }
+        Map<Long, String> userNames = loadUserNames(userIds);
+        Map<Long, String> categoryNames = loadCategoryNames(categoryIds);
+        Map<Long, String> applyNodeCodes = new HashMap<>();
+        for (FlowHisTaskVo task : taskList) {
+            task.setApproveName(resolveName(task.getApprover(), userNames));
+            task.setCreateByName(resolveName(task.getCreateBy(), userNames));
+            task.setCategoryName(resolveName(task.getCategory(), categoryNames));
+            String applyNodeCode = resolveApplyNodeCode(task.getDefinitionId(), applyNodeCodes);
+            if (StrUtil.equals(applyNodeCode, task.getNodeCode())) {
+                task.setNodeName("发起");
+            }
+        }
+    }
+
+    /**
+     * 解析并缓存流程定义的申请节点编码，用于区分同名的发起记录和审批记录。
+     */
+    private String resolveApplyNodeCode(Long definitionId, Map<Long, String> applyNodeCodes) {
+        if (definitionId == null) {
+            return null;
+        }
+        if (applyNodeCodes.containsKey(definitionId)) {
+            return applyNodeCodes.get(definitionId);
+        }
+        String applyNodeCode = null;
+        try {
+            applyNodeCode = flwCommonService.applyNodeCode(definitionId);
+        } catch (Exception ex) {
+            log.warn("无法解析流程定义的申请节点，definitionId={}", definitionId, ex);
+        }
+        applyNodeCodes.put(definitionId, applyNodeCode);
+        return applyNodeCode;
+    }
+
+    private Map<Long, String> loadUserNames(Set<Long> userIds) {
+        return userIds.isEmpty() ? Collections.emptyMap() : userService.selectUserNamesByIds(new ArrayList<>(userIds));
+    }
+
+    private Map<Long, String> loadCategoryNames(Set<Long> categoryIds) {
+        if (categoryIds.isEmpty()) {
+            return Collections.emptyMap();
+        }
+        Map<Long, String> names = new HashMap<>();
+        List<FlowCategory> categories = flwCategoryMapper.selectByIds(categoryIds);
+        for (FlowCategory category : categories) {
+            names.put(category.getCategoryId(), category.getCategoryName());
+        }
+        return names;
+    }
+
+    private void addId(Set<Long> ids, String value) {
+        Long id = Convert.toLong(value);
+        if (id != null) {
+            ids.add(id);
+        }
+    }
+
+    private String resolveName(String id, Map<Long, String> names) {
+        Long key = Convert.toLong(id);
+        return key == null ? id : names.getOrDefault(key, id);
+    }
+
+    private String joinNames(String ids, Map<Long, String> names) {
+        if (StrUtil.isBlank(ids)) {
+            return null;
+        }
+        List<String> values = new ArrayList<>();
+        for (String id : StrUtil.split(ids, ',')) {
+            values.add(resolveName(id, names));
+        }
+        return String.join(",", values);
+    }
+
+    /**
      * 查询已办任务
      *
      * @param flowTaskBo 参数
@@ -480,6 +600,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
     public R pageByAllTaskFinish(FlowTaskBo flowTaskBo, PageQuery pageQuery) {
         QueryWrapper<FlowTaskBo> queryWrapper = buildQueryWrapper(flowTaskBo);
         Page<FlowHisTaskVo> page = flwTaskMapper.getListFinishTask(pageQuery.build(), queryWrapper);
+        this.fillHisTaskDisplayNames(page.getRecords());
         return R.ok(page);
     }
 
@@ -494,6 +615,7 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         QueryWrapper<FlowTaskBo> queryWrapper = buildQueryWrapper(flowTaskBo);
         queryWrapper.in("t.processed_by", Convert.toStr(SecurityUtils.getUserId()));
         Page<FlowTaskVo> page = flwTaskMapper.getTaskCopyByPage(pageQuery.build(), queryWrapper);
+        this.fillRunTaskDisplayNames(page.getRecords());
         return R.ok(page);
     }
 
@@ -666,6 +788,8 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         flowTaskVo.setFlowCode(definition.getFlowCode());
         flowTaskVo.setFlowName(definition.getFlowName());
         flowTaskVo.setBusinessId(instance.getBusinessId());
+        flowTaskVo.setFormCustom(definition.getFormCustom());
+        flowTaskVo.setFormPath(definition.getFormPath());
         FlowNode flowNode = this.getByNodeCode(flowTaskVo.getNodeCode(), instance.getDefinitionId());
         if (ObjectUtil.isNull(flowNode)) {
             throw new NullPointerException("当前【" + flowTaskVo.getNodeCode() + "】节点编码不存在");
@@ -683,11 +807,14 @@ public class FlwTaskServiceImpl implements IFlwTaskService {
         } else {
             flowTaskVo.setCopyList(new ArrayList<>());
         }
+        Map<String, Object> variableMap = new HashMap<>();
         if (CollUtil.isNotEmpty(nodeExtVo.getVariables())) {
-            flowTaskVo.setVarList(nodeExtVo.getVariables());
-        } else {
-            flowTaskVo.setVarList(new HashMap<>());
+            variableMap.putAll(nodeExtVo.getVariables());
         }
+        if (CollUtil.isNotEmpty(instance.getVariableMap())) {
+            variableMap.putAll(instance.getVariableMap());
+        }
+        flowTaskVo.setVarList(variableMap);
         flowTaskVo.setNodeRatio(flowNode.getNodeRatio());
         flowTaskVo.setApplyNode(flowNode.getNodeCode().equals(flwCommonService.applyNodeCode(task.getDefinitionId())));
         return flowTaskVo;

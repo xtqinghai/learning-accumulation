@@ -116,9 +116,14 @@ public class FlowTaskVo implements Serializable {
     private String version;
 
     /**
-     * 流程状态
+     * 流程实例状态
      */
     private String flowStatus;
+
+    /**
+     * 当前任务状态
+     */
+    private String flowTaskStatus;
 
     /**
      * 流程分类id
@@ -202,7 +207,7 @@ public class FlowTaskVo implements Serializable {
      * <p>
      * 根据扩展属性中 VariablesEnum 类型的数据生成，存储 key=value 格式的自定义参数
      */
-    private Map<String, String> varList;
+    private Map<String, Object> varList;
 
     //业务扩展信息开始
     /**

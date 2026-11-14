@@ -128,16 +128,30 @@ public class FlwInstanceServiceImpl implements IFlwInstanceService {
      * @return 结果
      */
     @Override
-    public FlowInstanceVo queryByBusinessId(Long businessId) {
-        FlowInstance instance = this.selectInstByBusinessId(Convert.toStr(businessId));
+    public FlowInstanceVo queryByBusinessId(String businessId) {
+        FlowInstance instance = this.selectInstByBusinessId(businessId);
+        if (ObjectUtil.isNull(instance)) {
+            throw new RuntimeException(ExceptionCons.NOT_FOUNT_INSTANCE);
+        }
         FlowInstanceVo instanceVo = BeanUtil.toBean(instance, FlowInstanceVo.class);
         Definition definition = defService.getById(instanceVo.getDefinitionId());
+        if (ObjectUtil.isNull(definition)) {
+            throw new RuntimeException(ExceptionCons.NOT_FOUNT_DEF);
+        }
         instanceVo.setFlowName(definition.getFlowName());
         instanceVo.setFlowCode(definition.getFlowCode());
         instanceVo.setVersion(definition.getVersion());
         instanceVo.setFormCustom(definition.getFormCustom());
         instanceVo.setFormPath(definition.getFormPath());
         instanceVo.setCategory(definition.getCategory());
+        instanceVo.setVariables(new LinkedHashMap<>(Optional.ofNullable(instance.getVariableMap()).orElse(Collections.emptyMap())));
+        List<FlowTask> currentTasks = flwTaskService.selectByInstId(instance.getId());
+        if (CollUtil.isNotEmpty(currentTasks)) {
+            instanceVo.setTaskId(currentTasks.get(0).getId());
+            instanceVo.setNodeCode(currentTasks.get(0).getNodeCode());
+            instanceVo.setNodeName(currentTasks.get(0).getNodeName());
+            instanceVo.setNodeType(currentTasks.get(0).getNodeType());
+        }
         return instanceVo;
     }
 

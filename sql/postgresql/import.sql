@@ -14,6 +14,7 @@ BEGIN;
 \ir 60_notification_v1.sql
 \ir 70_scheduled_job_v1.sql
 \ir 80_parameter_backup_v1.sql
+\ir 92_tres_demo_menu.sql
 \ir 99_sync_sequences.sql
 COMMIT;
 \echo 'h_boot import completed.'

@@ -9,6 +9,7 @@ import lombok.Data;
 //import org.dromara.workflow.common.constant.FlowConstant;
 
 import java.util.Date;
+import java.util.Map;
 
 /**
  * 流程实例视图
@@ -148,5 +149,15 @@ public class FlowInstanceVo {
      */
     private String businessTitle;
     //业务扩展信息结束
+
+    /**
+     * 当前待办任务id。查看已结束流程时为空。
+     */
+    private Long taskId;
+
+    /**
+     * 流程实例变量，用于动态表单回显。
+     */
+    private Map<String, Object> variables;
 
 }

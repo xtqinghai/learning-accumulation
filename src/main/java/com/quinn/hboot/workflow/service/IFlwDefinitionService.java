@@ -44,6 +44,14 @@ public interface IFlwDefinitionService {
     boolean publish(Long id);
 
     /**
+     * 取消发布流程定义
+     *
+     * @param id 流程定义id
+     * @return 结果
+     */
+    boolean unPublish(Long id);
+
+    /**
      * 导出流程定义
      *
      * @param id       流程定义id

@@ -77,7 +77,17 @@ public class FlwInstanceController{//// extends BaseController {
      * @param businessId 业务id
      */
     @GetMapping("/getInfo/{businessId}")
-    public R<FlowInstanceVo> getInfo(@PathVariable Long businessId) {
+    public R<FlowInstanceVo> getInfo(@PathVariable String businessId) {
+        return R.ok(flwInstanceService.queryByBusinessId(businessId));
+    }
+
+    /**
+     * 根据业务id聚合动态表单办理所需的数据（实例、定义、变量、当前待办任务）。
+     *
+     * @param businessId 业务id
+     */
+    @GetMapping("/formInfo/{businessId}")
+    public R<FlowInstanceVo> formInfo(@PathVariable String businessId) {
         return R.ok(flwInstanceService.queryByBusinessId(businessId));
     }
 
