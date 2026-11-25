@@ -20,12 +20,18 @@ spring:
       org.quartz.threadPool.threadCount: 5
   ai:
     openai:
-      base-url: ${AI_BASE_URL:http://47.96.114.112:8080}
-      api-key: ${AI_API_KEY:not-configured}
+      base-url: ${AI_BASE_URL:http://localhost:11434}
+      api-key: ${AI_API_KEY:ollama}
       chat:
         options:
-          model: ${AI_MODEL:gpt-5.5}
+          model: ${AI_MODEL:qwen3.5:2b}
           temperature: ${AI_TEMPERATURE:0.7}
+          reasoning-effort: none
+          max-tokens: 1024
+        # 关闭 qwen 的思考模式，速度提升明显
+      embedding:
+        options:
+          model: ${AI_EMBEDDING_MODEL:bge-m3}
   config:
     import: classpath:codegen.yml
   profiles:
@@ -222,9 +228,16 @@ sa-token:
 app:
   ai:
     enabled: ${AI_ENABLED:true}
-    api-key: ${AI_API_KEY:not-configured}
-    model: ${AI_MODEL:gpt-5.5}
+    api-key: ${AI_API_KEY:ollama}
+    model: ${AI_MODEL:qwen3.5:2b}
     system-prompt: ${AI_SYSTEM_PROMPT:你是 h-boot 管理系统中的 AI 助手。请使用清晰、准确、简洁的中文回答用户问题；不确定时应明确说明，不要编造信息。}
+  knowledge:
+    embedding:
+      enabled: ${KNOWLEDGE_EMBEDDING_ENABLED:true}
+      dimensions: ${KNOWLEDGE_EMBEDDING_DIMENSIONS:1024}
+      batch-size: ${KNOWLEDGE_EMBEDDING_BATCH_SIZE:16}
+      candidate-limit: ${KNOWLEDGE_EMBEDDING_CANDIDATE_LIMIT:24}
+      backfill-enabled: ${KNOWLEDGE_EMBEDDING_BACKFILL_ENABLED:true}
   api-docs:
     enabled: ${APP_API_DOCS_ENABLED:false}
   auth:

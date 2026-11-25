@@ -1,12 +1,10 @@
 package com.quinn.hboot.knowledge.service.impl;
 
 import com.quinn.hboot.knowledge.mapper.KnowledgeArticleMapper;
-import com.quinn.hboot.knowledge.mapper.KnowledgeArticleChunkMapper;
 import com.quinn.hboot.knowledge.mapper.KnowledgeArticleVersionMapper;
 import com.quinn.hboot.knowledge.mapper.KnowledgeImportTaskMapper;
 import com.quinn.hboot.knowledge.mapper.KnowledgeSourceFileMapper;
 import com.quinn.hboot.knowledge.model.entity.KnowledgeArticle;
-import com.quinn.hboot.knowledge.model.entity.KnowledgeArticleChunk;
 import com.quinn.hboot.knowledge.model.entity.KnowledgeArticleVersion;
 import com.quinn.hboot.knowledge.model.entity.KnowledgeImportTask;
 import com.quinn.hboot.knowledge.model.entity.KnowledgeSourceFile;
@@ -19,13 +17,12 @@ import java.nio.charset.StandardCharsets;
 import java.security.MessageDigest;
 import java.time.LocalDateTime;
 import java.util.HexFormat;
-import java.util.List;
 
 @Service
 @RequiredArgsConstructor
 public class KnowledgeImportFinalizer {
     private final KnowledgeArticleMapper articleMapper;
-    private final KnowledgeArticleChunkMapper articleChunkMapper;
+    private final KnowledgeChunkSynchronizer chunkSynchronizer;
     private final KnowledgeArticleVersionMapper versionMapper;
     private final KnowledgeSourceFileMapper sourceFileMapper;
     private final KnowledgeImportTaskMapper taskMapper;
@@ -74,7 +71,7 @@ public class KnowledgeImportFinalizer {
 
         article.setCurrentVersionId(version.getId());
         articleMapper.updateById(article);
-        syncArticleChunks(article);
+        chunkSynchronizer.sync(article, source);
 
         source.setArticleId(article.getId());
         source.setStatus("READY");
@@ -99,30 +96,6 @@ public class KnowledgeImportFinalizer {
             return "由原始文件“" + fileName + "”生成的 AI 总结。";
         }
         return plain.substring(0, Math.min(500, plain.length()));
-    }
-
-    private void syncArticleChunks(KnowledgeArticle article) {
-        articleChunkMapper.delete(new com.baomidou.mybatisplus.core.conditions.query.LambdaQueryWrapper<KnowledgeArticleChunk>()
-            .eq(KnowledgeArticleChunk::getArticleId, article.getId()));
-        LocalDateTime now = LocalDateTime.now();
-        List<KnowledgeTextUtils.Chunk> chunks = KnowledgeTextUtils.splitIntoChunks(
-            article.getContent(),
-            1200,
-            150
-        );
-        for (KnowledgeTextUtils.Chunk chunk : chunks) {
-            KnowledgeArticleChunk record = new KnowledgeArticleChunk();
-            record.setArticleId(article.getId());
-            record.setSpaceId(article.getSpaceId());
-            record.setChunkNo(chunk.chunkNo());
-            record.setContent(chunk.content());
-            record.setSearchContent(chunk.searchContent());
-            record.setCharStart(chunk.charStart());
-            record.setCharEnd(chunk.charEnd());
-            record.setCreateTime(now);
-            record.setUpdateTime(now);
-            articleChunkMapper.insert(record);
-        }
     }
 
     private String limit(String value, int maxLength) {

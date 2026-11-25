@@ -11,7 +11,6 @@ import com.quinn.hboot.common.exception.BusinessException;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.quinn.hboot.knowledge.mapper.KnowledgeAnnotationMapper;
-import com.quinn.hboot.knowledge.mapper.KnowledgeArticleChunkMapper;
 import com.quinn.hboot.knowledge.mapper.KnowledgeArticleMapper;
 import com.quinn.hboot.knowledge.mapper.KnowledgeArticleVersionMapper;
 import com.quinn.hboot.knowledge.mapper.KnowledgeQaMessageMapper;
@@ -27,6 +26,7 @@ import com.quinn.hboot.knowledge.model.entity.KnowledgeQaSession;
 import com.quinn.hboot.knowledge.model.entity.KnowledgeSpace;
 import com.quinn.hboot.knowledge.model.vo.KnowledgeViews;
 import com.quinn.hboot.knowledge.service.KnowledgeService;
+import com.quinn.hboot.knowledge.service.KnowledgeHybridSearchService;
 import com.quinn.hboot.knowledge.support.KnowledgeTextUtils;
 import com.quinn.hboot.utils.SecurityUtils;
 import lombok.RequiredArgsConstructor;
@@ -55,8 +55,6 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     private static final int MAX_HISTORY_MESSAGES = 12;
     private static final int MAX_RAG_CHUNKS = 6;
     private static final int MAX_CITATION_CHARS = 500;
-    private static final int CHUNK_SIZE = 1200;
-    private static final int CHUNK_OVERLAP = 150;
 
     private final KnowledgeSpaceMapper spaceMapper;
     private final KnowledgeArticleMapper articleMapper;
@@ -64,7 +62,8 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     private final KnowledgeAnnotationMapper annotationMapper;
     private final KnowledgeQaSessionMapper qaSessionMapper;
     private final KnowledgeQaMessageMapper qaMessageMapper;
-    private final KnowledgeArticleChunkMapper chunkMapper;
+    private final KnowledgeChunkSynchronizer chunkSynchronizer;
+    private final KnowledgeHybridSearchService hybridSearchService;
     private final AiChatService aiChatService;
     private final AiProperties properties;
     private final ObjectMapper objectMapper;
@@ -131,7 +130,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         applyArticle(article, request, now);
         articleMapper.insert(article);
         saveVersion(article, "USER_EDIT");
-        syncArticleChunks(article);
+        chunkSynchronizer.sync(article);
         return requireArticle(article.getId());
     }
 
@@ -141,7 +140,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         applyArticle(article, request, LocalDateTime.now());
         articleMapper.updateById(article);
         saveVersion(article, "USER_EDIT");
-        syncArticleChunks(article);
+        chunkSynchronizer.sync(article);
         return requireArticle(id);
     }
 
@@ -149,7 +148,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
     public void deleteArticle(Long id) {
         requireArticle(id);
         articleMapper.deleteById(id);
-        deleteArticleChunks(id);
+        chunkSynchronizer.deleteByArticleId(id);
     }
 
     @Override
@@ -176,7 +175,7 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         article.setUpdateTime(LocalDateTime.now());
         articleMapper.updateById(article);
         saveVersion(article, "ROLLBACK");
-        syncArticleChunks(article);
+        chunkSynchronizer.sync(article);
         return requireArticle(articleId);
     }
 
@@ -345,9 +344,9 @@ public class KnowledgeServiceImpl implements KnowledgeService {
         userMessage.setCreateTime(LocalDateTime.now());
         qaMessageMapper.insert(userMessage);
 
-        List<KnowledgeArticleChunk> chunks = chunkMapper.searchRelevant(
+        List<KnowledgeArticleChunk> chunks = hybridSearchService.search(
             requireMySpace().getId(),
-            KnowledgeTextUtils.buildSearchTokens(request.question()),
+            request.question(),
             null,
             MAX_RAG_CHUNKS
         );
@@ -523,20 +522,17 @@ public class KnowledgeServiceImpl implements KnowledgeService {
                 if (article == null || chunk.getSearchContent() == null) {
                     return null;
                 }
-                String searchContent = chunk.getSearchContent();
-                int start = Math.min(Objects.requireNonNullElse(chunk.getCharStart(), 0), searchContent.length());
-                int end = Math.min(Math.max(start, Objects.requireNonNullElse(chunk.getCharEnd(), 0)), searchContent.length());
-                String quotedText = searchContent.substring(start, end);
-                if (quotedText.length() > MAX_CITATION_CHARS) {
-                    quotedText = quotedText.substring(0, MAX_CITATION_CHARS) + "…";
-                }
+                String content = Objects.requireNonNullElse(chunk.getContent(), "");
+                String quotedText = content.length() > MAX_CITATION_CHARS
+                    ? content.substring(0, MAX_CITATION_CHARS) + "…"
+                    : content;
                 return new KnowledgeViews.QaCitation(
                     article.getId(),
                     article.getTitle(),
                     chunk.getId(),
                     chunk.getChunkNo(),
-                    start,
-                    end,
+                    Objects.requireNonNullElse(chunk.getCharStart(), 0),
+                    Objects.requireNonNullElse(chunk.getCharEnd(), 0),
                     quotedText
                 );
             })
@@ -577,39 +573,6 @@ public class KnowledgeServiceImpl implements KnowledgeService {
             参考资料：
             %s
             """.formatted(question, context);
-    }
-
-    private void syncArticleChunks(KnowledgeArticle article) {
-        if (article.getId() == null) {
-            throw new BusinessException("文章 ID 不能为空");
-        }
-        List<KnowledgeTextUtils.Chunk> chunks = KnowledgeTextUtils.splitIntoChunks(
-            article.getContent(),
-            CHUNK_SIZE,
-            CHUNK_OVERLAP
-        );
-        List<KnowledgeArticleChunk> records = new ArrayList<>();
-        LocalDateTime now = LocalDateTime.now();
-        for (KnowledgeTextUtils.Chunk chunk : chunks) {
-            KnowledgeArticleChunk record = new KnowledgeArticleChunk();
-            record.setArticleId(article.getId());
-            record.setSpaceId(article.getSpaceId());
-            record.setChunkNo(chunk.chunkNo());
-            record.setContent(chunk.content());
-            record.setSearchContent(chunk.searchContent());
-            record.setCharStart(chunk.charStart());
-            record.setCharEnd(chunk.charEnd());
-            record.setCreateTime(now);
-            record.setUpdateTime(now);
-            records.add(record);
-        }
-        deleteArticleChunks(article.getId());
-        records.forEach(chunkMapper::insert);
-    }
-
-    private void deleteArticleChunks(Long articleId) {
-        chunkMapper.delete(new LambdaQueryWrapper<KnowledgeArticleChunk>()
-            .eq(KnowledgeArticleChunk::getArticleId, articleId));
     }
 
     private void applyArticle(

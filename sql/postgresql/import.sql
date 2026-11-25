@@ -14,6 +14,10 @@ BEGIN;
 \ir 60_notification_v1.sql
 \ir 70_scheduled_job_v1.sql
 \ir 80_parameter_backup_v1.sql
+\ir 13_knowledge_summary_config_v1.sql
+\ir 14_knowledge_source_chunks_v1.sql
+\ir 15_knowledge_summary_runtime_v1.sql
+\ir 16_knowledge_embeddings_v1.sql
 \ir 92_tres_demo_menu.sql
 \ir 99_sync_sequences.sql
 COMMIT;

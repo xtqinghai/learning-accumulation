@@ -108,7 +108,9 @@ export REDIS_HOST='localhost'
 export REDIS_PORT='6379'
 ```
 
-AI 功能不是启动系统的前置条件。需要使用时，再配置 `AI_BASE_URL`、`AI_API_KEY` 和 `AI_MODEL`。
+AI 功能不是启动系统的前置条件。需要使用时，再配置 `AI_BASE_URL`、`AI_API_KEY`、`AI_MODEL` 和
+`AI_EMBEDDING_MODEL`。知识库全局问答默认使用“关键词 + 向量”混合检索：PostgreSQL 需安装
+`pgvector`，本地 Ollama 可执行 `ollama pull bge-m3`。embedding 或 pgvector 不可用时系统会自动退回关键词检索。
 
 ### MacBook 本地依赖启动
 

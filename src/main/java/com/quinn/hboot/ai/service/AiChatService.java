@@ -14,6 +14,7 @@ import org.springframework.ai.chat.messages.SystemMessage;
 import org.springframework.ai.chat.messages.UserMessage;
 import org.springframework.ai.chat.model.ChatModel;
 import org.springframework.ai.chat.model.ChatResponse;
+import org.springframework.ai.chat.prompt.ChatOptions;
 import org.springframework.ai.chat.prompt.Prompt;
 import org.springframework.stereotype.Service;
 
@@ -32,21 +33,35 @@ public class AiChatService {
         validateConfiguration();
         validateConversation(request.messages());
 
-        return call(properties.systemPrompt(), request.messages());
+        return call(properties.systemPrompt(), request.messages(), null);
     }
 
     public AiChatResponse chatWithSystemPrompt(String systemPrompt, List<AiChatMessage> messages) {
+        return chatWithSystemPrompt(systemPrompt, messages, null);
+    }
+
+    public AiChatResponse chatWithSystemPrompt(
+        String systemPrompt,
+        List<AiChatMessage> messages,
+        Integer maxTokens
+    ) {
         validateConfiguration();
         validateConversation(messages);
         if (systemPrompt == null || systemPrompt.isBlank()) {
             throw new BusinessException("AI 系统提示词不能为空");
         }
-        return call(systemPrompt, messages);
+        return call(systemPrompt, messages, maxTokens);
     }
 
-    private AiChatResponse call(String systemPrompt, List<AiChatMessage> messages) {
+    private AiChatResponse call(String systemPrompt, List<AiChatMessage> messages, Integer maxTokens) {
         try {
-            ChatResponse response = chatModel.call(new Prompt(toSpringAiMessages(systemPrompt, messages)));
+            ChatOptions options = maxTokens == null || maxTokens <= 0
+                ? null
+                : ChatOptions.builder().maxTokens(maxTokens).build();
+            ChatResponse response = chatModel.call(new Prompt(
+                toSpringAiMessages(systemPrompt, messages),
+                options
+            ));
             String answer = response.getResult().getOutput().getText();
             if (answer == null || answer.isBlank()) {
                 throw new BusinessException(ErrorCode.SYSTEM_ERROR, "AI 服务未返回有效内容，请稍后重试");

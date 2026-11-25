@@ -31,10 +31,10 @@ import java.util.Set;
 @Service
 @RequiredArgsConstructor
 public class KnowledgeImportServiceImpl implements KnowledgeImportService {
-    private static final Set<String> SUPPORTED_EXTENSIONS = Set.of("md", "txt", "pdf", "docx", "pptx");
+    private static final Set<String> SUPPORTED_EXTENSIONS = Set.of(
+        "md", "txt", "csv", "pdf", "doc", "docx", "ppt", "pptx", "xls", "xlsx"
+    );
     private static final int MAX_PREVIEW_CHARS = 200_000;
-    private static final String LEGACY_OFFICE_MESSAGE =
-        "当前仅支持 docx 和 pptx，请先在本地将文件另存为对应格式后再上传。";
 
     private final KnowledgeImportTaskMapper taskMapper;
     private final KnowledgeSourceFileMapper sourceFileMapper;
@@ -183,11 +183,8 @@ public class KnowledgeImportServiceImpl implements KnowledgeImportService {
     }
 
     private void validateExtension(String extension) {
-        if ("doc".equals(extension) || "ppt".equals(extension)) {
-            throw new BusinessException(LEGACY_OFFICE_MESSAGE);
-        }
         if (!SUPPORTED_EXTENSIONS.contains(extension)) {
-            throw new BusinessException("仅支持 md、txt、pdf、docx 和 pptx 文件");
+            throw new BusinessException("仅支持 md、txt、csv、pdf、doc、docx、ppt、pptx、xls 和 xlsx 文件");
         }
     }
 

@@ -15,5 +15,16 @@ public interface KnowledgeArticleChunkMapper extends BaseMapper<KnowledgeArticle
         @Param("status") String status,
         @Param("limit") int limit
     );
+
+    List<KnowledgeArticleChunk> searchVector(
+        @Param("spaceId") Long spaceId,
+        @Param("embedding") String embedding,
+        @Param("status") String status,
+        @Param("limit") int limit
+    );
+
+    List<KnowledgeArticleChunk> findMissingEmbeddings(@Param("limit") int limit);
+
+    int updateEmbedding(@Param("id") Long id, @Param("embedding") String embedding);
 }
 
