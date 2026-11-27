@@ -1,10 +1,10 @@
-# h-boot
+# learning-accumulation
 
 English | [简体中文](README.md)
 
-`h-boot` is an actively maintained, separated frontend/backend administration platform for authorization, workflow, knowledge management, and reusable business modules. It is built with Spring Boot 3.5, MyBatis-Plus, Sa-Token, Warm-Flow, and Spring AI, with support for PostgreSQL 17 and MySQL 8.
+`learning-accumulation` is an actively maintained, separated frontend/backend administration platform for authorization, workflow, knowledge management, and reusable business modules. It is built with Spring Boot 3.5, MyBatis-Plus, Sa-Token, Warm-Flow, and Spring AI, with support for PostgreSQL 17 and MySQL 8.
 
-Companion frontend: [h-boot-admin](https://gitee.com/438704315/h-boot-admin)
+Companion frontend: [learning-accumulation-vue](https://gitee.com/438704315/learning-accumulation-vue)
 
 > The project is under active development and is intended for learning, extension, and feature evaluation. Before production use, assess testing, security, monitoring, backup, and release requirements. See the [production readiness checklist](docs/production-readiness-checklist.md).
 
@@ -43,7 +43,7 @@ Companion frontend: [h-boot-admin](https://gitee.com/438704315/h-boot-admin)
 | API documentation | Springdoc OpenAPI |
 | Utilities | MapStruct Plus, Lombok, Hutool |
 
-The frontend uses Vue 3, TypeScript, Vite, Element Plus, Pinia, and Vue Router. See [h-boot-admin](https://gitee.com/438704315/h-boot-admin) for exact versions.
+The frontend uses Vue 3, TypeScript, Vite, Element Plus, Pinia, and Vue Router. See [learning-accumulation-vue](https://gitee.com/438704315/learning-accumulation-vue) for exact versions.
 
 ## Quick Start
 
@@ -57,8 +57,8 @@ The frontend uses Vue 3, TypeScript, Vite, Element Plus, Pinia, and Vue Router. 
 ### Clone
 
 ```bash
-git clone https://gitee.com/438704315/h-boot.git
-git clone https://gitee.com/438704315/h-boot-admin.git
+git clone https://gitee.com/438704315/learning-accumulation.git
+git clone https://gitee.com/438704315/learning-accumulation-vue.git
 ```
 
 ### Initialize PostgreSQL
@@ -98,7 +98,7 @@ Development endpoints:
 ### Run the frontend
 
 ```bash
-cd ../h-boot-admin
+cd ../learning-accumulation-vue
 npm install
 npm run dev
 ```

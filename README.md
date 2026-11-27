@@ -1,10 +1,10 @@
-# h-boot
+# learning-accumulation
 
 [English](README.en.md) | 简体中文
 
-`h-boot` 是一个持续维护的前后端分离管理平台后端，面向权限管理、工作流、知识管理和可复用业务模块开发。项目基于 Spring Boot 3.5、MyBatis-Plus、Sa-Token、Warm-Flow 和 Spring AI，支持 PostgreSQL 17 与 MySQL 8。
+`learning-accumulation` 是一个持续维护的前后端分离管理平台后端，面向权限管理、工作流、知识管理和可复用业务模块开发。项目基于 Spring Boot 3.5、MyBatis-Plus、Sa-Token、Warm-Flow 和 Spring AI，支持 PostgreSQL 17 与 MySQL 8。
 
-配套前端：[h-boot-admin](https://gitee.com/438704315/h-boot-admin)
+配套前端：[learning-accumulation-vue](https://gitee.com/438704315/learning-accumulation-vue)
 
 > 项目目前处于积极开发阶段，适合学习、二次开发和功能验证。用于生产环境前，请完成测试、安全、监控、备份及发布流程评估，详见[上线可用框架缺口清单](docs/production-readiness-checklist.md)。
 
@@ -43,12 +43,12 @@
 | 接口文档 | Springdoc OpenAPI |
 | 工具 | MapStruct Plus、Lombok、Hutool |
 
-前端采用 Vue 3、TypeScript、Vite、Element Plus、Pinia 和 Vue Router，具体版本见 [h-boot-admin](https://gitee.com/438704315/h-boot-admin)。
+前端采用 Vue 3、TypeScript、Vite、Element Plus、Pinia 和 Vue Router，具体版本见 [learning-accumulation-vue](https://gitee.com/438704315/learning-accumulation-vue)。
 
 ## 项目结构
 
 ```text
-h-boot/
+learning-accumulation/
 ├── src/main/java/com/quinn/hboot/
 │   ├── ai/          # AI 对话
 │   ├── codegen/     # 代码生成
@@ -77,8 +77,8 @@ h-boot/
 ### 2. 获取代码
 
 ```bash
-git clone https://gitee.com/438704315/h-boot.git
-git clone https://gitee.com/438704315/h-boot-admin.git
+git clone https://gitee.com/438704315/learning-accumulation.git
+git clone https://gitee.com/438704315/learning-accumulation-vue.git
 ```
 
 ### 3. 初始化 PostgreSQL
@@ -173,7 +173,7 @@ REDIS_CONF="$(brew --prefix)/etc/redis.conf"
 ### 6. 启动前端
 
 ```bash
-cd ../h-boot-admin
+cd ../learning-accumulation-vue
 npm install
 npm run dev
 ```
@@ -188,11 +188,11 @@ npm run dev
 Browser
    |
    v
-h-boot-admin (Vue 3 + TypeScript)
+learning-accumulation-vue (Vue 3 + TypeScript)
    |
    | HTTP / JSON
    v
-h-boot (Spring Boot)
+learning-accumulation (Spring Boot)
    |-- PostgreSQL / MySQL    业务与流程数据
    |-- Redis                 会话、权限与缓存
    |-- Local file storage    文件和媒体资源
